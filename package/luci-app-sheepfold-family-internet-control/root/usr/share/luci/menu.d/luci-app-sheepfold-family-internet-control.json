@@ -1,0 +1,13 @@
+{
+  "admin/services/sheepfold": {
+    "title": "Sheepfold",
+    "order": 65,
+    "action": {
+      "type": "view",
+      "path": "sheepfold/overview"
+    },
+    "depends": {
+      "acl": [ "luci-app-sheepfold-family-internet-control" ]
+    }
+  }
+}

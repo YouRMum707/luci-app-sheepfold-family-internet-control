@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PKG_DIR="$ROOT_DIR/package/luci-app-sheepfold-family-internet-control"
+OUT_DIR="${SHEEPFOLD_OUT_DIR:-$ROOT_DIR/dist}"
+BUILD_DIR="$ROOT_DIR/.build/test-ipk"
+PKG_NAME="luci-app-sheepfold-family-internet-control"
+PKG_VERSION="$(sed -n 's/^PKG_VERSION:=//p' "$PKG_DIR/Makefile" | head -n 1)"
+PKG_RELEASE="$(sed -n 's/^PKG_RELEASE:=//p' "$PKG_DIR/Makefile" | head -n 1)"
+ARCH="all"
+IPK="$OUT_DIR/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_${ARCH}.ipk"
+
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR/control" "$BUILD_DIR/data/www" "$OUT_DIR"
+trap 'rm -rf "$BUILD_DIR"; rmdir "$ROOT_DIR/.build" 2>/dev/null || true' EXIT
+
+cp -R "$PKG_DIR/root/." "$BUILD_DIR/data/"
+cp -R "$PKG_DIR/htdocs/." "$BUILD_DIR/data/www/"
+chmod 0755 "$BUILD_DIR/data/etc/init.d/sheepfold"
+chmod 0755 "$BUILD_DIR/data/usr/libexec/sheepfold/sheepfold-service"
+
+cat > "$BUILD_DIR/control/control" <<CONTROL
+Package: $PKG_NAME
+Version: $PKG_VERSION-$PKG_RELEASE
+Architecture: $ARCH
+Maintainer: kva4991
+Description: Visual test build of Sheepfold Family Internet Control LuCI app.
+Depends: firewall4, rpcd, uci, uclient-fetch, ca-bundle, jsonfilter
+Section: luci
+Priority: optional
+CONTROL
+
+cat > "$BUILD_DIR/control/postinst" <<POSTINST
+#!/bin/sh
+[ -n "\${IPKG_INSTROOT}" ] && exit 0
+uci -q set sheepfold.global.ui_asset_version='${PKG_VERSION}-${PKG_RELEASE}'
+uci -q commit sheepfold
+rm -f /tmp/luci-indexcache 2>/dev/null || true
+rm -f /tmp/luci-modulecache/* 2>/dev/null || true
+exit 0
+POSTINST
+chmod 0755 "$BUILD_DIR/control/postinst"
+
+printf '2.0\n' > "$BUILD_DIR/debian-binary"
+
+(
+        cd "$BUILD_DIR/control"
+        tar --owner=0 --group=0 -czf ../control.tar.gz .
+)
+
+(
+        cd "$BUILD_DIR/data"
+        tar --owner=0 --group=0 -czf ../data.tar.gz .
+)
+
+write_ar_member() {
+        local name="$1"
+        local file="$2"
+        local size
+
+        size="$(wc -c < "$file" | tr -d ' ')"
+        printf '%-16s%-12s%-6s%-6s%-8s%-10s`\n' "$name/" 0 0 0 100644 "$size"
+        cat "$file"
+
+        if [ $((size % 2)) -ne 0 ]; then
+                printf '\n'
+        fi
+}
+
+{
+        printf '!<arch>\n'
+        write_ar_member "debian-binary" "$BUILD_DIR/debian-binary"
+        write_ar_member "control.tar.gz" "$BUILD_DIR/control.tar.gz"
+        write_ar_member "data.tar.gz" "$BUILD_DIR/data.tar.gz"
+} > "$IPK"
+
+echo "$IPK"
