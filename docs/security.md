@@ -25,6 +25,29 @@ Fingerprint and face unlock may be available, but should not be recommended as t
 Password or PIN is recommended. Fingerprint or face unlock can be less safe for parental-control apps: a child may try to unlock the app while the parent is asleep.
 ```
 
+## Administrators And Roles
+
+Sheepfold is administered by parent/admin users configured on the router.
+
+Minimum roles:
+
+- `owner`: full control, can add/remove administrators, change messenger integration, import/export, update, reboot, and clear logs;
+- `admin`: can manage devices, schedules, temporary access, Wi-Fi shortcuts, and emergency-useful sites, but cannot remove the owner.
+
+Optional future roles may be added later, but do not add child/client roles unless explicitly requested.
+
+Each messenger administrator must be explicitly bound to a Telegram/MAX user ID or chat ID in router settings.
+
+Administrative action logs should record:
+
+- administrator ID or display name;
+- action type;
+- target device or setting, with masking where appropriate;
+- timestamp;
+- result: success, failure, cancelled, or pending confirmation.
+
+Do not log administrator passwords, bot tokens, API tokens, or session IDs.
+
 ## List Conflicts
 
 The same device must not be present in both allowlist and blocklist.
@@ -46,6 +69,10 @@ The following actions must require confirmation:
 - global internet block;
 - settings import;
 - reset settings.
+- Wi-Fi SSID/password/security/channel changes;
+- active messenger switch;
+- adding a new administrator;
+- clearing logs.
 
 ## Logging
 

@@ -15,6 +15,7 @@
 - Android companion app.
 - Telegram or MAX two-way messenger bot.
 - Only one messenger adapter can be active on one router at a time.
+- Parent/admin roles configured on the router.
 - Parent AI assistant with country-aware provider selection.
 - Age-based guidance scenarios for parents, without automatic application.
 - Device allowlist.
@@ -106,6 +107,17 @@ Android connectivity:
 - Telegram/MAX bot is the remote command and notification path;
 - without VPN or a developer-operated cloud service, the Android app must not promise full remote router management outside the local network.
 
+## Administrators
+
+Sheepfold must support parent/admin users configured on the router.
+
+Minimum roles:
+
+- `owner`: full control and administrator management;
+- `admin`: device, schedule, temporary access, Wi-Fi shortcut, and emergency-useful sites management.
+
+Telegram/MAX access must be bound to explicitly approved user IDs or chat IDs. Children/client devices do not get a dedicated control interface by default.
+
 ## Target OpenWRT Scope
 
 The project should target modern OpenWRT installations that use `firewall4` and `nftables`.
@@ -117,6 +129,16 @@ There is no need to support old OpenWRT versions based on `firewall3` / `iptable
 Blocklisted devices are always blocked. Allowlisted devices are never blocked by global blocking or schedules. The backend and UI must prevent the same MAC address from being present in both lists.
 
 Temporary access must never bypass the blocklist.
+
+Schedule priority:
+
+1. blocklist;
+2. allowlist;
+3. temporary access;
+4. schedule;
+5. general rules.
+
+Schedules must support weekdays, time ranges, enabled/disabled state, device or group targets, and intervals that cross midnight.
 
 The Android app is for parent/admin devices only. Sheepfold should not require installing an app on children's phones.
 

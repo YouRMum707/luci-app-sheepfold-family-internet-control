@@ -34,6 +34,12 @@ Avoid:
 - The uninstall command must remove the package without clearing Sheepfold client lists or user settings, then print a report of remaining router settings that may require manual cleanup.
 - When changing installation, update, or uninstall commands, update both README files and `docs/github-install-setup.md` if relevant.
 
+## Implementation Entry Point
+
+- Future AI developers should start with `docs/developer-task.ru.md`, then read `docs/product-requirements.md` and the relevant focused docs.
+- Keep `docs/developer-task.ru.md` updated when project-level decisions change.
+- Do not replace the focused docs with the developer task; it is an entrypoint and summary, not the source of every detail.
+
 ## Emergency-Useful Sites
 
 - The user-facing feature name is:
@@ -80,9 +86,17 @@ Avoid:
 - A router can enable only one messenger adapter at a time: Telegram or MAX.
 - Do not design flows that require Telegram and MAX to be active simultaneously on the same router.
 - Messenger integrations must use the same Sheepfold API as LuCI and Android.
+- Messenger access must be bound to explicitly approved parent/admin users configured on the router.
 - On OpenWRT, prefer outbound HTTPS long polling for Telegram instead of webhooks, so the router does not need an inbound public HTTPS endpoint.
 - Keep the MAX adapter experimental until current public MAX Bot API behavior is confirmed for router-side use.
 - Administrative bot actions such as reboot, update, import, global block, and list changes must require explicit confirmation.
+
+## Administrators And Roles
+
+- Minimum roles are `owner` and `admin`.
+- `owner` can manage administrators; `admin` can manage family internet rules but must not remove the owner.
+- Do not add child/client roles or child-facing control interfaces unless explicitly requested later.
+- Administrative logs should record who changed what, when, and with what result, without storing secrets.
 
 ## Wi-Fi Settings
 
@@ -90,6 +104,13 @@ Avoid:
 - Wi-Fi changes must require confirmation because the current admin may be disconnected.
 - Do not hide or replace standard OpenWRT wireless pages; Sheepfold only provides a simpler family-facing shortcut.
 - Do not add guest-network features unless explicitly requested again.
+
+## Schedules
+
+- Schedules apply only to devices that are not in the allowlist or blocklist.
+- Temporary access may override a schedule, but must never override the blocklist.
+- Schedule UI must support weekdays, time ranges, enabled/disabled state, and intervals crossing midnight.
+- If schedule rules conflict, show a warning and keep backend behavior deterministic.
 
 ## AdGuard Home And Podkop Integrations
 

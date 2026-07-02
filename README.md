@@ -46,7 +46,7 @@ sh /tmp/sheepfold-uninstall.sh
 
 - Manage internet access for home devices through an OpenWRT router and its LuCI web interface.
 - Provide an Android companion app with quick actions and widgets.
-- Support VK/MAX messenger bot controls.
+- Support Telegram/MAX messenger bot controls.
 - Keep device allowlists, blocklists, schedules, temporary access tokens, and access to emergency-useful sites.
 - Sync device names and static IP addresses with the OpenWRT router DHCP static leases.
 - Work safely with `fw4` / `nftables`.
@@ -85,7 +85,7 @@ The project should not break AdGuard Home, Dnsmasq, Podkop, sing-box, or standar
 ```text
 package/luci-app-sheepfold-family-internet-control/  OpenWRT package skeleton
 android/                                             Android companion app
-bot/                                                 VK/MAX bot adapters
+bot/                                                 Telegram/MAX bot adapters
 docs/                                                Product and technical docs
 install.sh                                           Router installer entrypoint
 update.sh                                            Router updater entrypoint
@@ -99,10 +99,12 @@ This repository is in the planning/scaffolding stage.
 See:
 
 - [Product requirements](docs/product-requirements.md)
+- [Direct task for AI developers](docs/developer-task.md)
 - [Parent AI assistant](docs/ai-assistant.md)
 - [AI context sharing](docs/ai-context-sharing.md)
 - [Parent AI assistant prompt draft, Russian](docs/ai-assistant-prompt.ru.md)
 - [Age-based control scenarios](docs/age-scenarios.md)
+- [Access schedules](docs/schedules.md)
 - [Country profiles](docs/country-profiles.md)
 - [Emergency-useful sites planning](docs/domain-allowlist.md)
 - [Integrations](docs/integrations.md)
