@@ -95,6 +95,13 @@ Avoid:
 - If MAX is implemented, keep it clearly marked as experimental until current public MAX Bot API behavior is confirmed for router-side use.
 - Administrative bot actions such as reboot, update, import, global block, and list changes must require explicit confirmation.
 
+## Remote Access Scope
+
+- Do not design, document, or promise full Android/LuCI management through WireGuard, VPN tunnels, or any other tunnel to the router.
+- Full Android and LuCI management is local-network only.
+- Remote management outside the home network is limited to short confirmed commands and notifications through the single configured messenger adapter.
+- Do not add VPN setup helpers, WireGuard profiles, tunnel health checks, or VPN-based onboarding unless the project owner explicitly reverses this decision later.
+
 ## Administrators And Roles
 
 - Minimum roles are `owner` and `admin`.

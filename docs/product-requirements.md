@@ -107,7 +107,10 @@ Android connectivity:
 
 - local router connection is the default full-interface mode;
 - Telegram/VK bot is the remote command and notification path;
-- without VPN or a developer-operated cloud service, the Android app must not promise full remote router management outside the local network.
+- full Android/LuCI management must remain local-network only;
+- do not support or document full remote management through WireGuard, VPN tunnels, or any other tunnel to the router;
+- outside the local network, remote management is limited to short confirmed commands and notifications through the single configured messenger adapter;
+- without a developer-operated cloud service, the Android app must not promise full remote router management outside the local network.
 
 ## Administrators
 

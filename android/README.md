@@ -23,7 +23,7 @@ Default connection model:
 - local network connection to the router when the parent is at home;
 - Telegram or VK bot for remote short commands and notifications when the parent is away; VK is the default first-run messenger choice, and MAX may appear later as an experimental adapter.
 
-Without VPN or a developer-operated cloud service, the Android app should not promise full remote router management outside the local network.
+Full Android management should be local-network only. Do not design full remote management through WireGuard, VPN tunnels, or any other tunnel to the router. Outside the home network, use the configured messenger bot for short confirmed commands and notifications.
 
 ## First-Run Agreement
 
