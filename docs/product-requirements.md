@@ -65,3 +65,9 @@ The application should include security settings for local router access:
 AdGuard Home should remain responsible for DNS-level filtering when enabled.
 
 Podkop should remain responsible for routing after Sheepfold and AdGuard Home have allowed the traffic.
+
+## Helpful External Links
+
+- Podkop and AdGuard Home setup: https://podkop.net/docs/adguard/
+- Clearing browser cache after LuCI updates: https://podkop.net/docs/clear-browser-cache/
+- OpenWRT router comparison: https://hattabbi4.github.io/openwrt-router-compare/

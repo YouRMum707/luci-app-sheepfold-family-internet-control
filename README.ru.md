@@ -80,8 +80,11 @@ sh /tmp/sheepfold-install.sh
 См. также:
 
 - [Product requirements](docs/product-requirements.md)
+- [Планирование белого списка доменов](docs/domain-allowlist.ru.md)
+- [Integrations](docs/integrations.md)
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
+- [Сравнение роутеров с поддержкой OpenWRT](https://hattabbi4.github.io/openwrt-router-compare/)
 
 ## Поддержать проект
 
