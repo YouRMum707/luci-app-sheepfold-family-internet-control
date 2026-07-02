@@ -1,5 +1,7 @@
 # Sheepfold Family Internet Control
 
+[Русский](README.ru.md) | English
+
 Sheepfold is a family internet access control system for OpenWRT.
 
 It is planned as a LuCI application, OpenWRT backend service, Android companion app named **Ovcharnya** / **Овчарня**, and messenger bot integration for managing household internet access.
