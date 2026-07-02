@@ -126,6 +126,15 @@ Avoid:
 - Append the same version to Sheepfold JS/CSS/static asset URLs as a query suffix such as `?v=0.1.0-1`.
 - Bump the package version/release when LuCI frontend files change.
 - Keep manual browser-cache clearing as troubleshooting, not the normal update path.
+- Clear LuCI index/module cache from install/update hooks when the menu or LuCI view structure changes.
+
+## LuCI Architecture
+
+- Use a Podkop-like structure for the real LuCI implementation: a small entrypoint with `form.Map("sheepfold")`, `tabbed = true`, and separate modules for devices, allowlist, blocklist, schedules, emergency-useful sites, Wi-Fi, integrations, messaging, logs, diagnostics, and settings.
+- Keep the visual prototype separate from the future production architecture; do not keep growing one huge `overview.js`.
+- LuCI must call a narrow backend command/API layer such as `/usr/bin/sheepfold <method>` instead of building arbitrary shell commands.
+- rpcd ACL must explicitly allow only the Sheepfold files, UCI configs, ubus objects, and executable commands required by the UI.
+- Put diagnostics in a dedicated tab and return structured JSON for checks.
 
 ## Export And Backup
 

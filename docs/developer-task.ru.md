@@ -14,6 +14,7 @@
 - `docs/schedules.ru.md`;
 - `docs/integrations.md`;
 - `docs/domain-allowlist.ru.md`;
+- `docs/podkop-luci-notes.ru.md`;
 - `docs/ai-context-sharing.ru.md`.
 
 ## Главный сценарий
@@ -100,6 +101,8 @@ LuCI — основной интерфейс настройки.
 - экспорт полного бэкапа с секретами;
 
 LuCI-ассеты должны использовать один cache-busting version suffix. Источник версии — `PKG_VERSION-PKG_RELEASE` OpenWRT-пакета, runtime-значение можно хранить как `ui_asset_version`. Все Sheepfold JS/CSS/static URL должны получать один и тот же suffix вида `?v=0.1.0-1`. Не хардкодить отдельные версии в разных frontend-файлах.
+
+Рабочую LuCI-архитектуру делай по Podkop-подобной схеме: небольшой entrypoint, `form.Map("sheepfold")`, `tabbed = true`, отдельный модуль на каждую вкладку, отдельный слой backend methods и строгий rpcd ACL. Не разращивать один огромный `overview.js`.
 
 ## Android
 
