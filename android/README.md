@@ -21,7 +21,7 @@ The Android app is for parent/admin devices only.
 Default connection model:
 
 - local network connection to the router when the parent is at home;
-- Telegram or MAX bot for remote short commands and notifications when the parent is away.
+- Telegram or VK bot for remote short commands and notifications when the parent is away; VK is the default first-run messenger choice, and MAX may appear later as an experimental adapter.
 
 Without VPN or a developer-operated cloud service, the Android app should not promise full remote router management outside the local network.
 

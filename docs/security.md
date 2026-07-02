@@ -36,7 +36,7 @@ Minimum roles:
 
 Optional future roles may be added later, but do not add child/client roles unless explicitly requested.
 
-Each messenger administrator must be explicitly bound to a Telegram/MAX user ID or chat ID in router settings.
+Each messenger administrator must be explicitly bound to a Telegram/VK/MAX user ID or chat ID in router settings. VK is the default first-run messenger choice, but no messenger must become active until credentials and at least one administrator binding are configured. MAX is experimental and must not be enabled by default.
 
 Administrative action logs should record:
 

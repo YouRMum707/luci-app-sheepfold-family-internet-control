@@ -54,6 +54,7 @@ Avoid:
   - optional warning;
   - source, for example `starter`, `manual`, `imported`, or `integration`.
 - Emergency-useful sites are for restricted access: enough for necessary services, not enough for normal entertainment browsing.
+- Emergency-useful sites may be allowed for blocklisted devices only through a separate explicit setting. This must not grant access to LuCI, SSH, or Sheepfold API.
 - Do not add marketplaces, shopping services, super-app storefronts, food delivery catalogs, entertainment catalogs, app stores, or broad "everything" portals to default, starter, auto-generated, auto-imported, or "safe minimum" emergency-useful sites lists.
 
 ## Yandex Domains
@@ -82,13 +83,16 @@ Avoid:
 
 ## Messaging
 
-- Telegram and MAX are both two-way chat/control channels.
-- A router can enable only one messenger adapter at a time: Telegram or MAX.
-- Do not design flows that require Telegram and MAX to be active simultaneously on the same router.
+- Telegram and VK are both two-way chat/control channels.
+- VK is the default first-run messenger choice.
+- Keep `active` disabled until the parent/admin enters valid credentials and binds at least one approved administrator.
+- MAX remains an experimental adapter, not a first-release requirement.
+- A router can enable only one messenger adapter at a time: Telegram, VK, or experimental MAX.
+- Do not design flows that require multiple messenger adapters to be active simultaneously on the same router.
 - Messenger integrations must use the same Sheepfold API as LuCI and Android.
 - Messenger access must be bound to explicitly approved parent/admin users configured on the router.
 - On OpenWRT, prefer outbound HTTPS long polling for Telegram instead of webhooks, so the router does not need an inbound public HTTPS endpoint.
-- Keep the MAX adapter experimental until current public MAX Bot API behavior is confirmed for router-side use.
+- If MAX is implemented, keep it clearly marked as experimental until current public MAX Bot API behavior is confirmed for router-side use.
 - Administrative bot actions such as reboot, update, import, global block, and list changes must require explicit confirmation.
 
 ## Administrators And Roles
@@ -98,6 +102,14 @@ Avoid:
 - Do not add child/client roles or child-facing control interfaces unless explicitly requested later.
 - Administrative logs should record who changed what, when, and with what result, without storing secrets.
 
+## Device Defaults
+
+- New device behavior is configurable: `allow` by default, or `restrict_until_configured`.
+- Global "Block internet" blocks every device except allowlisted devices.
+- Device groups should include children, parents, TVs/media devices, and guests/custom groups.
+- Offline known devices should be cleaned after a configurable number of inactive days; default is 90 days.
+- Blocked-page placeholder text must be configurable by the parent/admin.
+
 ## Wi-Fi Settings
 
 - Sheepfold may expose common 2.4 GHz and 5 GHz Wi-Fi settings: SSID, password, security mode, and channel.
@@ -105,11 +117,27 @@ Avoid:
 - Do not hide or replace standard OpenWRT wireless pages; Sheepfold only provides a simpler family-facing shortcut.
 - Do not add guest-network features unless explicitly requested again.
 
+## LuCI Browser Cache
+
+- LuCI frontend assets must use one cache-busting version value.
+- The canonical source is the OpenWRT package version: `PKG_VERSION-PKG_RELEASE`.
+- The package Makefile should expose it as `SHEEPFOLD_UI_ASSET_VERSION` and write it to `ui_asset_version` during install/update.
+- Default UCI may expose this as `ui_asset_version`, but individual JS/CSS files must not hardcode their own versions.
+- Append the same version to Sheepfold JS/CSS/static asset URLs as a query suffix such as `?v=0.1.0-1`.
+- Bump the package version/release when LuCI frontend files change.
+- Keep manual browser-cache clearing as troubleshooting, not the normal update path.
+
+## Export And Backup
+
+- Default export must be readable JSON/archive without secrets.
+- Full export with bot tokens, API keys, sessions, passwords, or other secrets must require encrypted export with a password.
+
 ## Schedules
 
 - Schedules apply only to devices that are not in the allowlist or blocklist.
 - Temporary access may override a schedule, but must never override the blocklist.
-- Schedule UI must support weekdays, time ranges, enabled/disabled state, and intervals crossing midnight.
+- Schedule UI must support weekdays, time ranges, enabled/disabled state, allow/block actions, and intervals crossing midnight.
+- Temporary access quick buttons are +15 minutes, +30 minutes, +1 hour, +2 hours, +3 hours, +5 hours, until end of day, and until bedtime.
 - If schedule rules conflict, show a warning and keep backend behavior deterministic.
 
 ## AdGuard Home And Podkop Integrations

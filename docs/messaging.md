@@ -5,13 +5,16 @@ Sheepfold should support two-way messenger control.
 Supported adapters:
 
 - Telegram;
-- MAX.
+- VK;
+- MAX, experimental.
 
 Only one messenger adapter can be active on one router at a time.
 
 ## Active Messenger Rule
 
-- A router can have `telegram` or `max` enabled, not both.
+- VK is the default first-run messenger choice.
+- The installed config should keep the messenger inactive until credentials and at least one approved administrator are configured.
+- A router can have only one active adapter: `telegram`, `vk`, or experimental `max`.
 - Switching the active messenger must require admin confirmation.
 - Disabling the current messenger should not delete its configuration immediately; keep it for easy re-enable unless the user explicitly removes it.
 - All messenger actions must go through the same Sheepfold API used by LuCI and Android.
@@ -50,9 +53,9 @@ Interactive capabilities:
 - ask for confirmation before reboot/update/import;
 - accept short natural Russian commands.
 
-## MAX Two-Way Chat
+## VK Two-Way Chat
 
-MAX should support both notifications and interactive parent control.
+VK should support both notifications and interactive parent control.
 
 Planned capabilities:
 
@@ -66,14 +69,26 @@ Planned capabilities:
 - ask for confirmation before reboot/update/import;
 - accept short natural Russian commands.
 
+## MAX Experimental
+
+MAX may remain as an experimental adapter.
+
+Requirements:
+
+- disabled by default;
+- not a blocker for the first stable release;
+- use the same internal adapter interface;
+- show an `experimental` label in UI;
+- do not expose the router to the internet.
+
 Architecture:
 
-- implement Telegram and MAX as separate adapters;
+- implement Telegram and VK as separate adapters;
 - keep messenger-specific code outside OpenWRT firewall logic;
 - route all actions through the same Sheepfold API used by LuCI and Android;
 - keep command permissions explicit per approved user.
 - assign approved administrators in router settings;
-- each administrator should have a role and a linked Telegram/MAX user ID or chat ID;
+- each administrator should have a role and a linked Telegram/VK/MAX user ID or chat ID;
 - log administrative actions: who performed the command, what changed, when, and with what result.
 
 ## OpenWRT Implementation
@@ -92,7 +107,7 @@ Preferred Telegram approach:
 
 This fits home routers better than webhooks because webhooks require a public HTTPS endpoint.
 
-Use the same adapter interface for MAX, but keep the MAX adapter `experimental` until stable public Bot API documentation and an inbound-message method that does not expose the router to the internet are confirmed.
+Use the same adapter interface for VK. VK is a more justified second stable adapter than MAX for the current plan because VK's bot ecosystem is more established. MAX may remain experimental.
 
 Minimum OpenWRT dependencies:
 
@@ -108,6 +123,7 @@ Useful references:
 
 - Telegram Bot API: https://core.telegram.org/bots/api
 - Telegram `getUpdates`: https://core.telegram.org/bots/api#getupdates
+- VK Developers: https://dev.vk.com/
 
 ## Shared Requirements
 

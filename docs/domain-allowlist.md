@@ -14,6 +14,8 @@ The goal is to allow necessary services without opening video, games, social fee
 ## Product Rules
 
 - Keep emergency-useful sites disabled by default until the user enables it.
+- Access to emergency-useful sites for blocklisted devices is allowed only through a separate explicit setting for user safety.
+- Even when emergency-useful access is enabled, blocklisted devices must not access LuCI, SSH, or the Sheepfold API.
 - Use one editable domain list, not built-in presets. AdGuard Home already has presets and filtering lists; Sheepfold should not duplicate that job.
 - Let parents edit the whole list.
 - Prefer narrow domains and subdomains over broad parent domains.

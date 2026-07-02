@@ -13,7 +13,7 @@
 
 - Manage family internet access through an OpenWRT router and its LuCI web interface.
 - Android companion app.
-- Telegram or MAX two-way messenger bot.
+- Telegram or VK two-way messenger bot, with VK as the default first-run choice and MAX kept as an optional experimental adapter disabled by default.
 - Only one messenger adapter can be active on one router at a time.
 - Parent/admin roles configured on the router.
 - Parent AI assistant with country-aware provider selection.
@@ -22,6 +22,7 @@
 - Device blocklist.
 - Automatically discovered devices.
 - Search by MAC, current IP, hostname, and custom name.
+- Device groups: children, parents, TVs/media devices, guests/custom.
 - DHCP static lease synchronization.
 - Schedules.
 - Temporary access tokens.
@@ -29,6 +30,7 @@
 - Import/export of all settings and known clients.
 - Optional logging.
 - App update and router reboot controls with confirmation.
+- LuCI browser-cache busting through one project-level asset version.
 - OpenWRT uninstall command that removes the package but preserves Sheepfold settings and client lists, then shows a report of remaining router settings.
 - User agreement and data-processing consent shown before Android first setup and OpenWRT installation.
 - Privacy policy describing local storage, Android data, messenger data, AI-provider data sharing, logs, masking, export, and deletion.
@@ -104,7 +106,7 @@ Android app local authentication:
 Android connectivity:
 
 - local router connection is the default full-interface mode;
-- Telegram/MAX bot is the remote command and notification path;
+- Telegram/VK bot is the remote command and notification path;
 - without VPN or a developer-operated cloud service, the Android app must not promise full remote router management outside the local network.
 
 ## Administrators
@@ -116,7 +118,7 @@ Minimum roles:
 - `owner`: full control and administrator management;
 - `admin`: device, schedule, temporary access, Wi-Fi shortcut, and emergency-useful sites management.
 
-Telegram/MAX access must be bound to explicitly approved user IDs or chat IDs. Children/client devices do not get a dedicated control interface by default.
+Telegram/VK access must be bound to explicitly approved user IDs or chat IDs. MAX may be added as an experimental adapter, disabled by default. Children/client devices do not get a dedicated control interface by default.
 
 ## Target OpenWRT Scope
 
@@ -130,6 +132,26 @@ Blocklisted devices are always blocked. Allowlisted devices are never blocked by
 
 Temporary access must never bypass the blocklist.
 
+New devices policy must be configurable:
+
+```text
+allow
+restrict_until_configured
+```
+
+Default: `allow`.
+
+Global "Block internet" means blocking all devices except allowlisted devices.
+
+Emergency-useful sites may be allowed even for blocklisted devices if `domain_allowlist_for_blocklist` is enabled. This is for user safety. Blocklisted devices still must not access LuCI, SSH, or the Sheepfold API.
+
+Device groups should be supported for easier management:
+
+- children;
+- parents;
+- TVs/media devices;
+- guests/custom groups.
+
 Schedule priority:
 
 1. blocklist;
@@ -138,11 +160,26 @@ Schedule priority:
 4. schedule;
 5. general rules.
 
-Schedules must support weekdays, time ranges, enabled/disabled state, device or group targets, and intervals that cross midnight.
+Schedules must support weekdays, time ranges, enabled/disabled state, device or group targets, intervals that cross midnight, and both block and allow rules.
+
+Temporary access quick buttons:
+
+```text
++15 minutes
++30 minutes
++1 hour
++2 hours
++3 hours
++5 hours
+until end of day
+until bedtime
+```
+
+Default bedtime: `21:00`. Bedtime should be configurable in schedule settings.
 
 The Android app is for parent/admin devices only. Sheepfold should not require installing an app on children's phones.
 
-An optional client-facing blocked-page placeholder may be shown instead of endless page loading. This is not a child control interface; it is only a simple explanation that internet access is currently unavailable.
+An optional client-facing blocked-page placeholder should be served locally by the router instead of endless page loading. This is not a child control interface; it is only a simple explanation that internet access is currently unavailable. The placeholder text must be configurable by the parent/admin.
 
 ## Age-Based Guidance
 
@@ -192,6 +229,8 @@ Required LuCI/Android controls:
 - 5 GHz SSID;
 - 5 GHz password.
 
+2.4 GHz and 5 GHz names/passwords must be editable separately.
+
 Advanced collapsible controls:
 
 - security mode;
@@ -207,6 +246,8 @@ The application should include security settings for local router access:
 - blocklisted devices cannot access the OpenWRT router LuCI interface, SSH, or the Sheepfold local API;
 - globally blocked devices may access the router only if `allow_router_for_blocked` is enabled;
 - emergency-useful sites mode can optionally allow selected public domains for blocked devices.
+
+Emergency-useful sites may also be enabled for blocklisted devices by a separate setting, but this must not grant access to LuCI, SSH, or Sheepfold API.
 
 ## Integrations
 
@@ -244,8 +285,34 @@ The installer may automatically write Sheepfold-owned UCI values for this mode, 
 - Clearing browser cache after LuCI updates: https://podkop.net/docs/clear-browser-cache/
 - OpenWRT router comparison: https://hattabbi4.github.io/openwrt-router-compare/
 
+## Export And Backup
+
+Default export should be a readable JSON/archive without secrets.
+
+Secrets include bot tokens, API keys, sessions, passwords, and other credentials.
+
+If the user wants a full backup including secrets, Sheepfold should require encrypted export with a password. Full unencrypted export with secrets should not be the default.
+
+Offline known devices should be cleaned after a configurable number of inactive days. Default: `90` days.
+
 ## Messaging
 
-- Telegram and MAX should both support two-way chat: notifications, status, device search, temporary access, approvals, and confirmed administrative actions.
-- A router can enable only one messenger adapter at a time: Telegram or MAX.
+- Telegram and VK should both support two-way chat: notifications, status, device search, temporary access, approvals, and confirmed administrative actions.
+- VK is the default first-run messenger choice. The installed config should keep messenger `active` disabled until credentials and at least one approved administrator are configured.
+- A router can enable only one messenger adapter at a time: Telegram, VK, or experimental MAX.
+- MAX may remain as an optional experimental adapter until its public Bot API is confirmed for router-side use. It must be disabled by default and must not block the first stable Telegram/VK release.
 - Messenger integrations must go through the same Sheepfold API used by LuCI and Android.
+
+## LuCI Asset Versioning
+
+Sheepfold LuCI frontend resources must support browser-cache busting.
+
+Requirements:
+
+- keep one asset version for all Sheepfold LuCI JS, CSS, images, fonts, and static resources;
+- derive the canonical value from OpenWRT package `PKG_VERSION-PKG_RELEASE` through `SHEEPFOLD_UI_ASSET_VERSION`;
+- expose the runtime value as `ui_asset_version` or an equivalent generated LuCI config value;
+- append it to asset URLs as a query suffix, for example `?v=0.1.0-1`;
+- never hardcode separate asset versions inside individual JS/CSS files;
+- bump the package version or release whenever LuCI frontend files change;
+- keep manual browser-cache clearing documentation only as troubleshooting.
