@@ -1,0 +1,11 @@
+{
+  "luci-app-sheepfold-family-internet-control": {
+    "description": "Grant access to Sheepfold Family Internet Control",
+    "read": {
+      "uci": [ "sheepfold", "dhcp" ]
+    },
+    "write": {
+      "uci": [ "sheepfold", "dhcp" ]
+    }
+  }
+}

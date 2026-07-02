@@ -1,0 +1,12 @@
+* text=auto
+
+*.sh text eol=lf
+Makefile text eol=lf
+*.mk text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+package/luci-app-sheepfold-family-internet-control/root/etc/config/* text eol=lf
+package/luci-app-sheepfold-family-internet-control/root/etc/init.d/* text eol=lf
+package/luci-app-sheepfold-family-internet-control/root/usr/libexec/sheepfold/* text eol=lf

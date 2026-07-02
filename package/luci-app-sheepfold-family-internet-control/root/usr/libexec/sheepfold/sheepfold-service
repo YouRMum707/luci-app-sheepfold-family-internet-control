@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+COMMAND="${1:-run}"
+
+case "$COMMAND" in
+        run)
+                echo "Sheepfold service placeholder"
+                sleep 3600
+                ;;
+        reload)
+                echo "Sheepfold reload placeholder"
+                ;;
+        *)
+                echo "Usage: sheepfold-service [run|reload]" >&2
+                exit 1
+                ;;
+esac

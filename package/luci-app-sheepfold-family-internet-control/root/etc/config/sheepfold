@@ -1,0 +1,30 @@
+config sheepfold 'global'
+        option enabled '0'
+        option language 'ru'
+        option lan_interface 'br-lan'
+        option wan_interface 'wan'
+        option block_on_boot '0'
+        option logging '1'
+        option log_level 'important'
+        option allow_router_for_blocked '1'
+        option block_router_for_blacklist '1'
+        option domain_allowlist_enabled '0'
+        option adguard_integration '0'
+        option podkop_compatibility '0'
+
+config list 'allowlist'
+        option description 'Devices that must never be blocked'
+
+config list 'blocklist'
+        option description 'Devices that must always be blocked'
+
+config list 'domain_allowlist'
+        option description 'Domains available for temporarily blocked devices'
+
+config integration 'adguard'
+        option enabled '0'
+        option url 'http://127.0.0.1:3000'
+
+config integration 'podkop'
+        option enabled '0'
+        option compatibility_mode '1'

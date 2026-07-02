@@ -1,0 +1,26 @@
+.DS_Store
+Thumbs.db
+
+# Build outputs
+bin/
+build_dir/
+staging_dir/
+tmp/
+*.ipk
+*.apk
+
+# Local editor/project state
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Android/Gradle
+.gradle/
+android/build/
+android/app/build/
+
+# Secrets and local configs
+*.env
+*.local
+secrets/
