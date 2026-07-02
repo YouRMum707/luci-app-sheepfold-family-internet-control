@@ -58,8 +58,9 @@ Avoid:
 
 ## Messaging
 
-- Treat Telegram as a notification channel: "what happened?"
-- Treat MAX as a two-way chat/control channel: "what should we do now?"
+- Telegram and MAX are both two-way chat/control channels.
+- A router can enable only one messenger adapter at a time: Telegram or MAX.
+- Do not design flows that require Telegram and MAX to be active simultaneously on the same router.
 - Messenger integrations must use the same Sheepfold API as LuCI and Android.
 - Administrative bot actions such as reboot, update, import, global block, and list changes must require explicit confirmation.
 
@@ -69,6 +70,15 @@ Avoid:
 - English is the required fallback language.
 - Translation files are small; keep them in the repository/package by default instead of downloading them separately.
 - Planned generated UI languages include Spanish, German, French, Portuguese (Brazil), Italian, Polish, Turkish, Ukrainian, Chinese Simplified, Japanese, Korean, Arabic, Hindi, Indonesian, and Vietnamese.
+
+## AI Assistant And Country Profiles
+
+- The Android parent assistant must use an abstract provider layer. Do not hardcode DeepSeek or any other provider as the only global option.
+- DeepSeek can be the preferred default provider only in country profiles where it is allowed and reachable.
+- Provider availability is country-profile configuration, not a permanent legal claim in code.
+- The selected router country controls visible AI providers and suggested emergency-useful sites.
+- Manual user entries must survive country changes.
+- The assistant may suggest settings but must not apply router actions without explicit parent confirmation.
 
 ## Platform Scope
 

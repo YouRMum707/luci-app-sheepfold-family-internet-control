@@ -13,9 +13,9 @@
 
 - Manage family internet access through an OpenWRT router and its LuCI web interface.
 - Android companion app.
-- VK/MAX messenger bot.
-- Telegram notifications for parent alerts.
-- MAX two-way chat for interactive parent communication.
+- Telegram or MAX two-way messenger bot.
+- Only one messenger adapter can be active on one router at a time.
+- Parent AI assistant with country-aware provider selection.
 - Device allowlist.
 - Device blocklist.
 - Automatically discovered devices.
@@ -43,6 +43,34 @@ Requirements:
   - `Sheepfold` as the project name;
   - `Овчарня` only for the Android app name and Russian LuCI display name;
   - `Доступ к аварийно-полезным сайтам` / `Access to emergency-useful sites` for the restricted-domain feature.
+
+## Country Profiles
+
+Sheepfold must adapt to the selected router country.
+
+Country profiles should control:
+
+- available AI assistant providers;
+- default emergency-useful site suggestions;
+- domain descriptions and warnings;
+- localization defaults.
+
+Manual user entries must not be deleted when the country changes.
+
+Provider availability must be configuration-driven because legal and network availability can change.
+
+## Parent AI Assistant
+
+The Android app should include a parent AI assistant.
+
+Requirements:
+
+- DeepSeek should be the preferred default provider in countries where it is allowed and reachable;
+- users should be able to choose another provider when it is allowed in the selected router country;
+- provider options must change according to the selected router country profile;
+- API keys must be stored securely on Android;
+- the assistant may recommend router/app settings, but must not perform actions without explicit parent confirmation;
+- the assistant should help parents move from external control toward child self-control.
 
 ## Android Scope
 
@@ -92,6 +120,6 @@ Podkop should remain responsible for routing after Sheepfold and AdGuard Home ha
 
 ## Messaging
 
-- Telegram should support optional parent notifications for important events and errors.
-- MAX should support two-way chat: status, device search, temporary access, approvals, and confirmed administrative actions.
+- Telegram and MAX should both support two-way chat: notifications, status, device search, temporary access, approvals, and confirmed administrative actions.
+- A router can enable only one messenger adapter at a time: Telegram or MAX.
 - Messenger integrations must go through the same Sheepfold API used by LuCI and Android.

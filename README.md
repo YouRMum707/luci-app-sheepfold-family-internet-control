@@ -89,6 +89,8 @@ This repository is in the planning/scaffolding stage.
 See:
 
 - [Product requirements](docs/product-requirements.md)
+- [Parent AI assistant](docs/ai-assistant.md)
+- [Country profiles](docs/country-profiles.md)
 - [Emergency-useful sites planning](docs/domain-allowlist.md)
 - [Integrations](docs/integrations.md)
 - [Localization](docs/localization.md)
