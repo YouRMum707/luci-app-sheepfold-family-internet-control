@@ -82,6 +82,12 @@ Avoid:
 - Keep long assistant prompts in separate prompt documents, not buried inside architecture docs.
 - Assistant prompts are drafts until reviewed by the project owner and, for family/psychology guidance, a qualified family psychologist.
 
+## Android App Security Copy
+
+- During first setup, Android app local authentication should recommend password or PIN.
+- Fingerprint and face unlock may be offered, but should not be described as the safest default for a parental-control app.
+- Use concise wording: biometric unlock can be less safe because a child may try to unlock the app while the parent is asleep.
+
 ## Platform Scope
 
 - Target modern OpenWRT with `firewall4` / `nftables`.

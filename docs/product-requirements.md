@@ -86,6 +86,13 @@ Recommended Android baseline:
 - UI: Jetpack Compose;
 - token storage: Android Keystore.
 
+Android app local authentication:
+
+- ask for app-lock method during first setup;
+- recommend password or PIN by default;
+- allow fingerprint/face unlock if supported, but do not recommend it as the safest parental-control default;
+- show a short warning that biometric unlock may be less safe because a child may try to unlock the app while the parent is asleep.
+
 ## Target OpenWRT Scope
 
 The project should target modern OpenWRT installations that use `firewall4` and `nftables`.

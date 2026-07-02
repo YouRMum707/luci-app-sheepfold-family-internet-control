@@ -11,6 +11,18 @@
 - Restore rules after `fw4 restart` and router reboot.
 - Target `firewall4` / `nftables`; do not add legacy `firewall3` / `iptables` compatibility unless explicitly required later.
 
+## Android App Authentication
+
+During first setup, the Android app should ask which local app-lock method to use.
+
+Recommended default: password or PIN.
+
+Fingerprint and face unlock may be available, but should not be recommended as the safest default for a parental-control app. The UI should explain this briefly:
+
+```text
+Password or PIN is recommended. Fingerprint or face unlock can be less safe for parental-control apps: a child may try to unlock the app while the parent is asleep.
+```
+
 ## List Conflicts
 
 The same device must not be present in both allowlist and blocklist.
