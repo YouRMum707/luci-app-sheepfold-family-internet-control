@@ -19,6 +19,7 @@ The goal is to allow necessary services without opening video, games, social fee
 - Prefer narrow domains and subdomains over broad parent domains.
 - Explain that domain allowlisting is imperfect because of HTTPS, CDN hosting, mobile apps, DoH, shared domains, and browser cache.
 - Do not include movie, game, social network, short-video, streaming, or app-store domains in the default allowlist.
+- Do not include marketplaces, super-app storefronts, food delivery catalogs, app stores, or broad portals that enable shopping or entertainment workflows in the default allowlist.
 
 ## Editable Starter List
 
@@ -174,6 +175,29 @@ rzd.ru
 pass.rzd.ru
 mosmetro.ru
 transport.mos.ru
+```
+
+### Taxi And Super-Apps
+
+Taxi access can be useful in household or emergency situations, but taxi domains should not be part of the strict starter list.
+
+Reason: many taxi services are now super-apps. They may expose ride hailing together with marketplaces, food delivery, grocery delivery, carsharing, scooters, advertising, and other non-emergency workflows.
+
+For Russia, Yandex Go and related domains may be suggested only as a manually enabled transport extension with a warning:
+
+```text
+go.yandex
+taxi.yandex.ru
+```
+
+Do not add these by default:
+
+```text
+market.yandex.ru
+eda.yandex.ru
+lavka.yandex.ru
+dostavka.yandex.ru
+business.go.yandex
 ```
 
 ### Communication And Safety

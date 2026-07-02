@@ -108,6 +108,7 @@ uninstall.sh                                         удаление с роу�
 - [Сообщения и уведомления](docs/messaging.ru.md)
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
+- [Пользовательское соглашение](docs/user-agreement.ru.md)
 - [Сравнение роутеров с поддержкой OpenWRT](https://hattabbi4.github.io/openwrt-router-compare/)
 
 ## Поддержать проект

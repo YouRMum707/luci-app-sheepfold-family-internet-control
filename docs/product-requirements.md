@@ -28,6 +28,7 @@
 - Optional logging.
 - App update and router reboot controls with confirmation.
 - OpenWRT uninstall command that removes the package but preserves Sheepfold settings and client lists, then shows a report of remaining router settings.
+- User agreement and data-processing consent shown before Android first setup and OpenWRT installation.
 
 ## Localization
 
@@ -89,6 +90,7 @@ Recommended Android baseline:
 
 Android app local authentication:
 
+- before app-lock setup, require agreement checkbox: `Я принимаю пользовательское соглашение и даю согласие на обработку персональных и технических данных, необходимых для работы Sheepfold.`;
 - ask for app-lock method during first setup;
 - recommend password or PIN by default;
 - allow fingerprint/face unlock if supported, but do not recommend it as the safest parental-control default;

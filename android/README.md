@@ -14,6 +14,20 @@ The Android companion app is planned under the name **Овчарня**.
 
 The app should mirror the core LuCI workflows and include the parent AI assistant tab.
 
+## First-Run Agreement
+
+Before the first setup continues, the Android app must show a link to the full user agreement and require this checkbox:
+
+```text
+Я принимаю пользовательское соглашение и даю согласие на обработку персональных и технических данных, необходимых для работы Sheepfold.
+```
+
+Full agreement:
+
+```text
+https://github.com/kva4991/luci-app-sheepfold-family-internet-control/blob/main/docs/user-agreement.ru.md
+```
+
 ## App Lock
 
 On first setup, the Android app should ask how to protect access to the app.

@@ -108,6 +108,7 @@ See:
 - [Messaging and notifications](docs/messaging.md)
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
+- [User agreement](docs/user-agreement.md)
 - [OpenWRT router comparison](https://hattabbi4.github.io/openwrt-router-compare/)
 
 ## Support

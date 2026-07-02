@@ -4,6 +4,7 @@ set -eu
 OWNER="kva4991"
 REPO="luci-app-sheepfold-family-internet-control"
 PACKAGE="luci-app-sheepfold-family-internet-control"
+AGREEMENT_URL="https://github.com/${OWNER}/${REPO}/blob/main/docs/user-agreement.ru.md"
 
 echo "Sheepfold Family Internet Control installer"
 echo "Repository: ${OWNER}/${REPO}"
@@ -22,6 +23,27 @@ if ! command -v opkg >/dev/null 2>&1; then
     echo "ERROR: opkg was not found." >&2
     exit 1
 fi
+
+echo ""
+echo "Before installation, read the user agreement and data processing consent:"
+echo "${AGREEMENT_URL}"
+echo ""
+echo "By continuing, you confirm that you accept the agreement and are responsible for lawful use of Sheepfold."
+printf "Type yes, y, or да to continue: "
+if ! read -r AGREEMENT_ACCEPTED; then
+    echo "Installation cancelled: agreement was not accepted." >&2
+    exit 1
+fi
+
+case "${AGREEMENT_ACCEPTED}" in
+    yes|YES|Yes|y|Y|да|Да|ДА)
+        echo "Agreement accepted."
+        ;;
+    *)
+        echo "Installation cancelled: agreement was not accepted." >&2
+        exit 1
+        ;;
+esac
 
 package_installed() {
     opkg status "$1" >/dev/null 2>&1
