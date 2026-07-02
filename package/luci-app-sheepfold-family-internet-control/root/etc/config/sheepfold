@@ -9,6 +9,7 @@ config sheepfold 'global'
         option allow_router_for_blocked '1'
         option block_router_for_blacklist '1'
         option domain_allowlist_enabled '0'
+        option integration_mode 'none'
         option adguard_integration '0'
         option podkop_compatibility '0'
 

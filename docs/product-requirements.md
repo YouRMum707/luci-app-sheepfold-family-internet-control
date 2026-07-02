@@ -119,6 +119,30 @@ AdGuard Home should remain responsible for DNS-level filtering when enabled.
 
 Podkop should remain responsible for routing after Sheepfold and AdGuard Home have allowed the traffic.
 
+LuCI must include a setting:
+
+```text
+Use together with / Использование совместно с
+```
+
+Allowed values:
+
+- `none`;
+- `adguard`;
+- `podkop`;
+- `adguard_podkop`.
+
+When a mode is selected, the UI must show integration-specific notes and ask for confirmation before any automatic router changes. Sheepfold should create/export a backup before applying integration-related changes.
+
+During installation, Sheepfold must detect whether AdGuard Home and/or Podkop are already installed on the router. The installer should choose the matching default `integration_mode`:
+
+- no detected integration -> `none`;
+- AdGuard Home only -> `adguard`;
+- Podkop only -> `podkop`;
+- AdGuard Home and Podkop -> `adguard_podkop`.
+
+The installer may automatically write Sheepfold-owned UCI values for this mode, but must not rewrite AdGuard Home or Podkop configuration without an explicit separate confirmation.
+
 ## Helpful External Links
 
 - Podkop and AdGuard Home setup: https://podkop.net/docs/adguard/

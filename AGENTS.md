@@ -64,6 +64,18 @@ Avoid:
 - Messenger integrations must use the same Sheepfold API as LuCI and Android.
 - Administrative bot actions such as reboot, update, import, global block, and list changes must require explicit confirmation.
 
+## AdGuard Home And Podkop Integrations
+
+- The LuCI setting is `Use together with` / `Использование совместно с`.
+- Supported integration modes are `none`, `adguard`, `podkop`, and `adguard_podkop`.
+- Do not model AdGuard Home and Podkop as mutually exclusive; they can be used together.
+- The installer must detect existing AdGuard Home and Podkop installations and choose the matching Sheepfold `integration_mode`.
+- Show integration-specific notes before applying changes.
+- Automatic router changes require explicit confirmation and should create/export a backup first.
+- Automatic install-time changes may write only Sheepfold-owned UCI options unless the user explicitly confirms broader router changes.
+- Do not overwrite AdGuard Home or Podkop configs blindly.
+- Do not modify Podkop-managed Dnsmasq, nftables, sing-box, or routing state unless the change is explicitly designed and documented.
+
 ## Localization
 
 - Russian is the primary product wording source.

@@ -18,11 +18,13 @@ sh /tmp/sheepfold-install.sh
 1. Build `.ipk` packages in GitHub Actions.
 2. Publish packages to GitHub Releases.
 3. Teach `install.sh` to detect OpenWRT architecture.
-4. Download the matching `.ipk`.
-5. Install dependencies through `opkg`.
-6. Install Sheepfold through `opkg install`.
-7. Enable and start the service.
-8. Restart `rpcd`, `uhttpd`, and `firewall` when needed.
+4. Detect existing AdGuard Home and Podkop installations.
+5. Download the matching `.ipk`.
+6. Install dependencies through `opkg`.
+7. Install Sheepfold through `opkg install`.
+8. Apply the recommended Sheepfold `integration_mode`.
+9. Enable and start the service.
+10. Restart `rpcd`, `uhttpd`, and `firewall` when needed.
 
 ## Update Plan
 
