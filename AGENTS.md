@@ -79,6 +79,8 @@ Avoid:
 - The selected router country controls visible AI providers and suggested emergency-useful sites.
 - Manual user entries must survive country changes.
 - The assistant may suggest settings but must not apply router actions without explicit parent confirmation.
+- Keep long assistant prompts in separate prompt documents, not buried inside architecture docs.
+- Assistant prompts are drafts until reviewed by the project owner and, for family/psychology guidance, a qualified family psychologist.
 
 ## Platform Scope
 

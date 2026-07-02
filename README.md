@@ -90,6 +90,7 @@ See:
 
 - [Product requirements](docs/product-requirements.md)
 - [Parent AI assistant](docs/ai-assistant.md)
+- [Parent AI assistant prompt draft, Russian](docs/ai-assistant-prompt.ru.md)
 - [Country profiles](docs/country-profiles.md)
 - [Emergency-useful sites planning](docs/domain-allowlist.md)
 - [Integrations](docs/integrations.md)
