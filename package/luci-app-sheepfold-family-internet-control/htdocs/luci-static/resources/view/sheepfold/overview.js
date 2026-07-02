@@ -1,7 +1,6 @@
 'use strict';
 'require view';
 'require ui';
-'require uci';
 
 var devices = [
         {
@@ -153,10 +152,6 @@ function selectField(label, value, values, hint) {
 
 return view.extend({
         activeTab: 'devices',
-
-        load: function () {
-                return uci.load('sheepfold');
-        },
 
         switchTab: function (button, tab) {
                 var page = button.closest('.sf-page');
@@ -460,7 +455,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = uci.get('sheepfold', 'global', 'ui_asset_version') || '0.1.0-1';
+                var assetVersion = '0.1.0-3';
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
 
                 return E('div', { 'class': 'cbi-map sf-page' }, [
