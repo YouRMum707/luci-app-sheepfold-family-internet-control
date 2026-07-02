@@ -24,6 +24,7 @@ Avoid:
 - Prefer clear router-based wording over internal-only LuCI wording.
 - In Russian, write `через OpenWRT-роутер и его веб-интерфейс LuCI` instead of only `через LuCI`.
 - Keep README files approachable for non-developers.
+- Keep user-facing strings localizable. Do not hardcode menu labels, validation messages, or bot replies when a localization resource should be used.
 
 ## Platform Scope
 

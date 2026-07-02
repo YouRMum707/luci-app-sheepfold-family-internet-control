@@ -82,6 +82,8 @@ See:
 - [Product requirements](docs/product-requirements.md)
 - [Emergency-useful sites planning](docs/domain-allowlist.md)
 - [Integrations](docs/integrations.md)
+- [Localization](docs/localization.md)
+- [Messaging and notifications](docs/messaging.md)
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
 - [OpenWRT router comparison](https://hattabbi4.github.io/openwrt-router-compare/)

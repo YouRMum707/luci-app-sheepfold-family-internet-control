@@ -82,6 +82,8 @@ sh /tmp/sheepfold-install.sh
 - [Product requirements](docs/product-requirements.md)
 - [Планирование доступа к аварийно-полезным сайтам](docs/domain-allowlist.ru.md)
 - [Integrations](docs/integrations.md)
+- [Локализация](docs/localization.ru.md)
+- [Сообщения и уведомления](docs/messaging.ru.md)
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
 - [Сравнение роутеров с поддержкой OpenWRT](https://hattabbi4.github.io/openwrt-router-compare/)

@@ -24,15 +24,23 @@ The goal is to allow necessary services without opening video, games, social fee
 
 The first-run UI may suggest this list, but parents should review and confirm it before enabling restricted access:
 
-```text
-gosuslugi.ru
-esia.gosuslugi.ru
-mos.ru
-school.mos.ru
-dnevnik.ru
-ya.ru
-2gis.ru
-```
+| Domain | Display name | Description |
+| --- | --- | --- |
+| `gosuslugi.ru` | Gosuslugi | Russian public services portal: documents, applications, benefits, appointments, and household public-service tasks. |
+| `esia.gosuslugi.ru` | Gosuslugi login | Unified identity login used by many Russian government and education services. |
+| `mos.ru` | Moscow public services | Moscow city services, appointments, school and healthcare links for Moscow users. |
+| `school.mos.ru` | Moscow school portal | Moscow Electronic School and school-related services. |
+| `dnevnik.ru` | School diary | Electronic diary and school communication platform used in many regions. |
+| `ya.ru` | Yandex simple search | Minimal Yandex search entrypoint. Prefer this over broad `yandex.ru`. |
+| `2gis.ru` | 2GIS maps | Maps, addresses, organizations, pharmacies, hospitals, ATMs, and route planning. |
+
+Every automatically suggested entry must have:
+
+- domain;
+- user-visible display name;
+- short explanation;
+- optional warning;
+- source type, for example `starter`, `manual`, `imported`, or `integration`.
 
 ## Useful Domains To Consider
 
@@ -59,7 +67,13 @@ dnevnik.ru
 login.dnevnik.ru
 school.mos.ru
 edu.gosuslugi.ru
+myschool.edu.ru
+edu.gov.ru
+edu.ru
 uchi.ru
+yaklass.ru
+interneturok.ru
+foxford.ru
 resh.edu.ru
 ```
 
@@ -130,6 +144,36 @@ cdn-tinkoff.ru
 alfabank.ru
 click.alfabank.ru
 web.alfabank.ru
+```
+
+### Emergency, Health, And Public Services
+
+Useful for adults during household or emergency situations. These domains should still be reviewed by parents before adding them.
+
+```text
+mchs.gov.ru
+psi.mchs.gov.ru
+emias.info
+zdrav.mos.ru
+mos.ru
+gosuslugi.ru
+esia.gosuslugi.ru
+nalog.gov.ru
+lkfl2.nalog.ru
+fssp.gov.ru
+gibdd.ru
+pochta.ru
+rzd.ru
+```
+
+### Transport And City Navigation
+
+```text
+2gis.ru
+rzd.ru
+pass.rzd.ru
+mosmetro.ru
+transport.mos.ru
 ```
 
 ### Communication And Safety

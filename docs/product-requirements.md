@@ -14,6 +14,8 @@
 - Manage family internet access through an OpenWRT router and its LuCI web interface.
 - Android companion app.
 - VK/MAX messenger bot.
+- Telegram notifications for parent alerts.
+- MAX two-way chat for interactive parent communication.
 - Device allowlist.
 - Device blocklist.
 - Automatically discovered devices.
@@ -25,6 +27,22 @@
 - Import/export of all settings and known clients.
 - Optional logging.
 - App update and router reboot controls with confirmation.
+
+## Localization
+
+Sheepfold must support Russian and English UI text and should be ready for generated translations into popular languages.
+
+Requirements:
+
+- keep UI strings in localization resources, not hardcoded directly in LuCI JS or Android code;
+- provide Russian as the primary wording source;
+- keep English as the required fallback language;
+- generate and maintain translations for all LuCI, Android, bot, and documentation-facing menu labels;
+- planned generated languages: Spanish, German, French, Portuguese (Brazil), Italian, Polish, Turkish, Ukrainian, Chinese Simplified, Japanese, Korean, Arabic, Hindi, Indonesian, and Vietnamese;
+- keep terminology consistent:
+  - `Sheepfold` as the project name;
+  - `Овчарня` only for the Android app name and Russian LuCI display name;
+  - `Доступ к аварийно-полезным сайтам` / `Access to emergency-useful sites` for the restricted-domain feature.
 
 ## Android Scope
 
@@ -71,3 +89,9 @@ Podkop should remain responsible for routing after Sheepfold and AdGuard Home ha
 - Podkop and AdGuard Home setup: https://podkop.net/docs/adguard/
 - Clearing browser cache after LuCI updates: https://podkop.net/docs/clear-browser-cache/
 - OpenWRT router comparison: https://hattabbi4.github.io/openwrt-router-compare/
+
+## Messaging
+
+- Telegram should support optional parent notifications for important events and errors.
+- MAX should support two-way chat: status, device search, temporary access, approvals, and confirmed administrative actions.
+- Messenger integrations must go through the same Sheepfold API used by LuCI and Android.
