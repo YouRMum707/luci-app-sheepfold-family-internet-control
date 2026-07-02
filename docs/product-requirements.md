@@ -21,7 +21,7 @@
 - DHCP static lease synchronization.
 - Schedules.
 - Temporary access tokens.
-- Domain allowlist for restricted access mode.
+- Access to emergency-useful sites for restricted mode.
 - Import/export of all settings and known clients.
 - Optional logging.
 - App update and router reboot controls with confirmation.
@@ -58,7 +58,7 @@ The application should include security settings for local router access:
 
 - blocklisted devices cannot access the OpenWRT router LuCI interface, SSH, or the Sheepfold local API;
 - globally blocked devices may access the router only if `allow_router_for_blocked` is enabled;
-- domain allowlist mode can optionally allow selected public domains for blocked devices.
+- emergency-useful sites mode can optionally allow selected public domains for blocked devices.
 
 ## Integrations
 

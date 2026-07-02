@@ -1,23 +1,44 @@
-# Domain Allowlist Planning
+# Emergency-Useful Sites Planning
 
-The domain allowlist is intended for restricted mode: a device has no normal internet access, but can still open a small set of useful websites.
+User-facing setting name:
+
+- EN: `Access to emergency-useful sites`
+- RU: `Доступ к аварийно-полезным сайтам`
+
+The emergency-useful sites list is intended for restricted mode: a device has no normal internet access, but can still open a small set of useful websites.
+
+Think of it as emergency-useful access: enough for necessary services, but not enough for normal entertainment browsing.
 
 The goal is to allow necessary services without opening video, games, social feeds, or entertainment platforms.
 
 ## Product Rules
 
-- Keep the domain allowlist disabled by default until the user enables it.
-- Ship suggested presets, not an overly broad mandatory list.
-- Let parents edit every preset.
+- Keep emergency-useful sites disabled by default until the user enables it.
+- Use one editable domain list, not built-in presets. AdGuard Home already has presets and filtering lists; Sheepfold should not duplicate that job.
+- Let parents edit the whole list.
 - Prefer narrow domains and subdomains over broad parent domains.
 - Explain that domain allowlisting is imperfect because of HTTPS, CDN hosting, mobile apps, DoH, shared domains, and browser cache.
 - Do not include movie, game, social network, short-video, streaming, or app-store domains in the default allowlist.
 
-## Suggested Presets
+## Editable Starter List
+
+The first-run UI may suggest this list, but parents should review and confirm it before enabling restricted access:
+
+```text
+gosuslugi.ru
+esia.gosuslugi.ru
+mos.ru
+school.mos.ru
+dnevnik.ru
+ya.ru
+2gis.ru
+```
+
+## Useful Domains To Consider
+
+These are not presets. They are examples for the editable list.
 
 ### Government And Identity
-
-Useful for documents, public services, and identity flows.
 
 ```text
 gosuslugi.ru
@@ -42,7 +63,7 @@ uchi.ru
 resh.edu.ru
 ```
 
-### Search And Basic Tools
+### Search, Maps, And Basic Tools
 
 Use carefully. Search engines can lead to entertainment content even when the top-level domain looks harmless.
 
@@ -52,6 +73,29 @@ google.com
 translate.google.com
 maps.google.com
 2gis.ru
+```
+
+### Yandex Warning
+
+Do not add broad Yandex domains by default.
+
+Tooltip text:
+
+```text
+Yandex services are difficult to allow narrowly. For example, Yandex Maps may require broad Yandex domains and shared static domains. Adding yandex.ru can open much more than maps: video, music, games, feeds, entertainment pages, and other Yandex services. Prefer ya.ru for simple search and 2gis.ru for maps. Add broader Yandex domains only manually and knowingly.
+```
+
+Yandex Maps is useful, but it is not ideal for a strict starter list. In browser traffic it may require broad Yandex domains and shared static domains. Adding broad domains can open more than maps.
+
+Prefer `2gis.ru` by default. If parents explicitly want Yandex Maps, they can try adding:
+
+```text
+maps.yandex.ru
+yandex.ru
+yandex.com
+yastatic.net
+api-maps.yandex.ru
+static-maps.yandex.ru
 ```
 
 Avoid adding broad Yandex domains by default:
@@ -67,6 +111,27 @@ dzen.ru
 
 If Yandex search is needed, prefer `ya.ru` first and let parents explicitly add broader Yandex domains later.
 
+### Banks
+
+Bank access can be useful for parents or household essentials, but it should not be part of the strict child-focused default list. Bank mobile apps may require additional API and CDN domains that differ from browser domains.
+
+Suggested browser domains to try:
+
+```text
+sberbank.ru
+www.sberbank.ru
+sberbank.com
+www.sberbank.com
+online.sberbank.ru
+tbank.ru
+www.tbank.ru
+business.tbank.ru
+cdn-tinkoff.ru
+alfabank.ru
+click.alfabank.ru
+web.alfabank.ru
+```
+
 ### Communication And Safety
 
 Optional. These can be useful, but they may also become a way around restrictions.
@@ -78,30 +143,4 @@ web.whatsapp.com
 telegram.org
 ```
 
-Do not enable this preset by default.
-
-## Default Recommendation
-
-Start with no domains enabled automatically.
-
-Offer presets in the UI:
-
-- Government;
-- School;
-- Search and maps;
-- Communication;
-- Custom domains.
-
-The safest first-run suggestion is:
-
-```text
-gosuslugi.ru
-esia.gosuslugi.ru
-mos.ru
-school.mos.ru
-dnevnik.ru
-ya.ru
-2gis.ru
-```
-
-Parents should review and confirm the list before it becomes active.
+Do not enable this block by default.

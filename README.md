@@ -20,7 +20,7 @@ It is planned as an OpenWRT router application with a LuCI web interface, backen
 - Manage internet access for home devices through an OpenWRT router and its LuCI web interface.
 - Provide an Android companion app with quick actions and widgets.
 - Support VK/MAX messenger bot controls.
-- Keep device allowlists, blocklists, schedules, temporary access tokens, and domain allowlists.
+- Keep device allowlists, blocklists, schedules, temporary access tokens, and access to emergency-useful sites.
 - Sync device names and static IP addresses with the OpenWRT router DHCP static leases.
 - Work safely with `fw4` / `nftables`.
 - Coexist with AdGuard Home and Podkop.
@@ -80,7 +80,7 @@ This repository is in the planning/scaffolding stage.
 See:
 
 - [Product requirements](docs/product-requirements.md)
-- [Domain allowlist planning](docs/domain-allowlist.md)
+- [Emergency-useful sites planning](docs/domain-allowlist.md)
 - [Integrations](docs/integrations.md)
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
