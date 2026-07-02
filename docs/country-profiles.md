@@ -19,7 +19,7 @@ Country profiles prevent hardcoding Russia-specific assumptions into the whole p
 - The user selects the router country during setup.
 - The user can change the country later.
 - Country selection should not remove manual entries.
-- Country selection may update suggested emergency-useful sites.
+- Country selection may update suggested emergency-useful sites, but it must not enable them automatically without parent confirmation.
 - Country selection may change the list of visible AI providers.
 - Legal/provider availability must be treated as configuration, not hardcoded truth.
 - If provider status is unknown, show it as unavailable until explicitly configured.
@@ -58,6 +58,22 @@ Russia starter list:
 | `2gis.ru` | 2GIS maps | Maps, addresses, organizations, and routes. |
 
 Do not add broad `yandex.ru` to the Russia starter list. See `AGENTS.md` and `docs/domain-allowlist.md`.
+
+### Transport Suggestions
+
+A country profile may show transport sites as suggestions, not as an automatically enabled preset.
+
+For Russia, these may be suggested for manual confirmation:
+
+```text
+2gis.ru
+rzd.ru
+pass.rzd.ru
+transport.mos.ru
+mosmetro.ru
+```
+
+Do not add Yandex Go or Yandex Taxi to starter suggestions by default. This is too broad a super-app surface: taxi access may also expose marketplaces, food delivery, parcel delivery, carsharing, scooters, and other non-emergency workflows.
 
 ## Future Country Profiles
 

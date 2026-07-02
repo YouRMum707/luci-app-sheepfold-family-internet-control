@@ -72,11 +72,16 @@ Architecture:
 - keep messenger-specific code outside OpenWRT firewall logic;
 - route all actions through the same Sheepfold API used by LuCI and Android;
 - keep command permissions explicit per approved user.
+- assign approved administrators in router settings;
+- each administrator should have a role and a linked Telegram/MAX user ID or chat ID;
+- log administrative actions: who performed the command, what changed, when, and with what result.
 
 ## Shared Requirements
 
 - Messenger integration must be optional.
 - Store bot tokens securely.
 - Allow configuring approved chat IDs / user IDs.
-- Do not send router passwords, API tokens, or sensitive network secrets.
+- Do not send router passwords, API tokens, session IDs, full MAC addresses, private notes, full device lists, or other sensitive network data without explicit permission.
+- By default, bot messages should show a friendly device name and status; technical details should be shown only when an administrator asks for them.
+- Dangerous actions must require confirmation: router reboot, update, settings import, clear log, mass block, rule deletion, active messenger switch, and adding a new administrator.
 - Respect the logging setting: if logs are disabled, live notifications may still be sent, but Sheepfold should not create local event history unless explicitly enabled.

@@ -14,6 +14,17 @@ The Android companion app is planned under the name **Овчарня**.
 
 The app should mirror the core LuCI workflows and include the parent AI assistant tab.
 
+## Connectivity
+
+The Android app is for parent/admin devices only.
+
+Default connection model:
+
+- local network connection to the router when the parent is at home;
+- Telegram or MAX bot for remote short commands and notifications when the parent is away.
+
+Without VPN or a developer-operated cloud service, the Android app should not promise full remote router management outside the local network.
+
 ## First-Run Agreement
 
 Before the first setup continues, the Android app must show a link to the full user agreement and require this checkbox:

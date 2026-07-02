@@ -20,6 +20,23 @@ Requirements:
 - Store API keys securely on Android, preferably through Android Keystore.
 - Never store provider API keys in OpenWRT UCI config unless a server-side proxy mode is explicitly implemented later.
 
+## AI Data Sharing
+
+By default, send only the text that the parent typed into the assistant chat.
+
+Do not automatically send the following to an AI provider:
+
+- MAC addresses;
+- IP addresses;
+- children's names;
+- device names;
+- family details;
+- action logs;
+- device lists;
+- router settings.
+
+If the app needs to attach Sheepfold context, it must show a separate confirmation and list the exact fields that will be sent. Sensitive fields should be off by default.
+
 ## DeepSeek Notes
 
 DeepSeek is a good default candidate for the parent assistant because it tends to produce reflective, explanatory answers.

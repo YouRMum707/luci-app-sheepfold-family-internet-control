@@ -101,6 +101,7 @@ uninstall.sh                                         удаление с роу�
 - [Product requirements](docs/product-requirements.md)
 - [ИИ-помощник для родителей](docs/ai-assistant.ru.md)
 - [Черновик промпта ИИ-помощника](docs/ai-assistant-prompt.ru.md)
+- [Возрастные сценарии контроля](docs/age-scenarios.ru.md)
 - [Профили стран](docs/country-profiles.ru.md)
 - [Планирование доступа к аварийно-полезным сайтам](docs/domain-allowlist.ru.md)
 - [Integrations](docs/integrations.md)
@@ -109,6 +110,7 @@ uninstall.sh                                         удаление с роу�
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
 - [Пользовательское соглашение](docs/user-agreement.ru.md)
+- [Политика приватности](docs/privacy.ru.md)
 - [Сравнение роутеров с поддержкой OpenWRT](https://hattabbi4.github.io/openwrt-router-compare/)
 
 ## Поддержать проект

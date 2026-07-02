@@ -16,6 +16,7 @@
 - Telegram or MAX two-way messenger bot.
 - Only one messenger adapter can be active on one router at a time.
 - Parent AI assistant with country-aware provider selection.
+- Age-based guidance scenarios for parents, without automatic application.
 - Device allowlist.
 - Device blocklist.
 - Automatically discovered devices.
@@ -29,6 +30,8 @@
 - App update and router reboot controls with confirmation.
 - OpenWRT uninstall command that removes the package but preserves Sheepfold settings and client lists, then shows a report of remaining router settings.
 - User agreement and data-processing consent shown before Android first setup and OpenWRT installation.
+- Privacy policy describing local storage, Android data, messenger data, AI-provider data sharing, logs, masking, export, and deletion.
+- Optional guest network rules, disabled by default.
 
 ## Localization
 
@@ -71,6 +74,7 @@ Requirements:
 - users should be able to choose another provider when it is allowed in the selected router country;
 - provider options must change according to the selected router country profile;
 - API keys must be stored securely on Android;
+- MAC addresses, IP addresses, child names, device names, family details, logs, device lists, and router settings must not be sent to the AI provider without a separate explicit confirmation;
 - the assistant may recommend router/app settings, but must not perform actions without explicit parent confirmation;
 - the assistant should help parents move from external control toward child self-control.
 
@@ -96,6 +100,12 @@ Android app local authentication:
 - allow fingerprint/face unlock if supported, but do not recommend it as the safest parental-control default;
 - show a short warning that biometric unlock may be less safe because a child may try to unlock the app while the parent is asleep.
 
+Android connectivity:
+
+- local router connection is the default full-interface mode;
+- Telegram/MAX bot is the remote command and notification path;
+- without VPN or a developer-operated cloud service, the Android app must not promise full remote router management outside the local network.
+
 ## Target OpenWRT Scope
 
 The project should target modern OpenWRT installations that use `firewall4` and `nftables`.
@@ -107,6 +117,47 @@ There is no need to support old OpenWRT versions based on `firewall3` / `iptable
 Blocklisted devices are always blocked. Allowlisted devices are never blocked by global blocking or schedules. The backend and UI must prevent the same MAC address from being present in both lists.
 
 Temporary access must never bypass the blocklist.
+
+The Android app is for parent/admin devices only. Sheepfold should not require installing an app on children's phones.
+
+An optional client-facing blocked-page placeholder may be shown instead of endless page loading. This is not a child control interface; it is only a simple explanation that internet access is currently unavailable.
+
+## Age-Based Guidance
+
+Age-based scenarios are guidance for parents, not automatic enforcement.
+
+Suggested levels:
+
+- around 6 years old: high parent control, short windows, simple rules;
+- around 10 years old: schedules, temporary access, emergency-useful sites, clear explanations;
+- around 14 years old: joint planning, fewer surprise blocks, more responsibility;
+- around 17 years old: light controls, self-regulation, family agreements, focus on sleep, school, and safety.
+
+The parent AI assistant may use age to suggest a style, but no age scenario may be applied without explicit confirmation.
+
+## Logs
+
+Logging must support these retention values:
+
+```text
+6m
+3m
+1m
+14d
+7d
+3d
+1d
+12h
+3h
+1h
+off
+```
+
+Default retention: `3d`.
+
+Default maximum log size: `1024 KB`.
+
+Logs must support a clear-log action and masked export. Masked export is enabled by default.
 
 ## Router Interface Access
 

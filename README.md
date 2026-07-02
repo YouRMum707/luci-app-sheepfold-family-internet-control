@@ -101,6 +101,7 @@ See:
 - [Product requirements](docs/product-requirements.md)
 - [Parent AI assistant](docs/ai-assistant.md)
 - [Parent AI assistant prompt draft, Russian](docs/ai-assistant-prompt.ru.md)
+- [Age-based control scenarios](docs/age-scenarios.md)
 - [Country profiles](docs/country-profiles.md)
 - [Emergency-useful sites planning](docs/domain-allowlist.md)
 - [Integrations](docs/integrations.md)
@@ -109,6 +110,7 @@ See:
 - [GitHub and installer plan](docs/github-install-setup.md)
 - [Security model](docs/security.md)
 - [User agreement](docs/user-agreement.md)
+- [Privacy policy](docs/privacy.md)
 - [OpenWRT router comparison](https://hattabbi4.github.io/openwrt-router-compare/)
 
 ## Support

@@ -64,10 +64,15 @@ Avoid:
 
 - Keep the full Russian user agreement in `docs/user-agreement.ru.md`.
 - Keep `docs/user-agreement.md` as the English routing/summary document until a full English legal text is prepared.
+- Keep the full Russian privacy policy in `docs/privacy.ru.md`.
+- Keep `docs/privacy.md` as the English routing/summary document until a full English privacy policy is prepared.
 - Android first setup must require a checkbox before use: `Я принимаю пользовательское соглашение и даю согласие на обработку персональных и технических данных, необходимых для работы Sheepfold.`
 - OpenWRT installer must show a link to the full agreement and require explicit `yes`, `y`, or `да` input before applying installation or configuration changes.
 - The agreement must be visible before first use in LuCI/Android when practical.
 - Do not claim that the agreement is final legal advice; production releases should be reviewed by a qualified lawyer.
+- Sheepfold is self-hosted for family use by default. Do not introduce a developer-operated cloud dependency unless explicitly requested later.
+- Android is for parent/admin devices only; do not design hidden child-phone installation flows.
+- If app-store publication is added later, prepare store-specific privacy disclosures before release.
 
 ## Messaging
 
