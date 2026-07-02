@@ -47,8 +47,8 @@ If the home Wi-Fi network uses randomized/private MAC:
 
 - explain that Sheepfold needs a stable device identifier for reliable rules;
 - guide the parent to Android Wi-Fi network settings;
-- allow manual confirmation after the parent switches the network to the real device MAC, when the OS/manufacturer allows it;
-- allow the parent to intentionally manage the stable randomized MAC for that Wi-Fi network if they prefer.
+- require the parent to switch this home Wi-Fi network to the real device MAC before setup continues;
+- verify the selected admin device from router-side data after the parent returns to the app.
 
 Do not promise automatic switching from randomized/private MAC to device MAC. Android permissions and manufacturer builds may prevent reliable automatic changes.
 

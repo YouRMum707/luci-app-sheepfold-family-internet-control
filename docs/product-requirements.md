@@ -36,6 +36,8 @@
 - Privacy policy describing local storage, Android data, messenger data, AI-provider data sharing, logs, masking, export, and deletion.
 - Common Wi-Fi settings for 2.4 GHz and 5 GHz networks: SSID, password, security mode, and channel.
 - Administrator devices and Android pairing by QR/manual setup.
+- Single parent-facing save action in LuCI instead of separate Save/Apply semantics.
+- First-open router root password gate.
 
 ## Localization
 
@@ -120,7 +122,7 @@ Android Wi-Fi MAC check:
 - during first pairing, after the phone is connected to the home Wi-Fi, the Android app should check whether the phone is visible to the router as the same MAC address that Sheepfold will manage;
 - if Android uses a randomized/private MAC for this Wi-Fi network, the app should explain the problem and guide the parent to the system Wi-Fi network settings;
 - the app may open Android Wi-Fi settings when public APIs allow it, but must not promise that it can automatically disable randomized MAC on every device/manufacturer build;
-- the parent must be able to confirm manually that the home Wi-Fi uses the real device MAC, or accept managing the randomized MAC as the stable identifier for that specific Wi-Fi network.
+- first pairing must not continue until the home Wi-Fi network uses the real device MAC and Sheepfold verifies that router-side data matches the selected admin device.
 
 ## Administrators
 
@@ -289,6 +291,24 @@ The application should include security settings for local router access:
 - emergency-useful sites mode can optionally allow selected public domains for blocked devices.
 
 Emergency-useful sites may also be enabled for blocklisted devices by a separate setting, but this must not grant access to LuCI, SSH, or Sheepfold API.
+
+## First-Open Router Password Gate
+
+Before opening Sheepfold settings in LuCI, Sheepfold must check whether the OpenWRT root password is configured.
+
+Requirements:
+
+- if the root password is empty/not configured, block access to Sheepfold settings;
+- show a concise warning that router password protection must be enabled first;
+- provide a button/link to the standard OpenWRT password/administration page;
+- do not create or ship default Sheepfold admin passwords;
+- first Sheepfold setup must force the owner to set their own Sheepfold password.
+
+## LuCI Save Behavior
+
+Sheepfold LuCI should show one clear `Save` / `Сохранить` action for parents.
+
+The UI should not expose separate `Apply` and `Save` actions because that distinction is confusing for non-technical users. Internally, Sheepfold may still perform the OpenWRT save/apply steps needed by UCI, firewall, services, and LuCI, but the parent-facing UI should present it as one confirmed save operation.
 
 ## Integrations
 

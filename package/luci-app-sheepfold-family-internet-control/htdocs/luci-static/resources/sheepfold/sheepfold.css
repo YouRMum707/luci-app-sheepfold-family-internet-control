@@ -339,6 +339,30 @@
         background: #fff8e6;
 }
 
+.sf-note-ok {
+        border-left-color: #1d8a57;
+        background: #eefaf3;
+}
+
+.sf-note-danger {
+        border-left-color: #b42318;
+        background: #fff0ee;
+}
+
+.sf-note strong {
+        display: block;
+        margin-bottom: 4px;
+}
+
+.sf-note span {
+        display: block;
+}
+
+.sf-inline-link {
+        display: inline-block;
+        margin-top: 8px;
+}
+
 .sf-domain-list {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -416,11 +440,11 @@
 
 .sf-qr {
         display: grid;
-        grid-template-columns: repeat(8, 1fr);
-        gap: 4px;
+        grid-template-columns: repeat(33, 1fr);
+        gap: 0;
         width: 180px;
         height: 180px;
-        padding: 12px;
+        padding: 14px;
         border: 1px solid var(--sf-border);
         background: #ffffff;
 }
@@ -452,6 +476,10 @@
 
 .sf-setting-line code {
         overflow-wrap: anywhere;
+}
+
+.cbi-page-actions .cbi-button-apply {
+        display: none !important;
 }
 
 @media (max-width: 900px) {

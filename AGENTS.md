@@ -25,6 +25,7 @@ Avoid:
 - In Russian, write `через OpenWRT-роутер и его веб-интерфейс LuCI` instead of only `через LuCI`.
 - Keep README files approachable for non-developers.
 - Keep user-facing strings localizable. Do not hardcode menu labels, validation messages, or bot replies when a localization resource should be used.
+- In Sheepfold LuCI, prefer one clear `Save` / `Сохранить` action. Do not expose separate `Apply` and `Save` actions unless OpenWRT internals force it; if both exist technically, hide or merge `Apply` in the Sheepfold UI so parents are not asked to understand the distinction.
 
 ## README Layout
 
@@ -124,9 +125,16 @@ Avoid:
 - First Android setup should be initiated locally from LuCI by scanning an admin-device pairing QR code or entering manual settings.
 - Manual settings shown next to QR must include router address/API URL, administrator login or identifier, pairing code/token, token lifetime, and Wi-Fi MAC guidance.
 - Android must check whether the phone is visible to the router under the MAC address Sheepfold will manage.
-- If randomized/private MAC is enabled for the home Wi-Fi, guide the parent to Android Wi-Fi network settings and explain why Sheepfold needs a stable identifier.
+- If randomized/private MAC is enabled for the home Wi-Fi, guide the parent to Android Wi-Fi network settings and explain why Sheepfold needs the real device MAC.
+- Do not continue first pairing until the parent switches this Wi-Fi network to the real device MAC and Sheepfold can verify it from router-side data.
 - Do not promise automatic disabling of randomized/private MAC on Android. Public APIs and manufacturer builds may prevent reliable automatic switching.
-- Allow the parent to confirm either using the real device MAC for the home Wi-Fi or intentionally managing the stable randomized MAC used for that Wi-Fi network.
+
+## Router Password Gate
+
+- On first opening Sheepfold in LuCI, check whether the OpenWRT root password is set.
+- If the root password is empty/not configured, do not allow Sheepfold settings to open.
+- Show a clear warning and route the user to the OpenWRT password/administration page.
+- Do not create default Sheepfold administrator passwords. First setup must force the owner to set their own password.
 
 ## Device Defaults
 

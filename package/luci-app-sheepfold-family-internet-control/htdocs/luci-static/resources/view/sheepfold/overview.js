@@ -12,6 +12,7 @@ var devices = [
                 note: 'Всегда доступен, устройство администратора',
                 adminDevice: true,
                 adminOwner: 'Владелец',
+                adminLogin: 'owner',
                 pairingCode: 'SF-PAIR-8264'
         },
         {
@@ -73,6 +74,8 @@ var admins = [
         }
 ];
 
+var rootPasswordIsSet = true;
+
 var translations = {
         'All devices': 'Все устройства',
         'Allowlist': 'Белый список',
@@ -104,11 +107,12 @@ var translations = {
         'Sheepfold API URL': 'URL API Sheepfold',
         'Administrator login': 'Логин администратора',
         'Pairing code': 'Код сопряжения',
+        'QR payload': 'Данные QR',
         'Token lifetime': 'Срок действия токена',
         '10 minutes': '10 минут',
         'Wi-Fi MAC check': 'Проверка MAC Wi-Fi',
         'Use the real device MAC for this home Wi-Fi network.': 'Для этой домашней Wi-Fi сети используйте настоящий MAC устройства.',
-        'Android should detect randomized MAC and guide the parent to Wi-Fi settings; automatic switching must not be promised.': 'Android должен обнаруживать случайный MAC и вести родителя в настройки Wi-Fi; автоматическое переключение обещать нельзя.',
+        'Android must require the real device MAC for this home Wi-Fi network before continuing setup.': 'Android должен требовать настоящий MAC устройства для этой домашней Wi-Fi сети до продолжения настройки.',
         'Close': 'Закрыть',
         '+30 min': '+30 мин',
         'Temporary access would require confirmation.': 'Временный доступ потребует подтверждения.',
@@ -219,7 +223,13 @@ var translations = {
         'Default export is readable JSON without secrets.': 'Экспорт по умолчанию — читаемый JSON без секретов.',
         'Import': 'Импорт',
         'Import requires confirmation.': 'Импорт требует подтверждения.',
-        'Devices': 'Устройства'
+        'Devices': 'Устройства',
+        'Save': 'Сохранить',
+        'Save changes. This visual build does not use a separate Apply button.': 'Сохранить изменения. В этой визуальной сборке отдельная кнопка "Применить" не используется.',
+        'Router root password check': 'Проверка root-пароля роутера',
+        'Root password is set. Sheepfold settings can be opened.': 'Root-пароль задан. Настройки Sheepfold можно открывать.',
+        'Root password is not set. Sheepfold settings must stay locked until the router password is configured.': 'Root-пароль не задан. Настройки Sheepfold должны быть заблокированы до установки пароля роутера.',
+        'Open router password page': 'Открыть страницу пароля роутера'
 };
 
 function T(text) {
@@ -283,20 +293,221 @@ function adminDeviceIcon() {
         ]);
 }
 
-function qrPlaceholder() {
-        var active = {
-                0: true, 1: true, 2: true, 4: true, 6: true, 7: true, 8: true,
-                9: true, 12: true, 13: true, 15: true, 17: true, 20: true,
-                22: true, 23: true, 25: true, 27: true, 30: true, 31: true,
-                33: true, 36: true, 38: true, 40: true, 41: true, 42: true,
-                44: true, 45: true, 47: true, 48: true, 50: true, 53: true,
-                55: true, 56: true, 57: true, 58: true, 60: true, 62: true
-        };
+function gfMultiply(x, y) {
+        var z = 0;
+
+        while (y !== 0) {
+                if ((y & 1) !== 0)
+                        z ^= x;
+
+                x <<= 1;
+                if ((x & 0x100) !== 0)
+                        x ^= 0x11d;
+
+                y >>>= 1;
+        }
+
+        return z;
+}
+
+function gfPow2(power) {
+        var value = 1;
+
+        while (power-- > 0)
+                value = gfMultiply(value, 2);
+
+        return value;
+}
+
+function reedSolomonGenerator(degree) {
+        var poly = [1];
+
+        for (var i = 0; i < degree; i++) {
+                var next = Array(poly.length + 1).fill(0);
+                var root = gfPow2(i);
+
+                for (var j = 0; j < poly.length; j++) {
+                        next[j] ^= poly[j];
+                        next[j + 1] ^= gfMultiply(poly[j], root);
+                }
+
+                poly = next;
+        }
+
+        return poly;
+}
+
+function reedSolomonRemainder(data, degree) {
+        var generator = reedSolomonGenerator(degree);
+        var message = data.concat(Array(degree).fill(0));
+
+        for (var i = 0; i < data.length; i++) {
+                var factor = message[i];
+
+                if (factor === 0)
+                        continue;
+
+                for (var j = 0; j < generator.length; j++)
+                        message[i + j] ^= gfMultiply(generator[j], factor);
+        }
+
+        return message.slice(data.length);
+}
+
+function appendBits(bits, value, length) {
+        for (var i = length - 1; i >= 0; i--)
+                bits.push((value >>> i) & 1);
+}
+
+function asciiBytes(text) {
+        return text.split('').map(function (char) {
+                return char.charCodeAt(0) & 0xff;
+        });
+}
+
+function makeQrCodewords(text) {
+        var dataCodewords = 80;
+        var bits = [];
+        var bytes = asciiBytes(text);
+        var codewords = [];
+
+        appendBits(bits, 0x4, 4);
+        appendBits(bits, bytes.length, 8);
+
+        bytes.forEach(function (value) {
+                appendBits(bits, value, 8);
+        });
+
+        appendBits(bits, 0, Math.min(4, dataCodewords * 8 - bits.length));
+
+        while (bits.length % 8 !== 0)
+                bits.push(0);
+
+        for (var i = 0; i < bits.length; i += 8) {
+                var value = 0;
+
+                for (var j = 0; j < 8; j++)
+                        value = (value << 1) | bits[i + j];
+
+                codewords.push(value);
+        }
+
+        for (var pad = 0; codewords.length < dataCodewords; pad++)
+                codewords.push(pad % 2 === 0 ? 0xec : 0x11);
+
+        return codewords.concat(reedSolomonRemainder(codewords, 20));
+}
+
+function createQrMatrix(text) {
+        var version = 4;
+        var size = version * 4 + 17;
+        var matrix = Array.from({ length: size }, function () { return Array(size).fill(false); });
+        var reserved = Array.from({ length: size }, function () { return Array(size).fill(false); });
+
+        function setModule(x, y, value, isReserved) {
+                if (x < 0 || y < 0 || x >= size || y >= size)
+                        return;
+
+                matrix[y][x] = value;
+                if (isReserved)
+                        reserved[y][x] = true;
+        }
+
+        function addFinder(x, y) {
+                for (var dy = -1; dy <= 7; dy++) {
+                        for (var dx = -1; dx <= 7; dx++) {
+                                var xx = x + dx;
+                                var yy = y + dy;
+                                var on = dx >= 0 && dx <= 6 && dy >= 0 && dy <= 6 &&
+                                        (dx === 0 || dx === 6 || dy === 0 || dy === 6 ||
+                                        (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4));
+
+                                setModule(xx, yy, on, true);
+                        }
+                }
+        }
+
+        function addAlignment(cx, cy) {
+                for (var dy = -2; dy <= 2; dy++) {
+                        for (var dx = -2; dx <= 2; dx++) {
+                                var distance = Math.max(Math.abs(dx), Math.abs(dy));
+                                setModule(cx + dx, cy + dy, distance !== 1, true);
+                        }
+                }
+        }
+
+        addFinder(0, 0);
+        addFinder(size - 7, 0);
+        addFinder(0, size - 7);
+        addAlignment(26, 26);
+
+        for (var i = 0; i < size; i++) {
+                if (!reserved[6][i])
+                        setModule(i, 6, i % 2 === 0, true);
+                if (!reserved[i][6])
+                        setModule(6, i, i % 2 === 0, true);
+        }
+
+        setModule(8, version * 4 + 9, true, true);
+
+        var formatBits = 0x77c4;
+        for (i = 0; i <= 5; i++)
+                setModule(8, i, ((formatBits >>> i) & 1) !== 0, true);
+        setModule(8, 7, ((formatBits >>> 6) & 1) !== 0, true);
+        setModule(8, 8, ((formatBits >>> 7) & 1) !== 0, true);
+        setModule(7, 8, ((formatBits >>> 8) & 1) !== 0, true);
+        for (i = 9; i < 15; i++)
+                setModule(14 - i, 8, ((formatBits >>> i) & 1) !== 0, true);
+        for (i = 0; i < 8; i++)
+                setModule(size - 1 - i, 8, ((formatBits >>> i) & 1) !== 0, true);
+        for (i = 8; i < 15; i++)
+                setModule(8, size - 15 + i, ((formatBits >>> i) & 1) !== 0, true);
+
+        var codewords = makeQrCodewords(text);
+        var bitIndex = 0;
+        var upward = true;
+
+        for (var right = size - 1; right >= 1; right -= 2) {
+                if (right === 6)
+                        right--;
+
+                for (var vert = 0; vert < size; vert++) {
+                        var y = upward ? size - 1 - vert : vert;
+
+                        for (var col = 0; col < 2; col++) {
+                                var x = right - col;
+
+                                if (reserved[y][x])
+                                        continue;
+
+                                var bit = false;
+                                if (bitIndex < codewords.length * 8)
+                                        bit = ((codewords[bitIndex >>> 3] >>> (7 - (bitIndex & 7))) & 1) !== 0;
+
+                                if ((x + y) % 2 === 0)
+                                        bit = !bit;
+
+                                setModule(x, y, bit, false);
+                                bitIndex++;
+                        }
+                }
+
+                upward = !upward;
+        }
+
+        return matrix;
+}
+
+function qrCode(text) {
+        var matrix = createQrMatrix(text);
 
         return E('div', { 'class': 'sf-qr', 'aria-label': T('Pairing') },
-                Array.from({ length: 64 }, function (_, index) {
-                        return E('span', { 'class': active[index] ? 'on' : '' });
-                }));
+                matrix.reduce(function (nodes, row) {
+                        row.forEach(function (on) {
+                                nodes.push(E('span', { 'class': on ? 'on' : '' }));
+                        });
+                        return nodes;
+                }, []));
 }
 
 function settingLine(label, value) {
@@ -309,11 +520,13 @@ function settingLine(label, value) {
 function showPairingModal(device) {
         var routerAddress = '192.168.1.1';
         var apiUrl = 'http://' + routerAddress + '/sheepfold/api';
+        var pairingPayload = 'SF1|h=' + routerAddress + '|api=/sf|u=' +
+                (device.adminLogin || 'owner') + '|c=' + (device.pairingCode || 'SF-PAIR-0000') + '|ttl=600';
 
         ui.showModal(T('Pairing settings'), [
                 E('div', { 'class': 'sf-modal-pairing' }, [
                         E('div', { 'class': 'sf-qr-wrap' }, [
-                                qrPlaceholder(),
+                                qrCode(pairingPayload),
                                 E('p', {}, T('Scan this QR code with the Android app to connect it to this router.')),
                                 E('small', {}, T('The QR code must contain a short-lived one-time token, not the router root password.'))
                         ]),
@@ -321,11 +534,12 @@ function showPairingModal(device) {
                                 E('h4', {}, T('Manual setup')),
                                 settingLine(T('Router address'), routerAddress),
                                 settingLine(T('Sheepfold API URL'), apiUrl),
-                                settingLine(T('Administrator login'), device.adminOwner || 'owner'),
+                                settingLine(T('Administrator login'), device.adminLogin || 'owner'),
                                 settingLine(T('Pairing code'), device.pairingCode || 'SF-PAIR-0000'),
                                 settingLine(T('Token lifetime'), T('10 minutes')),
+                                settingLine(T('QR payload'), pairingPayload),
                                 settingLine(T('Wi-Fi MAC check'), T('Use the real device MAC for this home Wi-Fi network.')),
-                                E('div', { 'class': 'sf-note' }, T('Android should detect randomized MAC and guide the parent to Wi-Fi settings; automatic switching must not be promised.'))
+                                E('div', { 'class': 'sf-note sf-note-warning' }, T('Android must require the real device MAC for this home Wi-Fi network before continuing setup.'))
                         ])
                 ]),
                 E('div', { 'class': 'right' }, [
@@ -431,6 +645,21 @@ return view.extend({
                                 }
                         }, tab[1]);
                 }));
+        },
+
+        renderRootPasswordStatus: function () {
+                return E('div', {
+                        'class': 'sf-note ' + (rootPasswordIsSet ? 'sf-note-ok' : 'sf-note-danger')
+                }, [
+                        E('strong', {}, T('Router root password check')),
+                        E('span', {}, rootPasswordIsSet ?
+                                T('Root password is set. Sheepfold settings can be opened.') :
+                                T('Root password is not set. Sheepfold settings must stay locked until the router password is configured.')),
+                        rootPasswordIsSet ? '' : E('a', {
+                                'class': 'sf-inline-link',
+                                'href': L.url('admin/system/admin')
+                        }, T('Open router password page'))
+                ]);
         },
 
         renderDevices: function () {
@@ -742,29 +971,40 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-6';
+                var assetVersion = '0.1.0-7';
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
+                var header = E('div', { 'class': 'sf-header' }, [
+                        E('div', {}, [
+                                E('h2', {}, T('Sheepfold Family Internet Control')),
+                                E('p', {}, T('Visual test build. Router rules and persistence are not active yet.'))
+                        ]),
+                        E('div', { 'class': 'sf-header-actions' }, [
+                                actionButton(T('Save'), 'positive', T('Save changes. This visual build does not use a separate Apply button.')),
+                                actionButton(T('Block internet'), 'danger', T('Global block would block every device except allowlist.')),
+                                actionButton(T('Unblock'), 'positive', T('Global block would be disabled after confirmation.')),
+                                actionButton(T('Export'), 'neutral', T('Default export is readable JSON without secrets.')),
+                                actionButton(T('Import'), 'neutral', T('Import requires confirmation.'))
+                        ])
+                ]);
+
+                if (!rootPasswordIsSet) {
+                        return E('div', { 'class': 'sf-page' }, [
+                                E('link', { 'rel': 'stylesheet', 'href': cssHref }),
+                                header,
+                                this.renderRootPasswordStatus()
+                        ]);
+                }
 
                 return E('div', { 'class': 'sf-page' }, [
                         E('link', { 'rel': 'stylesheet', 'href': cssHref }),
-                        E('div', { 'class': 'sf-header' }, [
-                                E('div', {}, [
-                                        E('h2', {}, T('Sheepfold Family Internet Control')),
-                                        E('p', {}, T('Visual test build. Router rules and persistence are not active yet.'))
-                                ]),
-                                E('div', { 'class': 'sf-header-actions' }, [
-                                        actionButton(T('Block internet'), 'danger', T('Global block would block every device except allowlist.')),
-                                        actionButton(T('Unblock'), 'positive', T('Global block would be disabled after confirmation.')),
-                                        actionButton(T('Export'), 'neutral', T('Default export is readable JSON without secrets.')),
-                                        actionButton(T('Import'), 'neutral', T('Import requires confirmation.'))
-                                ])
-                        ]),
+                        header,
                         E('div', { 'class': 'sf-metrics' }, [
                                 metric(T('Devices'), '5', 'neutral'),
                                 metric(T('Allowlist'), '1', 'positive'),
                                 metric(T('Restricted'), '2', 'warning'),
                                 metric(T('Blocklist'), '1', 'danger')
                         ]),
+                        this.renderRootPasswordStatus(),
                         this.renderTabs(),
                         E('div', { 'class': 'sf-panels' }, this.renderPanels())
                 ]);

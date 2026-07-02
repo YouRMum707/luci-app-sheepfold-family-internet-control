@@ -3,6 +3,7 @@
 ## Principles
 
 - Do not store the router root password in the Android app.
+- Do not allow Sheepfold setup to continue when the OpenWRT root password is empty/not configured.
 - Use API tokens or session-based authentication.
 - Restrict management API access to the local network by default.
 - Sheepfold is a family self-hosted tool by default; do not require a developer-operated cloud service.
@@ -58,7 +59,7 @@ Pairing rules:
 - manual setup text next to QR should show only the minimum required connection settings;
 - pairing attempts and successful pairings must be written to the administrative action log with masking.
 
-During Android first setup, the app should check whether the phone is visible to the router under the MAC address Sheepfold will manage. If randomized/private MAC is enabled for the home Wi-Fi network, the app should guide the parent to system Wi-Fi settings instead of promising automatic changes.
+During Android first setup, the app should check whether the phone is visible to the router under the real device MAC address Sheepfold will manage. If randomized/private MAC is enabled for the home Wi-Fi network, the app should guide the parent to system Wi-Fi settings instead of promising automatic changes. Pairing must not continue until router-side data confirms the real MAC for the selected admin device.
 
 Administrative action logs should record:
 
