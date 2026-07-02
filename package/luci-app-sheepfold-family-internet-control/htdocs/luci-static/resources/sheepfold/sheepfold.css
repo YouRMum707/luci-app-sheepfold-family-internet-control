@@ -9,6 +9,7 @@
         --sf-yellow: #9a6700;
         --sf-blue: #2563eb;
         color: var(--sf-ink);
+        display: block;
 }
 
 .sf-header,
@@ -55,14 +56,37 @@
 
 .sf-action {
         min-height: 32px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #1f2937;
+        cursor: pointer;
+        padding: 7px 12px;
+        line-height: 1.2;
 }
 
 .sf-action-danger {
         border-color: #f0b8b2;
+        color: #7f1d1d;
 }
 
 .sf-action-positive {
         border-color: #a7d8bd;
+        color: #14532d;
+}
+
+.sf-action-neutral {
+        border-color: #cbd5e1;
+}
+
+.sf-header-actions .sf-action {
+        background: #202124;
+        border-color: #3b414a;
+        color: #ffffff;
+}
+
+.sf-header-actions .sf-action-danger {
+        border-color: #f0b8b2;
 }
 
 .sf-metrics {
@@ -111,6 +135,7 @@
 .sf-tab {
         border: 1px solid var(--sf-border);
         background: #fff;
+        color: #263141;
         border-radius: 8px;
         padding: 8px 10px;
         white-space: nowrap;
@@ -171,11 +196,6 @@
         min-width: 240px;
 }
 
-.sf-table {
-        width: 100%;
-        overflow-x: auto;
-}
-
 .sf-device-name {
         display: grid;
         gap: 3px;
@@ -184,6 +204,35 @@
 .sf-mono {
         font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
         font-size: 12px;
+}
+
+.sf-device-table {
+        border: 1px solid var(--sf-border);
+        border-radius: 8px;
+        overflow-x: auto;
+}
+
+.sf-device-row {
+        display: grid;
+        grid-template-columns: minmax(190px, 1.5fr) minmax(110px, 0.8fr) minmax(150px, 1fr) minmax(120px, 0.8fr) minmax(110px, 0.8fr) minmax(170px, 1fr);
+        gap: 12px;
+        align-items: center;
+        min-width: 860px;
+        padding: 11px 12px;
+        border-top: 1px solid var(--sf-border);
+        background: #ffffff;
+}
+
+.sf-device-row:first-child {
+        border-top: 0;
+}
+
+.sf-device-head {
+        background: #f8fafc;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
 }
 
 .sf-badge {
@@ -243,6 +292,12 @@
 
 .sf-chip {
         min-width: 62px;
+        border: 1px solid var(--sf-border);
+        border-radius: 6px;
+        background: #ffffff;
+        color: #1f2937;
+        cursor: pointer;
+        padding: 7px 9px;
 }
 
 .sf-command-list {

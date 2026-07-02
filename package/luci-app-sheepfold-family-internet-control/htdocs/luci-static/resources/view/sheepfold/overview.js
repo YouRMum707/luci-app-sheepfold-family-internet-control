@@ -93,7 +93,7 @@ function metric(label, value, tone) {
 
 function actionButton(label, tone, message) {
         return E('button', {
-                'class': 'btn cbi-button sf-action sf-action-' + tone,
+                'class': 'sf-action sf-action-' + tone,
                 'click': function (ev) {
                         ev.preventDefault();
                         notify(message || _('This action is a visual prototype only.'), tone === 'danger' ? 'warning' : 'info');
@@ -104,32 +104,33 @@ function actionButton(label, tone, message) {
 function deviceTable(rows, options) {
         options = options || {};
 
-        return E('div', { 'class': 'table cbi-section-table sf-table' }, [
-                E('div', { 'class': 'tr table-titles' }, [
-                        E('div', { 'class': 'th' }, _('Device')),
-                        E('div', { 'class': 'th' }, _('IP address')),
-                        E('div', { 'class': 'th' }, _('MAC address')),
-                        E('div', { 'class': 'th' }, _('Group')),
-                        E('div', { 'class': 'th' }, _('Status')),
-                        E('div', { 'class': 'th' }, _('Actions'))
-                ]),
-                rows.map(function (device) {
-                        return E('div', { 'class': 'tr' }, [
-                                E('div', { 'class': 'td sf-device-name' }, [
+        var tableRows = rows.map(function (device) {
+                return E('div', { 'class': 'sf-device-row' }, [
+                        E('div', { 'class': 'sf-device-name' }, [
                                         E('strong', {}, device.name),
                                         E('small', {}, device.note)
-                                ]),
-                                E('div', { 'class': 'td' }, device.ip),
-                                E('div', { 'class': 'td sf-mono' }, device.mac),
-                                E('div', { 'class': 'td' }, device.group),
-                                E('div', { 'class': 'td' }, badge(device.status)),
-                                E('div', { 'class': 'td sf-row-actions' }, [
-                                        actionButton(_('Configure'), 'neutral', _('Device editor is not implemented in this visual test build.')),
-                                        options.compact ? '' : actionButton(_('+30 min'), 'positive', _('Temporary access would require confirmation.'))
-                                ])
-                        ]);
-                })
-        ]);
+                        ]),
+                        E('div', {}, device.ip),
+                        E('div', { 'class': 'sf-mono' }, device.mac),
+                        E('div', {}, device.group),
+                        E('div', {}, badge(device.status)),
+                        E('div', { 'class': 'sf-row-actions' }, [
+                                actionButton(_('Configure'), 'neutral', _('Device editor is not implemented in this visual test build.')),
+                                options.compact ? '' : actionButton(_('+30 min'), 'positive', _('Temporary access would require confirmation.'))
+                        ])
+                ]);
+        });
+
+        return E('div', { 'class': 'sf-device-table' }, [
+                E('div', { 'class': 'sf-device-row sf-device-head' }, [
+                        E('div', {}, _('Device')),
+                        E('div', {}, _('IP address')),
+                        E('div', {}, _('MAC address')),
+                        E('div', {}, _('Group')),
+                        E('div', {}, _('Status')),
+                        E('div', {}, _('Actions'))
+                ])
+        ].concat(tableRows));
 }
 
 function field(label, value, hint) {
@@ -249,7 +250,7 @@ return view.extend({
                                                 '+15', '+30', '+1h', '+2h', '+3h', '+5h', _('End of day'), _('Bedtime')
                                         ].map(function (label) {
                                                 return E('button', {
-                                                'class': 'btn cbi-button sf-chip',
+                                                'class': 'sf-chip',
                                                         'click': function (ev) {
                                                                 ev.preventDefault();
                                                                 notify(_('Temporary access requires confirmation.'), 'info');
@@ -455,10 +456,10 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-3';
+                var assetVersion = '0.1.0-4';
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
 
-                return E('div', { 'class': 'cbi-map sf-page' }, [
+                return E('div', { 'class': 'sf-page' }, [
                         E('link', { 'rel': 'stylesheet', 'href': cssHref }),
                         E('div', { 'class': 'sf-header' }, [
                                 E('div', {}, [
