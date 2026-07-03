@@ -111,8 +111,8 @@ var translations = {
         'This action is a visual prototype only.': 'Это действие работает только как визуальная заглушка.',
         'Configure': 'Настроить',
         'Device editor is not implemented in this visual test build.': 'Редактор устройства не реализован в этой визуальной тестовой сборке.',
-        'Make admin device': 'Сделать админским',
-        'Choose which administrator owns this device before enabling admin pairing.': 'Перед включением админского устройства нужно выбрать, какому администратору оно принадлежит.',
+        'Bind devices': 'Привязать устройства',
+        'Administrator device binding is not implemented in this visual test build.': 'Привязка устройств администратора пока не реализована в этой визуальной сборке.',
         'Admin device': 'Админское устройство',
         'Owner': 'Владелец',
         'Pairing': 'Сопряжение',
@@ -848,7 +848,6 @@ function deviceTable(rows, options) {
                         E('div', {}, badge(device.status)),
                         E('div', { 'class': 'sf-row-actions' }, [
                                 actionButton(T('Configure'), 'neutral', T('Device editor is not implemented in this visual test build.')),
-                                device.adminDevice ? pairingButton(device) : actionButton(T('Make admin device'), 'neutral', T('Choose which administrator owns this device before enabling admin pairing.')),
                                 options.compact ? '' : actionButton(T('+30 min'), 'positive', T('Temporary access would require confirmation.'))
                         ])
                 ]);
@@ -904,6 +903,10 @@ function iconSvg(name) {
                         'M14 11v6',
                         'M6 7l1 14h10l1-14',
                         'M9 7V4h6v3'
+                ],
+                link: [
+                        'M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1',
+                        'M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1'
                 ]
         };
 
@@ -922,6 +925,18 @@ function iconButton(title, icon, tone, handler) {
                         handler();
                 }
         }, iconSvg(icon));
+}
+
+function faIconButton(title, iconClass, icon, tone, handler) {
+        return E('button', {
+                'class': 'sf-icon-action sf-icon-action-' + tone,
+                'title': title,
+                'aria-label': title,
+                'click': function (ev) {
+                        ev.preventDefault();
+                        handler();
+                }
+        }, E('i', { 'class': iconClass, 'aria-hidden': 'true' }, iconSvg(icon)));
 }
 
 function wifiQrEscape(value) {
@@ -1411,7 +1426,12 @@ return view.extend({
                                         E('div', {}, admin.role === 'owner' ? T('Owner') : T('Admin')),
                                         E('div', {}, admin.devices),
                                         E('div', { 'class': 'sf-row-actions' }, [
-                                                actionButton(T('Configure'), 'neutral', T('This action is a visual prototype only.'))
+                                                iconButton(T('Configure'), 'gear', 'neutral', function () {
+                                                        notify(T('This action is a visual prototype only.'), 'info');
+                                                }),
+                                                faIconButton(T('Bind devices'), 'fa-solid fa-link', 'link', 'neutral', function () {
+                                                        notify(T('Administrator device binding is not implemented in this visual test build.'), 'info');
+                                                })
                                         ])
                                 ]);
                         })))
@@ -1514,7 +1534,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-15';
+                var assetVersion = '0.1.0-17';
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
                 var header = E('div', { 'class': 'sf-header' }, [
                         E('div', {}, [
@@ -1522,10 +1542,8 @@ return view.extend({
                                 E('p', {}, T('Visual test build. Router rules and persistence are not active yet.'))
                         ]),
                         E('div', { 'class': 'sf-header-actions' }, [
-                                actionButton(T('Block internet'), 'danger', T('Global block would block every device except allowlist.')),
                                 actionButton(T('Unblock internet'), 'positive', T('Global block would be disabled after confirmation.')),
-                                actionButton(T('Export'), 'neutral', T('Default export is readable JSON without secrets.')),
-                                actionButton(T('Import'), 'neutral', T('Import requires confirmation.'))
+                                actionButton(T('Block internet'), 'danger', T('Global block would block every device except allowlist.'))
                         ])
                 ]);
 
