@@ -5,19 +5,21 @@ These rules apply to the whole repository.
 ## Project Naming
 
 - Use `Sheepfold` as the main project and product name in English and Russian text.
-- Use `Овчарня` only when referring to the Android app name or the Russian LuCI display name.
-- Do not use `Овчарня` as the generic Russian name for the whole project outside direct app/interface naming.
+- Use `Овчарня` only when referring to the Android app name.
+- In LuCI Russian UI headings, keep the product word in English: `Sheepfold`. Do not write `Овчарня` in the LuCI header.
+- Do not use `Овчарня` as the generic Russian name for the whole project outside direct Android app naming.
 
 Correct examples:
 
 - `Sheepfold — система семейного управления доступом...`
 - `Android-приложение: Овчарня`
-- `LuCI RU: Овчарня : контроль доступа в интернет для семьи`
+- `LuCI RU: Sheepfold : контроль доступа в интернет для семьи`
 
 Avoid:
 
 - `Овчарня — система...`
 - `Если Овчарня окажется полезной...`
+- `Овчарня : контроль доступа в интернет для семьи` in the LuCI header
 
 ## User-Facing Wording
 
@@ -26,12 +28,14 @@ Avoid:
 - Keep README files approachable for non-developers.
 - Keep user-facing strings localizable. Do not hardcode menu labels, validation messages, or bot replies when a localization resource should be used.
 - In Sheepfold LuCI, prefer one clear `Save` / `Сохранить` action. Do not expose separate `Apply` and `Save` actions unless OpenWRT internals force it; if both exist technically, hide or merge `Apply` in the Sheepfold UI so parents are not asked to understand the distinction.
+- In Sheepfold LuCI, keep `All devices`, `Allowlist`, and `Blocklist` as nested tabs inside the top-level `User lists` / `Списки пользователей` tab. `All devices` must be the default nested tab.
 
 ## README Layout
 
 - Keep installation, update, and uninstall instructions near the top of both `README.md` and `README.ru.md`, before long product explanations.
 - Keep the English and Russian README files structurally similar where practical.
 - Keep `install.sh`, `update.sh`, and `uninstall.sh` suitable for running directly on an OpenWRT router.
+- Test `.ipk` packages must be opkg-compatible `ar` archives containing `debian-binary`, `control.tar.gz`, and `data.tar.gz`; do not publish a gzip/tar archive under an `.ipk` filename.
 - The uninstall command must remove the package without clearing Sheepfold client lists or user settings, then print a report of remaining router settings that may require manual cleanup.
 - When changing installation, update, or uninstall commands, update both README files and `docs/github-install-setup.md` if relevant.
 
@@ -190,6 +194,7 @@ Avoid:
 - Use a Podkop-like structure for the real LuCI implementation: a small entrypoint with `form.Map("sheepfold")`, `tabbed = true`, and separate modules for devices, allowlist, blocklist, schedules, emergency-useful sites, Wi-Fi, integrations, messaging, logs, diagnostics, and settings.
 - Podkop is the implementation style reference for LuCI structure, backend JSON methods, diagnostics, ACL discipline, install/update flow, and cache handling. Do not copy Podkop routing/sing-box responsibilities into Sheepfold.
 - Keep the visual prototype separate from the future production architecture; do not keep growing one huge `overview.js`.
+- In the family-facing LuCI navigation, keep `Emergency-useful sites`, `Integrations`, and `Messenger` inside the `Settings` page. The current settings content belongs under a `General` subtab, and import/export/update/reboot actions belong under a `Misc` subtab.
 - LuCI must call a narrow backend command/API layer such as `/usr/bin/sheepfold <method>` instead of building arbitrary shell commands.
 - rpcd ACL must explicitly allow only the Sheepfold files, UCI configs, ubus objects, and executable commands required by the UI.
 - Put diagnostics in a dedicated tab and return structured JSON for checks.
@@ -211,8 +216,10 @@ Avoid:
 
 - The LuCI setting is `Use together with` / `Использование совместно с`.
 - Supported integration modes are `none`, `adguard`, `podkop`, and `adguard_podkop`.
+- Keep this setting: it defines the Sheepfold compatibility plan for DNS/routing diagnostics and safe apply-time behavior, not merely whether third-party packages are installed.
 - Do not model AdGuard Home and Podkop as mutually exclusive; they can be used together.
 - The installer must detect existing AdGuard Home and Podkop installations and choose the matching Sheepfold `integration_mode`.
+- LuCI should show AdGuard Home status through its local API when credentials are configured. For Podkop, use conservative local package/service/config detection until a stable Sheepfold-facing API exists.
 - Show integration-specific notes before applying changes.
 - Automatic router changes require explicit confirmation and should create/export a backup first.
 - Automatic install-time changes may write only Sheepfold-owned UCI options unless the user explicitly confirms broader router changes.

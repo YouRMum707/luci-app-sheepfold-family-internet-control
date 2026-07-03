@@ -57,7 +57,12 @@ printf '2.0\n' > "$BUILD_DIR/debian-binary"
 
 (
         cd "$BUILD_DIR"
-        tar --owner=0 --group=0 -czf "$IPK" ./debian-binary ./data.tar.gz ./control.tar.gz
+        command -v ar >/dev/null 2>&1 || {
+                echo "error: ar is required to build an opkg-compatible .ipk archive" >&2
+                exit 1
+        }
+        rm -f "$IPK"
+        ar r "$IPK" ./debian-binary ./control.tar.gz ./data.tar.gz >/dev/null
 )
 
 echo "$IPK"

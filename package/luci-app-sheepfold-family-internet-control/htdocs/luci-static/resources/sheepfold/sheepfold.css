@@ -94,7 +94,15 @@
 }
 
 .sf-header-actions .sf-action-danger {
-        border-color: #f0b8b2;
+        background: var(--sf-red);
+        border-color: var(--sf-red);
+        color: #ffffff;
+}
+
+.sf-header-actions .sf-action-positive {
+        background: var(--sf-green);
+        border-color: var(--sf-green);
+        color: #ffffff;
 }
 
 .sf-metrics {
@@ -464,6 +472,56 @@
         background: #111827;
 }
 
+.sf-wifi-network {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto;
+        gap: 18px;
+        align-items: start;
+}
+
+.sf-wifi-qr {
+        display: grid;
+        gap: 8px;
+        justify-items: center;
+}
+
+.sf-wifi-qr .sf-qr {
+        width: 132px;
+        height: 132px;
+        padding: 10px;
+}
+
+.sf-wifi-qr h4,
+.sf-wifi-qr small {
+        margin: 0;
+        text-align: center;
+}
+
+.sf-settings-tabs {
+        margin-bottom: 14px;
+}
+
+.sf-settings-panel[hidden] {
+        display: none !important;
+}
+
+.sf-settings-section {
+        display: grid;
+        gap: 14px;
+}
+
+.sf-status-card {
+        border-width: 2px;
+}
+
+.sf-status-warning {
+        border-color: #f59e0b;
+}
+
+.sf-status-ok {
+        border-color: #059669;
+}
+
 .sf-manual-settings h4 {
         margin-top: 0;
 }
@@ -557,7 +615,7 @@
         color: var(--sf-muted);
 }
 
-.cbi-page-actions .cbi-button-apply {
+.cbi-page-actions {
         display: none !important;
 }
 
@@ -575,6 +633,10 @@
 
         .sf-modal-pairing,
         .sf-modal-quick {
+                grid-template-columns: 1fr;
+        }
+
+        .sf-wifi-network {
                 grid-template-columns: 1fr;
         }
 

@@ -69,5 +69,5 @@ Do not translate:
 ## Naming Notes
 
 - Use `Sheepfold` as the project name in every language.
-- Use `Овчарня` only as the Android app name and Russian LuCI display name.
+- Use `Овчарня` only as the Android app name. Russian LuCI UI keeps the product word as `Sheepfold`.
 - The feature `Доступ к аварийно-полезным сайтам` should be translated by meaning, not word-for-word, for each language.

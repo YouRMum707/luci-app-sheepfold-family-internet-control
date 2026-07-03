@@ -5,7 +5,7 @@
 - GitHub repository: `luci-app-sheepfold-family-internet-control`
 - OpenWRT package: `luci-app-sheepfold-family-internet-control`
 - LuCI EN: `Sheepfold Family Internet Control`
-- LuCI RU: `Овчарня : контроль доступа в интернет для семьи`
+- LuCI RU: `Sheepfold : контроль доступа в интернет для семьи`
 - Android app: `Овчарня`
 - Android package: `app.sheepfold.android`
 
@@ -21,6 +21,7 @@
 - Device allowlist.
 - Device blocklist.
 - Automatically discovered devices.
+- LuCI user lists navigation: one top-level `User lists` / `Списки пользователей` tab with nested `All devices`, `Allowlist`, and `Blocklist`; `All devices` is the default nested tab.
 - Search by MAC, current IP, hostname, and custom name.
 - Device groups: children, parents, TVs/media devices, guests/custom.
 - DHCP static lease synchronization.
@@ -53,7 +54,7 @@ Requirements:
 - planned generated languages: Spanish, German, French, Portuguese (Brazil), Italian, Polish, Turkish, Ukrainian, Chinese Simplified, Japanese, Korean, Arabic, Hindi, Indonesian, and Vietnamese;
 - keep terminology consistent:
   - `Sheepfold` as the project name;
-  - `Овчарня` only for the Android app name and Russian LuCI display name;
+  - `Овчарня` only for the Android app name; LuCI Russian UI keeps the product word as `Sheepfold`;
   - `Доступ к аварийно-полезным сайтам` / `Access to emergency-useful sites` for the restricted-domain feature.
 
 ## Country Profiles

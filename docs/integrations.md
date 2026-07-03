@@ -46,6 +46,15 @@ When the user selects an integration mode, LuCI should show integration-specific
 
 Automatic router changes are allowed only after explicit confirmation.
 
+This setting is needed. It is not a cosmetic label and it must not simply mean "AdGuard/Podkop is installed". It controls the compatibility plan Sheepfold should use when preparing firewall, DNS, domain allowlist, diagnostics, and troubleshooting notes.
+
+Without this setting, Sheepfold cannot safely decide whether to:
+
+- leave DNS/routing alone;
+- expect AdGuard Home to be the DNS filtering layer after Sheepfold's device decision;
+- avoid Podkop-managed routing/Dnsmasq/nftables/sing-box state;
+- show the correct diagnostics when domain allowlisting or emergency-useful access does not work as expected.
+
 Suggested confirmation copy:
 
 ```text
@@ -88,6 +97,16 @@ Allowed automatic actions after confirmation:
 - enable integration flags in Sheepfold config;
 - show commands/changes that still require manual action.
 
+Suggested apply-time skeleton:
+
+1. Read selected `integration_mode`.
+2. Run detection checks for AdGuard Home, Podkop, Dnsmasq, firewall4/nftables, and Sheepfold-owned chains/sets.
+3. Show a planned-changes preview in LuCI.
+4. Create/export a Sheepfold backup before applying.
+5. Apply only Sheepfold-owned UCI options and Sheepfold-owned firewall/nftables state automatically.
+6. Mark checks that need manual action instead of silently changing third-party configs.
+7. Log the administrator, selected mode, checks, planned changes, result, and warnings with secrets masked.
+
 Avoid automatic destructive changes:
 
 - do not overwrite AdGuard Home config blindly;
@@ -109,6 +128,17 @@ Possible integration points:
 - map AdGuard clients to Sheepfold devices by IP/MAC/name;
 - expose integration status in LuCI;
 - avoid taking over DNS rules in a way that breaks AdGuard Home.
+
+LuCI should display AdGuard Home status when this mode is selected or detected:
+
+- installed/not detected;
+- service running/stopped when this can be checked locally;
+- API reachable/not reachable;
+- version if the API returns it;
+- last check time;
+- whether credentials/API endpoint are configured in Sheepfold.
+
+Use the local AdGuard Home API only when credentials are configured by the parent/admin. Do not store or display the full password/token in logs or exports.
 
 LuCI notes for this mode:
 
@@ -133,6 +163,14 @@ LuCI notes for this mode:
 - Sheepfold must avoid modifying Podkop-managed Dnsmasq, nftables, sing-box, or routing state.
 - If Podkop is installed but disabled, show a warning.
 - If Podkop is not detected, do not enable Podkop compatibility silently.
+
+Podkop currently should be treated as "local package/service/config detection" unless a stable Sheepfold-facing API appears later. LuCI status should therefore be conservative:
+
+- package/config detected or not detected;
+- service enabled/running if available through init/service state;
+- compatibility mode selected;
+- warning when Podkop is selected but not detected;
+- warning that Sheepfold must not overwrite Podkop-managed routing, Dnsmasq, nftables, or sing-box state.
 
 Useful external references:
 

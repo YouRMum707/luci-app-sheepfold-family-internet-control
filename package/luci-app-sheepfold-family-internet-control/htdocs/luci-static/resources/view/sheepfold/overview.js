@@ -1,6 +1,7 @@
 'use strict';
 'require view';
 'require ui';
+'require uci';
 
 var devices = [
         {
@@ -92,6 +93,7 @@ var rootPasswordIsSet = true;
 
 var translations = {
         'All devices': 'Все устройства',
+        'User lists': 'Списки пользователей',
         'Allowlist': 'Белый список',
         'Blocklist': 'Чёрный список',
         'Schedules': 'Расписания',
@@ -102,6 +104,7 @@ var translations = {
         'Administrators': 'Администраторы',
         'Logs': 'Журнал',
         'Settings': 'Настройки',
+        'Misc': 'Разное',
         'Scheduled': 'По расписанию',
         'Restricted': 'Ограничено',
         'New': 'Новое',
@@ -177,8 +180,12 @@ var translations = {
         'Domain editor is not implemented in this visual test build.': 'Редактор доменов пока не реализован в этой визуальной сборке.',
         'Do not add broad yandex.ru by default: it can open video, music, games, feeds, and other non-emergency services.': 'Не добавляйте широкий yandex.ru по умолчанию: он может открыть видео, музыку, игры, ленты и другие неаварийные сервисы.',
         'Family-facing shortcut for common OpenWRT wireless settings.': 'Упрощённый семейный доступ к основным настройкам Wi-Fi OpenWRT.',
-        'Apply Wi-Fi changes': 'Применить Wi-Fi',
-        'Wi-Fi changes can disconnect current users and require confirmation.': 'Изменения Wi-Fi могут отключить текущих пользователей и требуют подтверждения.',
+        'Connect QR': 'QR подключения',
+        'Scan to connect to this Wi-Fi network.': 'Отсканируйте для подключения к этой Wi-Fi сети.',
+        'Real router wireless settings are loaded from OpenWRT UCI.': 'Реальные настройки Wi-Fi загружаются из OpenWRT UCI.',
+        'No active Wi-Fi networks were found in the router wireless config.': 'В конфигурации wireless роутера не найдены активные Wi-Fi сети.',
+        'Network': 'Сеть',
+        'Open network': 'Открытая сеть',
         'SSID': 'SSID',
         'Password': 'Пароль',
         'Security': 'Защита',
@@ -188,6 +195,18 @@ var translations = {
         'None': 'Нет',
         'Traffic order: Sheepfold -> AdGuard Home -> Podkop.': 'Порядок трафика: Sheepfold -> AdGuard Home -> Podkop.',
         'Automatic router changes must show integration-specific notes and create/export a backup before applying.': 'Автоматические изменения роутера должны показывать нюансы интеграции и создавать/экспортировать резервную копию перед применением.',
+        'Integration status': 'Статус интеграций',
+        'AdGuard Home status': 'Статус AdGuard Home',
+        'AdGuard Home API check should use the local AdGuard Home API when credentials are configured.': 'Проверка API AdGuard Home должна использовать локальный API AdGuard Home, когда учётные данные настроены.',
+        'Podkop status': 'Статус Podkop',
+        'Podkop has no stable Sheepfold-facing API yet; detect package/service state and show conservative notes.': 'У Podkop пока нет стабильного API для Sheepfold; определяйте пакет/службу и показывайте осторожные подсказки.',
+        'Prepare integration settings': 'Подготовить настройки интеграции',
+        'Integration setup must show planned changes, create an export, and require confirmation before applying.': 'Настройка интеграции должна показать план изменений, создать экспорт и потребовать подтверждение перед применением.',
+        'Mode notes': 'Нюансы режима',
+        'Sheepfold works alone.': 'Sheepfold работает самостоятельно.',
+        'Sheepfold blocks/allows devices before AdGuard Home DNS filtering.': 'Sheepfold разрешает/блокирует устройства до DNS-фильтрации AdGuard Home.',
+        'Sheepfold must not overwrite Podkop-managed routing, Dnsmasq, nftables, or sing-box state.': 'Sheepfold не должен перезаписывать маршрутизацию, Dnsmasq, nftables или sing-box, которыми управляет Podkop.',
+        'Recommended chain: Sheepfold -> AdGuard Home -> Podkop.': 'Рекомендуемая цепочка: Sheepfold -> AdGuard Home -> Podkop.',
         'Active messenger': 'Активный мессенджер',
         'Disabled': 'Выключено',
         'MAX experimental': 'MAX экспериментально',
@@ -231,6 +250,7 @@ var translations = {
         '90 days': '90 дней',
         '180 days': '180 дней',
         'Export and update': 'Экспорт и обновление',
+        'Import and export': 'Импорт и экспорт',
         'Export mode': 'Режим экспорта',
         'Readable JSON without secrets': 'Читаемый JSON без секретов',
         'Encrypted full backup': 'Зашифрованный полный бэкап',
@@ -240,11 +260,11 @@ var translations = {
         'Application update requires confirmation.': 'Обновление приложения требует подтверждения.',
         'Reboot router': 'Перезагрузить роутер',
         'Router reboot requires confirmation.': 'Перезагрузка роутера требует подтверждения.',
-        'Sheepfold Family Internet Control': 'Овчарня : контроль доступа в интернет для семьи',
+        'Sheepfold Family Internet Control': 'Sheepfold : контроль доступа в интернет для семьи',
         'Visual test build. Router rules and persistence are not active yet.': 'Визуальная тестовая сборка. Правила роутера и сохранение настроек пока не активны.',
         'Block internet': 'Выключить интернет',
         'Global block would block every device except allowlist.': 'Глобальная блокировка заблокирует все устройства, кроме белого списка.',
-        'Unblock': 'Включить',
+        'Unblock internet': 'Включить интернет',
         'Global block would be disabled after confirmation.': 'Глобальная блокировка будет выключена после подтверждения.',
         'Export': 'Экспорт',
         'Default export is readable JSON without secrets.': 'Экспорт по умолчанию — читаемый JSON без секретов.',
@@ -254,7 +274,6 @@ var translations = {
         'Save': 'Сохранить',
         'Save changes. This visual build does not use a separate Apply button.': 'Сохранить изменения. В этой визуальной сборке отдельная кнопка "Применить" не используется.',
         'Router root password check': 'Проверка root-пароля роутера',
-        'Root password is set. Sheepfold settings can be opened.': 'Root-пароль задан. Настройки Sheepfold можно открывать.',
         'Root password is not set. Sheepfold settings must stay locked until the router password is configured.': 'Root-пароль не задан. Настройки Sheepfold должны быть заблокированы до установки пароля роутера.',
         'Open router password page': 'Открыть страницу пароля роутера'
 };
@@ -264,17 +283,26 @@ function T(text) {
 }
 
 var tabs = [
-        ['devices', T('All devices')],
-        ['allowlist', T('Allowlist')],
-        ['blocklist', T('Blocklist')],
+        ['users', T('User lists')],
         ['schedules', T('Schedules')],
-        ['emergency', T('Emergency-useful sites')],
         ['wifi', T('Wi-Fi')],
-        ['integrations', T('Integrations')],
         ['admins', T('Administrators')],
-        ['bot', T('Messenger')],
         ['logs', T('Logs')],
         ['settings', T('Settings')]
+];
+
+var settingsTabs = [
+        ['general', T('General')],
+        ['integrations', T('Integrations')],
+        ['messenger', T('Messenger')],
+        ['emergency', T('Emergency-useful sites')],
+        ['misc', T('Misc')]
+];
+
+var userListTabs = [
+        ['devices', T('All devices')],
+        ['allowlist', T('Allowlist')],
+        ['blocklist', T('Blocklist')]
 ];
 
 function notify(message, level) {
@@ -386,8 +414,11 @@ function appendBits(bits, value, length) {
                 bits.push((value >>> i) & 1);
 }
 
-function asciiBytes(text) {
-        return text.split('').map(function (char) {
+function utf8Bytes(text) {
+        if (window.TextEncoder)
+                return Array.prototype.slice.call(new TextEncoder().encode(text));
+
+        return unescape(encodeURIComponent(text)).split('').map(function (char) {
                 return char.charCodeAt(0) & 0xff;
         });
 }
@@ -395,7 +426,7 @@ function asciiBytes(text) {
 function makeQrCodewords(text) {
         var dataCodewords = 80;
         var bits = [];
-        var bytes = asciiBytes(text);
+        var bytes = utf8Bytes(text);
         var codewords = [];
 
         appendBits(bits, 0x4, 4);
@@ -640,7 +671,10 @@ function pairingButton(device) {
 }
 
 function showQuickAllowlistModal() {
-        var wifiPayload = 'WIFI:T:WPA;S:Sheepfold Home 5G;P:sheepfold-demo-pass;;';
+        var networks = readWifiNetworksFromUci();
+        var wifiPayload = networks.length ?
+                wifiQrPayload(networks[0].ssid, networks[0].password, networks[0].encryption) :
+                'WIFI:T:nopass;S:;;';
         var progressFill = E('span', { 'class': 'sf-quick-progress-fill' });
         var statusText = E('span', { 'class': 'sf-quick-status-text' });
         var permitButton;
@@ -796,8 +830,144 @@ function selectField(label, value, values, hint) {
         ]);
 }
 
+function wifiQrEscape(value) {
+        return String(value == null ? '' : value).replace(/([\\;,:"])/g, '\\$1');
+}
+
+function wifiQrSecurity(encryption) {
+        var value = String(encryption || '').toLowerCase();
+
+        if (!value || value === 'none' || value === 'open' || value === 'disabled')
+                return 'nopass';
+
+        if (value.indexOf('wep') !== -1)
+                return 'WEP';
+
+        return 'WPA';
+}
+
+function wifiQrPayload(ssid, password, encryption) {
+        var security = wifiQrSecurity(encryption);
+        var payload = 'WIFI:T:' + security + ';S:' + wifiQrEscape(ssid) + ';';
+
+        if (security !== 'nopass')
+                payload += 'P:' + wifiQrEscape(password) + ';';
+
+        return payload + ';';
+}
+
+function readWifiNetworksFromUci() {
+        return uci.sections('wireless', 'wifi-iface').filter(function (section) {
+                return section.disabled !== '1' && (!section.mode || section.mode === 'ap');
+        }).map(function (section) {
+                var device = section.device || '';
+                var deviceLabel = device || T('Network');
+                var band = device ? (uci.get('wireless', device, 'band') || uci.get('wireless', device, 'hwmode')) : '';
+                var channel = device ? (uci.get('wireless', device, 'channel') || 'auto') : 'auto';
+                var sectionName = section['.name'] || '';
+                var ssid = section.ssid || (sectionName ? uci.get('wireless', sectionName, 'ssid') : '') || '';
+                var encryption = section.encryption || (sectionName ? uci.get('wireless', sectionName, 'encryption') : '') || 'none';
+                var password = section.key || (sectionName ? uci.get('wireless', sectionName, 'key') : '') || '';
+
+                return {
+                        label: ssid ? ssid + ' (' + (band || deviceLabel) + ')' : deviceLabel,
+                        ssid: ssid,
+                        password: password,
+                        encryption: encryption,
+                        channel: channel
+                };
+        });
+}
+
+function wifiSecurityOptions(value) {
+        var options = [
+                ['sae-mixed', 'WPA2/WPA3 mixed'],
+                ['psk2', 'WPA2-PSK'],
+                ['sae', 'WPA3-SAE'],
+                ['psk-mixed', 'WPA/WPA2 mixed'],
+                ['wep', 'WEP'],
+                ['none', T('Open network')]
+        ];
+        var known = options.some(function (item) {
+                return item[0] === value;
+        });
+
+        if (value && !known)
+                options.unshift([value, value]);
+
+        return options;
+}
+
+function wifiNetworkBox(network) {
+        var ssidInput = E('input', { 'class': 'cbi-input-text', 'value': network.ssid || '' });
+        var passwordInput = E('input', { 'class': 'cbi-input-text', 'value': network.password || '' });
+        var securitySelect = E('select', { 'class': 'cbi-input-select' }, wifiSecurityOptions(network.encryption).map(function (item) {
+                return E('option', { 'value': item[0], 'selected': item[0] === network.encryption ? 'selected' : null }, item[1]);
+        }));
+        var channelSelect = E('select', { 'class': 'cbi-input-select' }, [
+                ['auto', T('Auto')],
+                ['1', '1'],
+                ['6', '6'],
+                ['11', '11'],
+                ['36', '36'],
+                ['44', '44'],
+                ['149', '149']
+        ].map(function (item) {
+                return E('option', { 'value': item[0], 'selected': item[0] === network.channel ? 'selected' : null }, item[1]);
+        }));
+        var qrWrap = E('div', { 'class': 'sf-wifi-qr-code' });
+        var payloadNode = E('code', {});
+
+        function updateQr() {
+                var payload = wifiQrPayload(ssidInput.value, passwordInput.value, securitySelect.value);
+
+                qrWrap.replaceChildren(qrCode(payload));
+                payloadNode.textContent = payload;
+        }
+
+        ssidInput.addEventListener('input', updateQr);
+        passwordInput.addEventListener('input', updateQr);
+        securitySelect.addEventListener('change', updateQr);
+
+        updateQr();
+
+        return E('div', { 'class': 'sf-box sf-wifi-network' }, [
+                E('div', { 'class': 'sf-wifi-fields' }, [
+                        E('h4', {}, network.label),
+                        E('label', { 'class': 'sf-field' }, [
+                                E('span', {}, T('SSID')),
+                                ssidInput
+                        ]),
+                        E('label', { 'class': 'sf-field' }, [
+                                E('span', {}, T('Password')),
+                                passwordInput
+                        ]),
+                        E('label', { 'class': 'sf-field' }, [
+                                E('span', {}, T('Security')),
+                                securitySelect
+                        ]),
+                        E('label', { 'class': 'sf-field' }, [
+                                E('span', {}, T('Channel')),
+                                channelSelect
+                        ])
+                ]),
+                E('div', { 'class': 'sf-wifi-qr' }, [
+                        E('h4', {}, T('Connect QR')),
+                        qrWrap,
+                        E('small', {}, T('Scan to connect to this Wi-Fi network.')),
+                        payloadNode
+                ])
+        ]);
+}
+
 return view.extend({
-        activeTab: 'devices',
+        activeTab: 'users',
+        activeUserListTab: 'devices',
+        activeSettingsTab: 'general',
+
+        load: function () {
+                return uci.load('wireless');
+        },
 
         switchTab: function (button, tab) {
                 var page = button.closest('.sf-page');
@@ -828,23 +998,83 @@ return view.extend({
                 }));
         },
 
+        switchSettingsTab: function (button, tab) {
+                var panel = button.closest('.sf-panel');
+
+                this.activeSettingsTab = tab;
+
+                panel.querySelectorAll('.sf-settings-tab').forEach(function (node) {
+                        node.classList.toggle('active', node.getAttribute('data-settings-tab') === tab);
+                });
+
+                panel.querySelectorAll('.sf-settings-panel').forEach(function (node) {
+                        node.hidden = node.getAttribute('data-settings-panel') !== tab;
+                });
+        },
+
+        renderSettingsTabs: function () {
+                var self = this;
+
+                return E('div', { 'class': 'sf-tabs sf-settings-tabs' }, settingsTabs.map(function (tab) {
+                        return E('button', {
+                                'class': 'sf-tab sf-settings-tab' + (self.activeSettingsTab === tab[0] ? ' active' : ''),
+                                'data-settings-tab': tab[0],
+                                'click': function (ev) {
+                                        ev.preventDefault();
+                                        self.switchSettingsTab(ev.currentTarget, tab[0]);
+                                }
+                        }, tab[1]);
+                }));
+        },
+
+        switchUserListTab: function (button, tab) {
+                var panel = button.closest('.sf-panel');
+
+                this.activeUserListTab = tab;
+
+                panel.querySelectorAll('.sf-user-list-tab').forEach(function (node) {
+                        node.classList.toggle('active', node.getAttribute('data-user-list-tab') === tab);
+                });
+
+                panel.querySelectorAll('.sf-user-list-panel').forEach(function (node) {
+                        node.hidden = node.getAttribute('data-user-list-panel') !== tab;
+                });
+        },
+
+        renderUserListTabs: function () {
+                var self = this;
+
+                return E('div', { 'class': 'sf-tabs sf-user-list-tabs' }, userListTabs.map(function (tab) {
+                        return E('button', {
+                                'class': 'sf-tab sf-user-list-tab' + (self.activeUserListTab === tab[0] ? ' active' : ''),
+                                'data-user-list-tab': tab[0],
+                                'click': function (ev) {
+                                        ev.preventDefault();
+                                        self.switchUserListTab(ev.currentTarget, tab[0]);
+                                }
+                        }, tab[1]);
+                }));
+        },
+
         renderRootPasswordStatus: function () {
+                if (rootPasswordIsSet) {
+                        return '';
+                }
+
                 return E('div', {
                         'class': 'sf-note ' + (rootPasswordIsSet ? 'sf-note-ok' : 'sf-note-danger')
                 }, [
                         E('strong', {}, T('Router root password check')),
-                        E('span', {}, rootPasswordIsSet ?
-                                T('Root password is set. Sheepfold settings can be opened.') :
-                                T('Root password is not set. Sheepfold settings must stay locked until the router password is configured.')),
-                        rootPasswordIsSet ? '' : E('a', {
+                        E('span', {}, T('Root password is not set. Sheepfold settings must stay locked until the router password is configured.')),
+                        E('a', {
                                 'class': 'sf-inline-link',
                                 'href': L.url('admin/system/admin')
                         }, T('Open router password page'))
                 ]);
         },
 
-        renderDevices: function () {
-                return E('div', { 'class': 'sf-panel' }, [
+        renderDevices: function (embedded) {
+                return E('div', { 'class': embedded ? 'sf-settings-section' : 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
                                         E('h3', {}, T('All devices')),
@@ -862,8 +1092,8 @@ return view.extend({
                 ]);
         },
 
-        renderAllowlist: function () {
-                return E('div', { 'class': 'sf-panel' }, [
+        renderAllowlist: function (embedded) {
+                return E('div', { 'class': embedded ? 'sf-settings-section' : 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
                                         E('h3', {}, T('Allowlist')),
@@ -878,8 +1108,8 @@ return view.extend({
                 ]);
         },
 
-        renderBlocklist: function () {
-                return E('div', { 'class': 'sf-panel' }, [
+        renderBlocklist: function (embedded) {
+                return E('div', { 'class': embedded ? 'sf-settings-section' : 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
                                         E('h3', {}, T('Blocklist')),
@@ -889,6 +1119,24 @@ return view.extend({
                         ]),
                         E('div', { 'class': 'sf-note sf-note-warning' }, T('Emergency-useful sites for blocklisted devices require a separate explicit setting and still do not open router access.')),
                         deviceTable(devices.filter(function (device) { return device.status === 'blocked'; }), { compact: true })
+                ]);
+        },
+
+        renderUserListPanel: function (tab, content) {
+                return E('div', {
+                        'class': 'sf-user-list-panel sf-settings-panel',
+                        'data-user-list-panel': tab,
+                        'hidden': this.activeUserListTab === tab ? null : 'hidden'
+                }, content);
+        },
+
+        renderUsers: function () {
+                return E('div', { 'class': 'sf-panel' }, [
+                        E('h3', {}, T('User lists')),
+                        this.renderUserListTabs(),
+                        this.renderUserListPanel('devices', this.renderDevices(true)),
+                        this.renderUserListPanel('allowlist', this.renderAllowlist(true)),
+                        this.renderUserListPanel('blocklist', this.renderBlocklist(true))
                 ]);
         },
 
@@ -929,7 +1177,7 @@ return view.extend({
         },
 
         renderEmergency: function () {
-                return E('div', { 'class': 'sf-panel' }, [
+                return E('div', { 'class': 'sf-settings-section' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
                                         E('h3', {}, T('Access to emergency-useful sites')),
@@ -948,69 +1196,73 @@ return view.extend({
                 ]);
         },
 
+        readWifiNetworks: function () {
+                return readWifiNetworksFromUci();
+        },
+
         renderWifi: function () {
+                var networks = this.readWifiNetworks();
+
                 return E('div', { 'class': 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
                                         E('h3', {}, T('Wi-Fi')),
-                                        E('p', {}, T('Family-facing shortcut for common OpenWRT wireless settings.'))
-                                ]),
-                                actionButton(T('Apply Wi-Fi changes'), 'danger', T('Wi-Fi changes can disconnect current users and require confirmation.'))
-                        ]),
-                        E('div', { 'class': 'sf-grid two' }, [
-                                E('div', { 'class': 'sf-box' }, [
-                                        E('h4', {}, T('2.4 GHz')),
-                                        field(T('SSID'), 'Sheepfold Home 2G'),
-                                        field(T('Password'), '********'),
-                                        selectField(T('Security'), 'sae-mixed', [
-                                                ['sae-mixed', 'WPA2/WPA3 mixed'],
-                                                ['psk2', 'WPA2-PSK'],
-                                                ['sae', 'WPA3-SAE']
-                                        ]),
-                                        selectField(T('Channel'), 'auto', [
-                                                ['auto', T('Auto')],
-                                                ['1', '1'],
-                                                ['6', '6'],
-                                                ['11', '11']
-                                        ])
-                                ]),
-                                E('div', { 'class': 'sf-box' }, [
-                                        E('h4', {}, T('5 GHz')),
-                                        field(T('SSID'), 'Sheepfold Home 5G'),
-                                        field(T('Password'), '********'),
-                                        selectField(T('Security'), 'sae-mixed', [
-                                                ['sae-mixed', 'WPA2/WPA3 mixed'],
-                                                ['psk2', 'WPA2-PSK'],
-                                                ['sae', 'WPA3-SAE']
-                                        ]),
-                                        selectField(T('Channel'), 'auto', [
-                                                ['auto', T('Auto')],
-                                                ['36', '36'],
-                                                ['44', '44'],
-                                                ['149', '149']
-                                        ])
+                                        E('p', {}, T('Real router wireless settings are loaded from OpenWRT UCI.'))
                                 ])
-                        ])
+                        ]),
+                        networks.length ?
+                                E('div', { 'class': 'sf-grid two' }, networks.map(wifiNetworkBox)) :
+                                E('div', { 'class': 'sf-note sf-note-warning' }, T('No active Wi-Fi networks were found in the router wireless config.'))
                 ]);
         },
 
+        integrationModeNotes: function (mode) {
+                var notes = {
+                        none: T('Sheepfold works alone.'),
+                        adguard: T('Sheepfold blocks/allows devices before AdGuard Home DNS filtering.'),
+                        podkop: T('Sheepfold must not overwrite Podkop-managed routing, Dnsmasq, nftables, or sing-box state.'),
+                        adguard_podkop: T('Recommended chain: Sheepfold -> AdGuard Home -> Podkop.')
+                };
+
+                return notes[mode] || notes.none;
+        },
+
         renderIntegrations: function () {
-                return E('div', { 'class': 'sf-panel' }, [
+                var mode = 'adguard_podkop';
+
+                return E('div', { 'class': 'sf-settings-section' }, [
                         E('h3', {}, T('Integrations')),
                         E('div', { 'class': 'sf-form-row' }, [
-                                selectField(T('Use together with'), 'adguard_podkop', [
+                                selectField(T('Use together with'), mode, [
                                         ['none', T('None')],
                                         ['adguard', 'AdGuard Home'],
                                         ['podkop', 'Podkop'],
                                         ['adguard_podkop', 'AdGuard Home + Podkop']
                                 ], T('Traffic order: Sheepfold -> AdGuard Home -> Podkop.'))
                         ]),
-                        E('div', { 'class': 'sf-note' }, T('Automatic router changes must show integration-specific notes and create/export a backup before applying.'))
+                        E('div', { 'class': 'sf-grid two' }, [
+                                E('div', { 'class': 'sf-box sf-status-card sf-status-warning' }, [
+                                        E('h4', {}, T('AdGuard Home status')),
+                                        E('strong', {}, 'API: pending'),
+                                        E('p', {}, T('AdGuard Home API check should use the local AdGuard Home API when credentials are configured.'))
+                                ]),
+                                E('div', { 'class': 'sf-box sf-status-card sf-status-warning' }, [
+                                        E('h4', {}, T('Podkop status')),
+                                        E('strong', {}, 'service/package: pending'),
+                                        E('p', {}, T('Podkop has no stable Sheepfold-facing API yet; detect package/service state and show conservative notes.'))
+                                ])
+                        ]),
+                        E('div', { 'class': 'sf-note' }, [
+                                E('strong', {}, T('Mode notes')),
+                                E('span', {}, this.integrationModeNotes(mode))
+                        ]),
+                        E('div', { 'class': 'sf-note' }, T('Automatic router changes must show integration-specific notes and create/export a backup before applying.')),
+                        actionButton(T('Prepare integration settings'), 'danger', T('Integration setup must show planned changes, create an export, and require confirmation before applying.'))
                 ]);
         },
 
         renderBot: function () {
-                return E('div', { 'class': 'sf-panel' }, [
+                return E('div', { 'class': 'sf-settings-section' }, [
                         E('h3', {}, T('Messenger')),
                         E('div', { 'class': 'sf-grid two' }, [
                                 E('div', { 'class': 'sf-box' }, [
@@ -1094,9 +1346,8 @@ return view.extend({
                 ]);
         },
 
-        renderSettings: function () {
-                return E('div', { 'class': 'sf-panel' }, [
-                        E('h3', {}, T('Settings')),
+        renderSettingsGeneral: function () {
+                return E('div', {}, [
                         E('div', { 'class': 'sf-grid two' }, [
                                 E('div', { 'class': 'sf-box' }, [
                                         E('h4', {}, T('General')),
@@ -1115,18 +1366,53 @@ return view.extend({
                                         ])
                                 ]),
                                 E('div', { 'class': 'sf-box' }, [
-                                        E('h4', {}, T('Export and update')),
-                                        selectField(T('Export mode'), 'safe', [
-                                                ['safe', T('Readable JSON without secrets')],
-                                                ['encrypted', T('Encrypted full backup')]
-                                        ]),
-                                        field(T('Blocked page text'), T('Internet is temporarily unavailable by family rules.')),
-                                        E('div', { 'class': 'sf-toolbar' }, [
-                                                actionButton(T('Update app'), 'danger', T('Application update requires confirmation.')),
-                                                actionButton(T('Reboot router'), 'danger', T('Router reboot requires confirmation.'))
-                                        ])
+                                        E('h4', {}, T('General')),
+                                        field(T('Blocked page text'), T('Internet is temporarily unavailable by family rules.'))
                                 ])
                         ])
+                ]);
+        },
+
+        renderSettingsMisc: function () {
+                return E('div', { 'class': 'sf-grid two' }, [
+                        E('div', { 'class': 'sf-box' }, [
+                                E('h4', {}, T('Import and export')),
+                                selectField(T('Export mode'), 'safe', [
+                                        ['safe', T('Readable JSON without secrets')],
+                                        ['encrypted', T('Encrypted full backup')]
+                                ]),
+                                E('div', { 'class': 'sf-toolbar' }, [
+                                        actionButton(T('Import'), 'neutral', T('Import requires confirmation.')),
+                                        actionButton(T('Export'), 'neutral', T('Default export is readable JSON without secrets.'))
+                                ])
+                        ]),
+                        E('div', { 'class': 'sf-box' }, [
+                                E('h4', {}, T('Export and update')),
+                                E('div', { 'class': 'sf-toolbar' }, [
+                                        actionButton(T('Update app'), 'danger', T('Application update requires confirmation.')),
+                                        actionButton(T('Reboot router'), 'danger', T('Router reboot requires confirmation.'))
+                                ])
+                        ])
+                ]);
+        },
+
+        renderSettingsPanel: function (tab, content) {
+                return E('div', {
+                        'class': 'sf-settings-panel',
+                        'data-settings-panel': tab,
+                        'hidden': this.activeSettingsTab === tab ? null : 'hidden'
+                }, content);
+        },
+
+        renderSettings: function () {
+                return E('div', { 'class': 'sf-panel' }, [
+                        E('h3', {}, T('Settings')),
+                        this.renderSettingsTabs(),
+                        this.renderSettingsPanel('general', this.renderSettingsGeneral()),
+                        this.renderSettingsPanel('integrations', this.renderIntegrations()),
+                        this.renderSettingsPanel('messenger', this.renderBot()),
+                        this.renderSettingsPanel('emergency', this.renderEmergency()),
+                        this.renderSettingsPanel('misc', this.renderSettingsMisc())
                 ]);
         },
 
@@ -1140,22 +1426,17 @@ return view.extend({
 
         renderPanels: function () {
                 return [
-                        this.renderPanel('devices', this.renderDevices()),
-                        this.renderPanel('allowlist', this.renderAllowlist()),
-                        this.renderPanel('blocklist', this.renderBlocklist()),
+                        this.renderPanel('users', this.renderUsers()),
                         this.renderPanel('schedules', this.renderSchedules()),
-                        this.renderPanel('emergency', this.renderEmergency()),
                         this.renderPanel('wifi', this.renderWifi()),
-                        this.renderPanel('integrations', this.renderIntegrations()),
                         this.renderPanel('admins', this.renderAdmins()),
-                        this.renderPanel('bot', this.renderBot()),
                         this.renderPanel('logs', this.renderLogs()),
                         this.renderPanel('settings', this.renderSettings())
                 ];
         },
 
         render: function () {
-                var assetVersion = '0.1.0-9';
+                var assetVersion = '0.1.0-10';
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
                 var header = E('div', { 'class': 'sf-header' }, [
                         E('div', {}, [
@@ -1163,9 +1444,8 @@ return view.extend({
                                 E('p', {}, T('Visual test build. Router rules and persistence are not active yet.'))
                         ]),
                         E('div', { 'class': 'sf-header-actions' }, [
-                                actionButton(T('Save'), 'positive', T('Save changes. This visual build does not use a separate Apply button.')),
                                 actionButton(T('Block internet'), 'danger', T('Global block would block every device except allowlist.')),
-                                actionButton(T('Unblock'), 'positive', T('Global block would be disabled after confirmation.')),
+                                actionButton(T('Unblock internet'), 'positive', T('Global block would be disabled after confirmation.')),
                                 actionButton(T('Export'), 'neutral', T('Default export is readable JSON without secrets.')),
                                 actionButton(T('Import'), 'neutral', T('Import requires confirmation.'))
                         ])
@@ -1188,7 +1468,6 @@ return view.extend({
                                 metric(T('Restricted'), '2', 'warning'),
                                 metric(T('Blocklist'), '1', 'danger')
                         ]),
-                        this.renderRootPasswordStatus(),
                         this.renderTabs(),
                         E('div', { 'class': 'sf-panels' }, this.renderPanels())
                 ]);

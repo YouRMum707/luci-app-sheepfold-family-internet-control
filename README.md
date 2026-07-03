@@ -42,7 +42,7 @@ sh /tmp/sheepfold-uninstall.sh
 - GitHub repository: `luci-app-sheepfold-family-internet-control`
 - OpenWRT package: `luci-app-sheepfold-family-internet-control`
 - LuCI EN: `Sheepfold Family Internet Control`
-- LuCI RU: `Овчарня : контроль доступа в интернет для семьи`
+- LuCI RU: `Sheepfold : контроль доступа в интернет для семьи`
 - Android app: `Овчарня`
 - Android package: `app.sheepfold.android`
 
