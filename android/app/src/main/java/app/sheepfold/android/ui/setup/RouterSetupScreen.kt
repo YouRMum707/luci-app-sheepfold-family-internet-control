@@ -22,6 +22,8 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
@@ -83,11 +85,37 @@ private enum class SetupStep {
     PairingChoice,
     QrScanner,
     ManualSetup,
-    AppPassword
+    AppProtection
+}
+
+private enum class AppProtectionMode(
+    val title: String,
+    val description: String
+) {
+    Password(
+        title = "Пароль",
+        description = "Рекомендуемый вариант по умолчанию."
+    ),
+    Pin(
+        title = "PIN-код из 4 цифр",
+        description = "Удобно, но слабее длинного пароля."
+    ),
+    Face(
+        title = "Распознавание по лицу",
+        description = "Не рекомендуется как основной способ защиты."
+    ),
+    Fingerprint(
+        title = "Отпечаток пальца",
+        description = "Не рекомендуется как основной способ защиты."
+    ),
+    None(
+        title = "Нет",
+        description = "Приложение будет открываться без дополнительной защиты."
+    )
 }
 
 @Composable
-fun RouterSetupScreen() {
+fun RouterSetupScreen(onSetupComplete: () -> Unit) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val routerConnectionManager = remember { RouterConnectionManager() }
@@ -102,7 +130,7 @@ fun RouterSetupScreen() {
             SetupStep.PairingChoice -> SetupStep.MacCheck
             SetupStep.QrScanner -> SetupStep.PairingChoice
             SetupStep.ManualSetup -> SetupStep.PairingChoice
-            SetupStep.AppPassword -> SetupStep.PairingChoice
+            SetupStep.AppProtection -> SetupStep.PairingChoice
         }
     }
 
@@ -153,7 +181,7 @@ fun RouterSetupScreen() {
                                     snackbarHostState.showSnackbar(
                                         "Подключено к серверу (${request.routerName})"
                                     )
-                                    setupStep = SetupStep.AppPassword
+                                    setupStep = SetupStep.AppProtection
                                 } else {
                                     snackbarHostState.showSnackbar("Не удалось подключиться к серверу")
                                 }
@@ -183,7 +211,7 @@ fun RouterSetupScreen() {
                                     snackbarHostState.showSnackbar(
                                         "Подключено к серверу (${request.routerName})"
                                     )
-                                    setupStep = SetupStep.AppPassword
+                                    setupStep = SetupStep.AppProtection
                                 } else {
                                     snackbarHostState.showSnackbar("Не удалось подключиться к серверу")
                                 }
@@ -198,11 +226,12 @@ fun RouterSetupScreen() {
                     }
                 )
 
-                SetupStep.AppPassword -> AppPasswordScreen(
-                    onPasswordReady = {
+                SetupStep.AppProtection -> AppProtectionScreen(
+                    onProtectionReady = {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Пароль приложения установлен")
+                            snackbarHostState.showSnackbar("Защита приложения настроена")
                         }
+                        onSetupComplete()
                     }
                 )
             }
@@ -234,6 +263,7 @@ private fun AgreementScreen(onAccept: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -710,51 +740,119 @@ private class QrImageScanner {
 }
 
 @Composable
-private fun AppPasswordScreen(onPasswordReady: () -> Unit) {
+private fun AppProtectionScreen(onProtectionReady: () -> Unit) {
+    var selectedMode by remember { mutableStateOf(AppProtectionMode.Password) }
     var password by remember { mutableStateOf("") }
     var repeatPassword by remember { mutableStateOf("") }
-    val passwordIsValid = password.length >= 4 && password == repeatPassword
+    var pin by remember { mutableStateOf("") }
+    var repeatPin by remember { mutableStateOf("") }
+    val canContinue = when (selectedMode) {
+        AppProtectionMode.Password -> password.length >= 4 && password == repeatPassword
+        AppProtectionMode.Pin -> pin.length == 4 && pin == repeatPin
+        AppProtectionMode.Face,
+        AppProtectionMode.Fingerprint,
+        AppProtectionMode.None -> true
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ScreenHeader(text = "Пароль приложения")
+        ScreenHeader(text = "Защита приложения")
         Text(
-            text = "Задайте пароль или PIN для входа в приложение Sheepfold на этом телефоне.",
+            text = "Выберите способ защиты входа в Sheepfold на этом телефоне.",
             style = MaterialTheme.typography.bodyLarge
         )
         SetupCard(
             title = "Рекомендация",
-            body = "Пароль или PIN безопаснее как основной способ защиты. Отпечаток пальца и разблокировка лицом могут быть менее надёжны, если ребёнок попробует разблокировать приложение, пока родитель спит."
+            body = "По умолчанию используйте пароль. PIN удобнее, но слабее. Отпечаток пальца и лицо могут быть менее надёжны, если ребёнок попробует разблокировать приложение, пока родитель спит."
         )
-        SheepfoldTextField(
-            value = password,
-            onValueChange = { password = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Пароль или PIN") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-        SheepfoldTextField(
-            value = repeatPassword,
-            onValueChange = { repeatPassword = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Повторите пароль или PIN") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
+        AppProtectionMode.entries.forEach { mode ->
+            FramedButton(
+                onClick = { selectedMode = mode },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = if (selectedMode == mode) {
+                        "${mode.title} [выбрано]"
+                    } else {
+                        mode.title
+                    }
+                )
+            }
+        }
+
+        SetupCard(title = selectedMode.title, body = selectedMode.description)
+
+        when (selectedMode) {
+            AppProtectionMode.Password -> {
+                SheepfoldTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Пароль") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
+                SheepfoldTextField(
+                    value = repeatPassword,
+                    onValueChange = { repeatPassword = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Повторите пароль") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
+            }
+
+            AppProtectionMode.Pin -> {
+                SheepfoldTextField(
+                    value = pin,
+                    onValueChange = { pin = it.filter(Char::isDigit).take(4) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("PIN-код") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)
+                )
+                SheepfoldTextField(
+                    value = repeatPin,
+                    onValueChange = { repeatPin = it.filter(Char::isDigit).take(4) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Повторите PIN-код") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)
+                )
+            }
+
+            AppProtectionMode.Face -> SetupCard(
+                title = "Важно",
+                body = "Распознавание по лицу будет подключено позже через системную биометрию Android. Сейчас выбор фиксирует желаемый режим."
+            )
+
+            AppProtectionMode.Fingerprint -> SetupCard(
+                title = "Важно",
+                body = "Отпечаток пальца будет подключён позже через системную биометрию Android. Сейчас выбор фиксирует желаемый режим."
+            )
+
+            AppProtectionMode.None -> SetupCard(
+                title = "Без защиты",
+                body = "Этот вариант стоит использовать только если телефон уже надёжно защищён и не попадает детям в руки."
+            )
+        }
+
         FramedButton(
-            enabled = passwordIsValid,
-            onClick = onPasswordReady,
+            enabled = canContinue,
+            onClick = onProtectionReady,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Сохранить пароль")
+            Text(text = "Завершить настройку")
         }
     }
 }

@@ -83,6 +83,8 @@ On first setup, the Android app should ask how to protect access to the app.
 
 Recommended default: password or PIN.
 
+The main application screen must not open until the app-protection step is completed. After successful router pairing, always show the app-protection screen first; only its final confirmation may switch the app into the main UI.
+
 Biometric unlock by fingerprint or face can be offered, but should not be recommended as the safest option. Short warning text:
 
 ```text
@@ -141,7 +143,7 @@ android/app/build/outputs/apk/debug/app-debug.apk
 After `gradle :app:assembleDebug`, the project also copies the APK to:
 
 ```text
-%USERPROFILE%\Downloads\sheepfold-v0.1.5.apk
+%USERPROFILE%\Downloads\sheepfold-v0.1.6.apk
 ```
 
 To copy it somewhere else, set `SHEEPFOLD_APK_OUTPUT_DIR` before building.
