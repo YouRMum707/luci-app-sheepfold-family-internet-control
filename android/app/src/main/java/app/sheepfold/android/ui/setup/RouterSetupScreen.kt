@@ -98,6 +98,7 @@ import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.concurrent.Executors
@@ -286,8 +287,10 @@ fun RouterSetupScreen(onSetupComplete: () -> Unit) {
 private fun AgreementScreen(onAccept: () -> Unit) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+    val coroutineScope = rememberCoroutineScope()
     val runtimePermissions = remember { requiredRuntimePermissions() }
     var agreementAccepted by remember { mutableStateOf(false) }
+    var isOpeningAgreement by remember { mutableStateOf(false) }
     var permissionStates by remember {
         mutableStateOf(runtimePermissions.associateWith { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -317,7 +320,7 @@ private fun AgreementScreen(onAccept: () -> Unit) {
             Image(
                 painter = painterResource(id = R.drawable.sheepfold_logo),
                 contentDescription = "Sheepfold",
-                modifier = Modifier.size(84.dp)
+                modifier = Modifier.size(168.dp)
             )
             ScreenHeader(text = "Sheepfold", large = true)
             Text(
@@ -340,9 +343,16 @@ private fun AgreementScreen(onAccept: () -> Unit) {
                 )
                 AgreementLinkText(
                     onClick = {
-                        uriHandler.openUri(
-                            "https://github.com/kva4991/luci-app-sheepfold-family-internet-control/blob/main/docs/user-agreement.ru.md"
-                        )
+                        if (!isOpeningAgreement) {
+                            isOpeningAgreement = true
+                            coroutineScope.launch {
+                                uriHandler.openUri(
+                                    "https://github.com/kva4991/luci-app-sheepfold-family-internet-control/blob/main/docs/user-agreement.ru.md"
+                                )
+                                delay(1500)
+                                isOpeningAgreement = false
+                            }
+                        }
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -382,6 +392,34 @@ private fun AgreementScreen(onAccept: () -> Unit) {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp)
         )
+
+        if (isOpeningAgreement) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xCCF6FAF8)),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF2E7D32))
+                        Text(
+                            text = "Открываю соглашение...",
+                            color = Color(0xFF17211D),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -490,14 +528,14 @@ private fun RoundNextButton(
         modifier = modifier.size(112.dp),
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
+            containerColor = Color(0xFF2E7D32),
+            contentColor = Color.White,
             disabledContainerColor = Color(0xFFDDEBE4),
-            disabledContentColor = Color(0xFF5F746C)
+            disabledContentColor = Color(0xFF2E5E4F)
         )
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "▸", style = MaterialTheme.typography.headlineSmall)
+            Text(text = "▸", style = MaterialTheme.typography.displayLarge)
             Text(text = "далее")
         }
     }
@@ -512,7 +550,7 @@ private fun AgreementLinkText(
         append("Я согласен с ")
         withStyle(
             SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
+                color = Color(0xFF14532D),
                 textDecoration = TextDecoration.Underline,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
@@ -526,7 +564,7 @@ private fun AgreementLinkText(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            color = Color(0xFF17211D)
         )
         Box(
             modifier = Modifier
@@ -621,85 +659,89 @@ private fun MacCheckScreen(onContinue: () -> Unit) {
     val isWifi = networkTransport == NetworkTransport.Wifi
     val isEthernet = networkTransport == NetworkTransport.Ethernet
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        ScreenHeader(text = "Проверка MAC-адреса")
-        Text(
-            text = if (isWifi) {
-                "Sheepfold будет привязывать устройство к тому MAC-адресу, который роутер видит в этой сети."
-            } else {
-                "Для проводного подключения роутер видит MAC сетевого адаптера. Подтвердите, что именно это подключение нужно привязать как админское."
-            },
-            style = MaterialTheme.typography.bodyLarge
-        )
-        SetupCard(
-            title = "Текущее подключение",
-            body = if (isWifi) {
-                "Тип: ${networkTransport.displayName}\nWi-Fi: $wifiName\nMAC: $macAddress"
-            } else {
-                "Тип: ${networkTransport.displayName}\nMAC: $macAddress"
-            }
-        )
-        if (!isWifi && !isEthernet) {
-            SetupCard(
-                title = "Нужна локальная сеть",
-                body = "Вернитесь назад и подключите телефон к Wi-Fi или проводной сети роутера."
-            )
-        } else if (currentWifi.macAddress == null) {
-            WarningCard(
-                title = "Желательно проверить MAC",
-                body = if (isWifi) {
-                    "Android не отдал MAC-адрес приложению. Желательно открыть настройки текущей Wi-Fi сети и переключить её на настоящий MAC устройства, но это не обязательно: Sheepfold сможет привязать телефон по MAC, который видит роутер."
-                } else {
-                    "Android не отдал MAC-адрес адаптера приложению. Проверьте устройство в списке клиентов роутера."
-                }
-            )
-        } else if (macLooksRandomized) {
-            WarningCard(
-                title = "Желательно использовать настоящий MAC",
-                body = if (isWifi) {
-                    "Текущий MAC похож на случайный/private MAC. Лучше переключить эту Wi-Fi сеть на настоящий MAC устройства для стабильности, но это не обязательно. Если оставить случайный MAC, телефон может появиться как новое устройство после сброса или повторного добавления Wi-Fi сети."
-                } else {
-                    "У проводного адаптера такой MAC тоже возможен. Проверьте, что именно этот адаптер нужно привязать как админское устройство."
-                }
-            )
-        } else {
-            SetupCard(
-                title = "Похоже, всё в порядке",
-                body = "MAC выглядит как постоянный адрес для текущего подключения. Подробные инструкции не нужны."
-            )
-        }
-        FramedButton(
-            onClick = {
-                networkTransport = readNetworkTransport(context)
-                currentWifi = readCurrentWifiDetails(context)
-            },
-            modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 144.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Обновить данные подключения")
-        }
-        if (isWifi) {
+            ScreenHeader(text = "Проверка MAC-адреса")
+            Text(
+                text = if (isWifi) {
+                    "Sheepfold будет привязывать устройство к тому MAC-адресу, который роутер видит в этой сети."
+                } else {
+                    "Для проводного подключения роутер видит MAC сетевого адаптера. Подтвердите, что именно это подключение нужно привязать как админское."
+                },
+                style = MaterialTheme.typography.bodyLarge
+            )
+            SetupCard(
+                title = "Текущее подключение",
+                body = if (isWifi) {
+                    "Тип: ${networkTransport.displayName}\nWi-Fi: $wifiName\nMAC: $macAddress"
+                } else {
+                    "Тип: ${networkTransport.displayName}\nMAC: $macAddress"
+                }
+            )
+            if (!isWifi && !isEthernet) {
+                SetupCard(
+                    title = "Нужна локальная сеть",
+                    body = "Вернитесь назад и подключите телефон к Wi-Fi или проводной сети роутера."
+                )
+            } else if (currentWifi.macAddress == null) {
+                WarningCard(
+                    title = "Желательно проверить MAC",
+                    body = if (isWifi) {
+                        "Android не отдал MAC-адрес приложению. Желательно открыть настройки текущей Wi-Fi сети и переключить её на настоящий MAC устройства, но это не обязательно: Sheepfold сможет привязать телефон по MAC, который видит роутер."
+                    } else {
+                        "Android не отдал MAC-адрес адаптера приложению. Проверьте устройство в списке клиентов роутера."
+                    }
+                )
+            } else if (macLooksRandomized) {
+                WarningCard(
+                    title = "Желательно использовать настоящий MAC",
+                    body = if (isWifi) {
+                        "Текущий MAC похож на случайный/private MAC. Лучше переключить эту Wi-Fi сеть на настоящий MAC устройства для стабильности, но это не обязательно. Если оставить случайный MAC, телефон может появиться как новое устройство после сброса или повторного добавления Wi-Fi сети."
+                    } else {
+                        "У проводного адаптера такой MAC тоже возможен. Проверьте, что именно этот адаптер нужно привязать как админское устройство."
+                    }
+                )
+            } else {
+                SetupCard(
+                    title = "Похоже, всё в порядке",
+                    body = "MAC выглядит как постоянный адрес для текущего подключения. Подробные инструкции не нужны."
+                )
+            }
             FramedButton(
                 onClick = {
-                    context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+                    networkTransport = readNetworkTransport(context)
+                    currentWifi = readCurrentWifiDetails(context)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Открыть настройки Wi-Fi")
+                Text(text = "Обновить данные подключения")
+            }
+            if (isWifi) {
+                FramedButton(
+                    onClick = {
+                        context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Открыть настройки Wi-Fi")
+                }
             }
         }
-        FramedButton(
+
+        RoundNextButton(
             enabled = isWifi || isEthernet,
             onClick = onContinue,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Продолжить")
-        }
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp)
+        )
     }
 }
 
@@ -720,10 +762,12 @@ private fun PairingChoiceScreen(
             text = "Выберите способ подключения к Sheepfold на OpenWRT-роутере.",
             style = MaterialTheme.typography.bodyLarge
         )
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             PairingChoiceButton(
                 text = "QR код",
@@ -731,9 +775,7 @@ private fun PairingChoiceScreen(
                 contentColor = Color.White,
                 onClick = onQrClick,
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 36.dp)
-                    .fillMaxWidth(0.84f)
+                    .fillMaxWidth()
             )
             PairingChoiceButton(
                 text = "Ручная настройка",
@@ -741,9 +783,7 @@ private fun PairingChoiceScreen(
                 contentColor = Color(0xFF3A2A00),
                 onClick = onManualClick,
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 36.dp)
-                    .fillMaxWidth(0.84f)
+                    .fillMaxWidth()
             )
         }
         SetupCard(
@@ -891,7 +931,7 @@ private fun QrScannerScreen(
     ) {
         ScreenHeader(text = "Сканирование QR")
         Text(
-            text = "Наведите камеру на QR-код сопряжения, открытый в LuCI.",
+            text = "Наведите камеру на QR-код сопряжения, открытый в настройке администратора программы Sheepfold.",
             style = MaterialTheme.typography.bodyLarge
         )
         FramedButton(
