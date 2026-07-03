@@ -8,7 +8,9 @@ import java.net.URL
 
 data class RouterConnectionRequest(
     val apiUrl: String,
-    val routerName: String
+    val routerName: String,
+    val temporaryPassword: String? = null,
+    val administratorLogin: String? = null
 )
 
 class RouterConnectionManager {
@@ -26,7 +28,53 @@ class RouterConnectionManager {
             val routerName = json.optString("routerName")
                 .ifBlank { json.optString("name") }
                 .ifBlank { hostName(apiUrl) }
-            return RouterConnectionRequest(apiUrl = apiUrl, routerName = routerName)
+            val temporaryPassword = json.optString("temporaryPassword")
+                .ifBlank { json.optString("pairingToken") }
+                .ifBlank { json.optString("token") }
+                .ifBlank { json.optString("code") }
+                .ifBlank { null }
+            val administratorLogin = json.optString("administratorLogin")
+                .ifBlank { json.optString("adminLogin") }
+                .ifBlank { json.optString("login") }
+                .ifBlank { null }
+            return RouterConnectionRequest(
+                apiUrl = apiUrl,
+                routerName = routerName,
+                temporaryPassword = temporaryPassword,
+                administratorLogin = administratorLogin
+            )
+        }
+
+        if (trimmed.startsWith("SF1|")) {
+            val fields = trimmed.split('|')
+                .drop(1)
+                .mapNotNull { field ->
+                    val separatorIndex = field.indexOf('=')
+                    if (separatorIndex <= 0) {
+                        null
+                    } else {
+                        field.substring(0, separatorIndex) to field.substring(separatorIndex + 1)
+                    }
+                }
+                .toMap()
+
+            val baseUrl = normalizeRouterUrl(fields["h"].orEmpty())
+            val apiPath = fields["api"].orEmpty().trim()
+            val apiUrl = when {
+                apiPath.isBlank() -> baseUrl
+                apiPath.startsWith("http://") || apiPath.startsWith("https://") -> normalizeRouterUrl(apiPath)
+                apiPath.startsWith("/") -> "$baseUrl$apiPath"
+                else -> "$baseUrl/$apiPath"
+            }
+
+            return RouterConnectionRequest(
+                apiUrl = apiUrl,
+                routerName = fields["name"].orEmpty().ifBlank { hostName(baseUrl) },
+                temporaryPassword = fields["c"].orEmpty()
+                    .ifBlank { fields["token"].orEmpty() }
+                    .ifBlank { null },
+                administratorLogin = fields["u"].orEmpty().ifBlank { null }
+            )
         }
 
         val apiUrl = normalizeRouterUrl(trimmed)

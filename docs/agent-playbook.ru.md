@@ -401,6 +401,8 @@ Admin:
 - QR не содержит root-пароль роутера, LuCI session cookies, bot tokens, AI keys, пароли, full backups или другие секреты;
 - token короткоживущий, одноразовый, revocable;
 - token хранится на роутере только как hash/non-reusable secret;
+- после успешного сопряжения backend роутера немедленно помечает token/code как использованный (`consumed`) и больше никогда не принимает его повторно, даже если QR сфотографировали или ручной код переписали;
+- перед выдачей постоянного Android credential backend проверяет hash token, TTL, администратора-владельца, admin-device, consumed state и revocation state;
 - pairing actions логируются с masking.
 
 ## Android-приложение

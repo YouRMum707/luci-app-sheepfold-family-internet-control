@@ -150,6 +150,7 @@ Requirements:
 - pressing `Pairing` opens a modal with a QR code for the Android app and the same settings in text form for manual setup;
 - QR/manual setup must include router address/API URL, administrator login or identifier, pairing token/code, token lifetime, and Wi-Fi MAC guidance;
 - pairing tokens must be one-time, short-lived, revocable, and stored only as hashes or otherwise non-reusable secrets on the router;
+- once a pairing token/code is successfully used, the router must immediately mark it as consumed and reject every later attempt to use the same QR/manual code;
 - pairing must not expose router root credentials, LuCI session cookies, bot tokens, AI keys, or other unrelated secrets;
 - pairing events must be written to the administrative action log with masking.
 

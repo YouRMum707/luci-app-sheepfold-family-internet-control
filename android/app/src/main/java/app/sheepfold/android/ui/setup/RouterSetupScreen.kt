@@ -3,6 +3,7 @@ package app.sheepfold.android.ui.setup
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -90,6 +91,11 @@ fun RouterSetupScreen() {
                 SetupStep.QrScanner -> QrScannerScreen(
                     isTestingConnection = isTestingConnection,
                     onBack = { setupStep = SetupStep.PairingChoice },
+                    onShowMessage = { message ->
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(message)
+                        }
+                    },
                     onQrDetected = { payload ->
                         if (isTestingConnection) {
                             return@QrScannerScreen
@@ -307,7 +313,8 @@ private fun ManualSetupScreen(
                 onConnect(
                     RouterConnectionRequest(
                         apiUrl = url,
-                        routerName = routerName.ifBlank { host }
+                        routerName = routerName.ifBlank { host },
+                        temporaryPassword = temporaryPassword.ifBlank { null }
                     )
                 )
             },
@@ -329,9 +336,11 @@ private fun ManualSetupScreen(
 private fun QrScannerScreen(
     isTestingConnection: Boolean,
     onBack: () -> Unit,
+    onShowMessage: (String) -> Unit,
     onQrDetected: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val imageScanner = remember { QrImageScanner() }
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
@@ -342,6 +351,19 @@ private fun QrScannerScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasCameraPermission = granted
+    }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri == null) {
+            return@rememberLauncherForActivityResult
+        }
+        imageScanner.scan(
+            context = context,
+            uri = uri,
+            onResult = onQrDetected,
+            onError = { onShowMessage("QR код на изображении не найден") }
+        )
     }
 
     LaunchedEffect(Unit) {
@@ -364,6 +386,12 @@ private fun QrScannerScreen(
             text = "Наведите камеру на QR-код сопряжения, открытый в LuCI.",
             style = MaterialTheme.typography.bodyLarge
         )
+        TextButton(
+            enabled = !isTestingConnection,
+            onClick = { imagePickerLauncher.launch("image/*") }
+        ) {
+            Text(text = "Загрузить QR из файла")
+        }
 
         Box(
             modifier = Modifier
@@ -474,6 +502,34 @@ private fun CameraQrScanner(
             }
         }
     )
+}
+
+private class QrImageScanner {
+    private val options = BarcodeScannerOptions.Builder()
+        .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+        .build()
+
+    fun scan(
+        context: android.content.Context,
+        uri: Uri,
+        onResult: (String) -> Unit,
+        onError: () -> Unit
+    ) {
+        val image = InputImage.fromFilePath(context, uri)
+        BarcodeScanning.getClient(options)
+            .process(image)
+            .addOnSuccessListener { barcodes ->
+                val rawValue = barcodes.firstOrNull()?.rawValue
+                if (rawValue.isNullOrBlank()) {
+                    onError()
+                } else {
+                    onResult(rawValue)
+                }
+            }
+            .addOnFailureListener {
+                onError()
+            }
+    }
 }
 
 @Composable

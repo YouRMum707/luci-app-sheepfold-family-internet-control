@@ -36,8 +36,11 @@ Flow:
 - LuCI shows `Pairing` / `Сопряжение` for that device;
 - the pairing dialog shows a QR code plus the same values for manual setup;
 - Android scans the QR code or lets the parent enter the router address/API URL, administrator login or ID, pairing code, and token lifetime manually.
+- Android can scan the QR code through the camera or load a QR image from local files/downloads.
 
 The QR payload must use a short-lived one-time token scoped to one administrator and one device. It must not contain router root passwords, LuCI session cookies, bot tokens, AI keys, or unrelated secrets.
+
+After successful pairing, the router backend must mark the one-time token as consumed and reject every later reuse of the same QR/manual code.
 
 ## Wi-Fi MAC Check
 
