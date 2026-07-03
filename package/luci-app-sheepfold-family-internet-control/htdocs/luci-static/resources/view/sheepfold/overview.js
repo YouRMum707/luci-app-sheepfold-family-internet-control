@@ -69,13 +69,13 @@ var admins = [
                 name: 'Владелец',
                 login: 'owner',
                 role: 'owner',
-                devices: 'Телефон родителя'
+                deviceIds: ['D-0001']
         },
         {
                 name: 'Мама',
                 login: 'mama',
                 role: 'admin',
-                devices: 'Не привязано'
+                deviceIds: ['D-0002', 'D-0003']
         }
 ];
 
@@ -118,7 +118,11 @@ var translations = {
         'Device editor is not implemented in this visual test build.': 'Редактор устройства не реализован в этой визуальной тестовой сборке.',
         'ID': 'ID',
         'Bind devices': 'Привязать устройства',
-        'Administrator device binding is not implemented in this visual test build.': 'Привязка устройств администратора пока не реализована в этой визуальной сборке.',
+        'Device binding': 'Привязка устройств',
+        'Select administrator devices. Blocklisted devices are not available for binding.': 'Выберите устройства администратора. Устройства из чёрного списка недоступны для привязки.',
+        'Selected devices are shown first.': 'Выбранные устройства показаны сверху.',
+        'No devices selected': 'Устройства не выбраны',
+        'Device bindings saved.': 'Привязка устройств сохранена.',
         'Admin device': 'Админское устройство',
         'Owner': 'Владелец',
         'Pairing': 'Сопряжение',
@@ -147,6 +151,7 @@ var translations = {
         'Actions': 'Действия',
         'Detected automatically from router leases, ARP/neighbor data, and static DHCP leases.': 'Обнаруживаются автоматически из аренд DHCP, ARP/neighbor-данных и постоянных аренд DHCP.',
         'Search by name, IP, or MAC': 'Поиск по имени, IP или MAC',
+        'Search by name, IP, MAC, or ID': 'Поиск по имени, IP, MAC или ID',
         'Add manually': 'Добавить вручную',
         'Manual MAC-based add form is not implemented in this visual test build.': 'Ручное добавление по MAC пока не реализовано в этой визуальной сборке.',
         'These devices are never blocked by global blocking or schedules.': 'Эти устройства не блокируются глобальной блокировкой и расписаниями.',
@@ -251,7 +256,7 @@ var translations = {
         'Export masked': 'Экспорт с маскированием',
         'Masked log export is not implemented in this visual test build.': 'Экспорт журнала с маскированием пока не реализован в этой визуальной сборке.',
         'Admin granted +30 minutes to Child tablet': 'Администратор дал +30 минут устройству "Планшет ребёнка"',
-        'New device detected: DC:A6:32:xx:xx:19, IP 192.168.1.98': 'Обнаружено новое устройство: DC:A6:32:xx:xx:19, IP 192.168.1.98',
+        'New device detected: ID 4, DC:A6:32:xx:xx:19, IP 192.168.1.98': 'Обнаружено новое устройство: ID 4, DC:A6:32:xx:xx:19, IP 192.168.1.98',
         'Global block disabled by owner': 'Глобальная блокировка выключена владельцем',
         'General': 'Общие',
         'Language': 'Язык',
@@ -844,12 +849,153 @@ function domainCard(site) {
         ]);
 }
 
+function deviceDisplayId(device) {
+        var match = String(device.id || '').match(/(\d+)$/);
+
+        return match ? String(parseInt(match[1], 10)) : String(devices.indexOf(device) + 1);
+}
+
+function deviceById(id) {
+        for (var i = 0; i < devices.length; i++) {
+                if (devices[i].id === id)
+                        return devices[i];
+        }
+
+        return null;
+}
+
+function adminDeviceList(admin) {
+        var selected = (admin.deviceIds || []).map(deviceById).filter(Boolean);
+
+        if (!selected.length)
+                return E('span', { 'class': 'sf-muted' }, T('No devices selected'));
+
+        return E('div', { 'class': 'sf-admin-device-list' }, selected.map(function (device) {
+                return E('div', {}, [
+                        E('span', { 'class': 'sf-admin-device-list-id' }, deviceDisplayId(device)),
+                        E('span', {}, device.name)
+                ]);
+        }));
+}
+
+function showAdminDeviceBindingModal(admin, onSave) {
+        var selected = {};
+        var filterInput = E('input', {
+                'class': 'cbi-input-text sf-search sf-binding-filter',
+                'placeholder': T('Search by name, IP, MAC, or ID')
+        });
+        var table = E('div', { 'class': 'sf-binding-table' });
+
+        (admin.deviceIds || []).forEach(function (id) {
+                selected[id] = true;
+        });
+
+        function matchesFilter(device, needle) {
+                if (!needle)
+                        return true;
+
+                return [
+                        deviceDisplayId(device),
+                        device.id,
+                        device.name,
+                        device.ip,
+                        device.mac,
+                        device.group
+                ].join(' ').toLowerCase().indexOf(needle) !== -1;
+        }
+
+        function sortedRows() {
+                return devices.filter(function (device) {
+                        return device.status !== 'blocked';
+                }).sort(function (left, right) {
+                        var leftSelected = selected[left.id] ? 1 : 0;
+                        var rightSelected = selected[right.id] ? 1 : 0;
+
+                        if (leftSelected !== rightSelected)
+                                return rightSelected - leftSelected;
+
+                        return devices.indexOf(right) - devices.indexOf(left);
+                });
+        }
+
+        function redraw() {
+                var needle = filterInput.value.trim().toLowerCase();
+                var rows = sortedRows().filter(function (device) {
+                        return matchesFilter(device, needle);
+                }).map(function (device) {
+                        var checkbox = E('input', {
+                                'type': 'checkbox',
+                                'checked': selected[device.id] ? 'checked' : null,
+                                'change': function (ev) {
+                                        selected[device.id] = ev.currentTarget.checked;
+                                        redraw();
+                                }
+                        });
+
+                        return E('div', { 'class': 'sf-binding-row' + (selected[device.id] ? ' is-selected' : '') }, [
+                                E('div', { 'class': 'sf-device-index' }, deviceDisplayId(device)),
+                                E('div', { 'class': 'sf-device-name' }, [
+                                        E('strong', {}, device.name),
+                                        E('small', {}, device.group)
+                                ]),
+                                E('div', {}, device.ip),
+                                E('div', { 'class': 'sf-mono' }, device.mac),
+                                E('label', { 'class': 'sf-binding-check' }, checkbox)
+                        ]);
+                });
+
+                table.replaceChildren.apply(table, [
+                        E('div', { 'class': 'sf-binding-row sf-binding-head' }, [
+                                E('div', {}, T('ID')),
+                                E('div', {}, T('Device')),
+                                E('div', {}, T('IP address')),
+                                E('div', {}, T('MAC address')),
+                                E('div', {}, '')
+                        ])
+                ].concat(rows));
+        }
+
+        filterInput.addEventListener('input', redraw);
+        redraw();
+
+        ui.showModal(T('Device binding'), [
+                E('div', { 'class': 'sf-binding-modal' }, [
+                        E('p', { 'class': 'sf-section-intro' }, T('Select administrator devices. Blocklisted devices are not available for binding.')),
+                        E('div', { 'class': 'sf-panel-head sf-binding-toolbar' }, [
+                                filterInput,
+                                E('span', { 'class': 'sf-muted' }, T('Selected devices are shown first.'))
+                        ]),
+                        table
+                ]),
+                E('div', { 'class': 'sf-modal-actions right' }, [
+                        E('button', {
+                                'class': 'btn cbi-button',
+                                'click': ui.hideModal
+                        }, T('Cancel')),
+                        E('button', {
+                                'class': 'btn cbi-button cbi-button-positive',
+                                'click': function () {
+                                        admin.deviceIds = sortedRows().filter(function (device) {
+                                                return selected[device.id];
+                                        }).map(function (device) {
+                                                return device.id;
+                                        });
+                                        if (onSave)
+                                                onSave();
+                                        ui.hideModal();
+                                        notify(T('Device bindings saved.'), 'info');
+                                }
+                        }, T('Save'))
+                ])
+        ]);
+}
+
 function deviceTable(rows, options) {
         options = options || {};
 
         var tableRows = rows.map(function (device, index) {
                 return E('div', { 'class': 'sf-device-row' }, [
-                        E('div', { 'class': 'sf-device-index' }, String(index + 1)),
+                        E('div', { 'class': 'sf-device-index' }, deviceDisplayId(device)),
                         E('div', { 'class': 'sf-device-name' }, [
                                         E('strong', {}, [
                                                 device.adminDevice ? adminDeviceIcon() : '',
@@ -1278,7 +1424,6 @@ return view.extend({
                 return E('div', { 'class': embedded ? 'sf-settings-section' : 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
-                                        E('h3', {}, T('All devices')),
                                         E('p', {}, T('Detected automatically from router leases, ARP/neighbor data, and static DHCP leases.'))
                                 ]),
                                 E('div', { 'class': 'sf-toolbar' }, [
@@ -1297,7 +1442,6 @@ return view.extend({
                 return E('div', { 'class': embedded ? 'sf-settings-section' : 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
-                                        E('h3', {}, T('Allowlist')),
                                         E('p', {}, T('These devices are never blocked by global blocking or schedules.'))
                                 ]),
                                 E('div', { 'class': 'sf-toolbar' }, [
@@ -1313,7 +1457,6 @@ return view.extend({
                 return E('div', { 'class': embedded ? 'sf-settings-section' : 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
-                                        E('h3', {}, T('Blocklist')),
                                         E('p', {}, T('Blocklisted devices cannot access the internet, LuCI, SSH, or the Sheepfold API.'))
                                 ]),
                                 actionButton(T('Add device'), 'danger', T('Blocklist changes require confirmation.'))
@@ -1333,7 +1476,6 @@ return view.extend({
 
         renderUsers: function () {
                 return E('div', { 'class': 'sf-panel' }, [
-                        E('h3', {}, T('User lists')),
                         this.renderUserListTabs(),
                         this.renderUserListPanel('devices', this.renderDevices(true)),
                         this.renderUserListPanel('allowlist', this.renderAllowlist(true)),
@@ -1345,7 +1487,6 @@ return view.extend({
                 return E('div', { 'class': 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
-                                        E('h3', {}, T('Schedules')),
                                         E('p', {}, T('Allow and block rules for devices and groups.'))
                                 ]),
                                 actionButton(T('Add rule'), 'positive', T('Schedule editor is not implemented in this visual test build.'))
@@ -1502,19 +1643,23 @@ return view.extend({
                                         E('div', {}, T('Actions'))
                                 ])
                         ].concat(admins.map(function (admin) {
+                                var devicesCell = E('div', {}, adminDeviceList(admin));
+
                                 return E('div', { 'class': 'sf-admin-row' }, [
                                         E('div', {}, [
                                                 E('strong', {}, admin.name)
                                         ]),
                                         E('div', { 'class': 'sf-mono' }, admin.login),
                                         E('div', {}, admin.role === 'owner' ? T('Owner') : T('Admin')),
-                                        E('div', {}, admin.devices),
+                                        devicesCell,
                                         E('div', { 'class': 'sf-row-actions' }, [
                                                 iconButton(T('Configure'), 'gear', 'neutral', function () {
                                                         notify(T('This action is a visual prototype only.'), 'info');
                                                 }),
                                                 iconButton(T('Bind devices'), 'link', 'neutral', function () {
-                                                        notify(T('Administrator device binding is not implemented in this visual test build.'), 'info');
+                                                        showAdminDeviceBindingModal(admin, function () {
+                                                                devicesCell.replaceChildren(adminDeviceList(admin));
+                                                        });
                                                 })
                                         ])
                                 ]);
@@ -1535,7 +1680,7 @@ return view.extend({
                         ]),
                         E('div', { 'class': 'sf-log' }, [
                                 E('div', {}, [E('time', {}, '03.07.2026 20:31:12'), E('span', {}, T('Admin granted +30 minutes to Child tablet'))]),
-                                E('div', {}, [E('time', {}, '03.07.2026 19:55:04'), E('span', {}, T('New device detected: DC:A6:32:xx:xx:19, IP 192.168.1.98'))]),
+                                E('div', {}, [E('time', {}, '03.07.2026 19:55:04'), E('span', {}, T('New device detected: ID 4, DC:A6:32:xx:xx:19, IP 192.168.1.98'))]),
                                 E('div', {}, [E('time', {}, '03.07.2026 18:10:44'), E('span', {}, T('Global block disabled by owner'))])
                         ])
                 ]);
@@ -1588,7 +1733,6 @@ return view.extend({
                         this.activeSettingsTab = 'general';
 
                 return E('div', { 'class': 'sf-panel' }, [
-                        E('h3', {}, T('Settings')),
                         this.renderSettingsTabs(),
                         this.renderSettingsPanel('general', this.renderSettingsGeneral()),
                         this.renderSettingsPanel('integrations', this.renderIntegrations()),
@@ -1618,7 +1762,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-20';
+                var assetVersion = '0.1.0-23';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);

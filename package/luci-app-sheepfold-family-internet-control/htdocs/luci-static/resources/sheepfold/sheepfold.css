@@ -44,6 +44,10 @@
         color: var(--sf-muted);
 }
 
+.sf-muted {
+        color: var(--sf-muted);
+}
+
 .sf-header-actions,
 .sf-toolbar,
 .sf-row-actions,
@@ -351,6 +355,32 @@
         margin-top: 3px;
 }
 
+.sf-admin-device-list {
+        display: grid;
+        gap: 5px;
+}
+
+.sf-admin-device-list div {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+}
+
+.sf-admin-device-list-id {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        min-width: 22px;
+        height: 22px;
+        border: 1px solid var(--sf-border);
+        border-radius: 6px;
+        color: var(--sf-muted);
+        background: #f8fafc;
+        font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        font-size: 12px;
+        font-weight: 700;
+}
+
 .sf-admin-head {
         background: #f8fafc;
         color: #334155;
@@ -529,6 +559,61 @@
 .sf-log time {
         color: var(--sf-muted);
         min-width: 145px;
+}
+
+.sf-binding-modal {
+        min-width: min(860px, 86vw);
+}
+
+.sf-binding-toolbar {
+        align-items: center;
+}
+
+.sf-binding-filter {
+        min-width: min(360px, 100%);
+}
+
+.sf-binding-table {
+        border: 1px solid var(--sf-border);
+        border-radius: 8px;
+        overflow-x: auto;
+}
+
+.sf-binding-row {
+        display: grid;
+        grid-template-columns: 44px minmax(180px, 1.4fr) minmax(110px, 0.8fr) minmax(150px, 1fr) 58px;
+        gap: 12px;
+        align-items: center;
+        min-width: 700px;
+        padding: 10px 12px;
+        border-top: 1px solid var(--sf-border);
+        background: #ffffff;
+}
+
+.sf-binding-row:first-child {
+        border-top: 0;
+}
+
+.sf-binding-row.is-selected {
+        background: #f0fbf5;
+}
+
+.sf-binding-head {
+        background: #f8fafc;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+}
+
+.sf-binding-check {
+        display: flex;
+        justify-content: flex-end;
+}
+
+.sf-binding-check input {
+        width: 20px;
+        height: 20px;
 }
 
 .sf-modal-pairing {
