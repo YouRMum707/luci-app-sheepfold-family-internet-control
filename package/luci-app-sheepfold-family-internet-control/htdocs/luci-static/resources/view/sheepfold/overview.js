@@ -161,7 +161,6 @@ var translations = {
         'Detected automatically from router leases, ARP/neighbor data, and static DHCP leases.': 'Обнаруживаются автоматически из аренд DHCP, ARP/neighbor-данных и постоянных аренд DHCP.',
         'Search by name, IP, or MAC': 'Поиск по имени, IP или MAC',
         'Search by name, IP, MAC, or ID': 'Поиск по имени, IP, MAC или ID',
-        'Add manually': 'Добавить вручную',
         'Manual MAC-based add form is not implemented in this visual test build.': 'Ручное добавление по MAC пока не реализовано в этой визуальной сборке.',
         'These devices are never blocked by global blocking or schedules.': 'Эти устройства не блокируются глобальной блокировкой и расписаниями.',
         'Add device': 'Добавить устройство',
@@ -245,10 +244,8 @@ var translations = {
         'Approved admin ID': 'ID разрешённого администратора',
         'Stored on the router.': 'Хранится на роутере.',
         'Administrator accounts': 'Учётные записи администраторов',
-        'Each administrator has a unique display name, login, and password stored on the router.': 'У каждого администратора есть уникальное имя, логин и пароль, хранящиеся на роутере.',
         'Add administrator': 'Добавить администратора',
         'Adding a new administrator requires confirmation.': 'Добавление администратора требует подтверждения.',
-        'Unique name': 'Уникальное имя',
         'Login': 'Логин',
         'Admin devices': 'Админские устройства',
         'Commands': 'Команды',
@@ -952,6 +949,10 @@ function deviceDisplayId(device) {
         return match ? String(parseInt(match[1], 10)) : String(devices.indexOf(device) + 1);
 }
 
+function formattedDeviceDisplayId(device) {
+        return '#' + deviceDisplayId(device);
+}
+
 function deviceById(id) {
         for (var i = 0; i < devices.length; i++) {
                 if (devices[i].id === id)
@@ -969,7 +970,7 @@ function adminDeviceList(admin) {
 
         return E('div', { 'class': 'sf-admin-device-list' }, selected.map(function (device) {
                 return E('div', {}, [
-                        E('span', { 'class': 'sf-admin-device-list-id' }, '#' + deviceDisplayId(device)),
+                        E('span', { 'class': 'sf-admin-device-list-id' }, formattedDeviceDisplayId(device)),
                         E('span', {}, device.name)
                 ]);
         }));
@@ -993,6 +994,7 @@ function showAdminDeviceBindingModal(admin, onSave) {
 
                 return [
                         deviceDisplayId(device),
+                        formattedDeviceDisplayId(device),
                         device.id,
                         device.name,
                         device.ip,
@@ -1030,7 +1032,7 @@ function showAdminDeviceBindingModal(admin, onSave) {
                         });
 
                         return E('div', { 'class': 'sf-binding-row' + (selected[device.id] ? ' is-selected' : '') }, [
-                                E('div', { 'class': 'sf-device-index' }, deviceDisplayId(device)),
+                                E('div', { 'class': 'sf-device-index' }, formattedDeviceDisplayId(device)),
                                 E('div', { 'class': 'sf-device-name' }, [
                                         E('strong', {}, device.name),
                                         E('small', {}, device.group)
@@ -1095,7 +1097,7 @@ function deviceTable(rows, options) {
 
         var tableRows = rows.map(function (device, index) {
                 return E('div', { 'class': 'sf-device-row' }, [
-                        E('div', { 'class': 'sf-device-index' }, deviceDisplayId(device)),
+                        E('div', { 'class': 'sf-device-index' }, formattedDeviceDisplayId(device)),
                         E('div', { 'class': 'sf-device-name' }, [
                                         E('strong', {}, [
                                                 device.adminDevice ? adminCrownIcon() : '',
@@ -1541,7 +1543,7 @@ return view.extend({
                                                 'class': 'cbi-input-text sf-search',
                                                 'placeholder': T('Search by name, IP, or MAC')
                                         }),
-                                        actionButton(T('Add manually'), 'positive', T('Manual MAC-based add form is not implemented in this visual test build.'))
+                                        actionButton(T('Add device'), 'positive', T('Manual MAC-based add form is not implemented in this visual test build.'))
                                 ])
                         ]),
                         deviceTable(devices)
@@ -1569,7 +1571,7 @@ return view.extend({
                                 E('div', {}, [
                                         E('p', {}, T('Blocklisted devices cannot access the internet, LuCI, SSH, or the Sheepfold API.'))
                                 ]),
-                                actionButton(T('Add device'), 'danger', T('Blocklist changes require confirmation.'))
+                                actionButton(T('Add device'), 'positive', T('Blocklist changes require confirmation.'))
                         ]),
                         E('div', { 'class': 'sf-note sf-note-warning' }, T('Emergency-useful sites for blocklisted devices require a separate explicit setting and still do not open router access.')),
                         deviceTable(devices.filter(function (device) { return device.status === 'blocked'; }), { compact: true })
@@ -1739,14 +1741,13 @@ return view.extend({
                 return E('div', { 'class': 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
-                                        E('h3', {}, T('Administrator accounts')),
-                                        E('p', {}, T('Each administrator has a unique display name, login, and password stored on the router.'))
+                                        E('h3', {}, T('Administrator accounts'))
                                 ]),
-                                actionButton(T('Add administrator'), 'danger', T('Adding a new administrator requires confirmation.'))
+                                actionButton(T('Add administrator'), 'positive', T('Adding a new administrator requires confirmation.'))
                         ]),
                         E('div', { 'class': 'sf-admin-table' }, [
                                 E('div', { 'class': 'sf-admin-row sf-admin-head' }, [
-                                        E('div', {}, T('Unique name')),
+                                        E('div', {}, T('Admin name')),
                                         E('div', {}, T('Login')),
                                         E('div', {}, T('Admin devices')),
                                         E('div', {}, T('Actions'))
@@ -1871,7 +1872,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-28';
+                var assetVersion = '0.1.0-29';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
