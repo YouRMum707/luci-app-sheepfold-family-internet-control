@@ -199,12 +199,16 @@ var translations = {
         'Add site': 'Добавить сайт',
         'Edit site': 'Редактировать сайт',
         'Delete site': 'Удалить сайт',
+        'Site URL is required.': 'URL адрес сайта обязателен.',
+        'Site saved.': 'Сайт сохранён.',
+        'Site deleted.': 'Сайт удалён.',
+        'Delete this site?': 'Удалить этот сайт?',
+        'This site will be removed from the emergency-useful list.': 'Этот сайт будет удалён из списка аварийно-полезных сайтов.',
+        'Delete': 'Удалить',
         'URL address': 'URL адрес',
         'Name': 'Название',
         'Description': 'Описание',
         'Cancel': 'Отмена',
-        'Site changes would be saved after confirmation.': 'Изменения сайта будут сохранены после подтверждения.',
-        'Site would be removed after confirmation.': 'Сайт будет удалён после подтверждения.',
         'Do not add broad yandex.ru by default: it can open video, music, games, feeds, and other non-emergency services.': 'Не добавляйте широкий yandex.ru по умолчанию: он может открыть видео, музыку, игры, ленты и другие неаварийные сервисы.',
         'Family-facing shortcut for common OpenWRT wireless settings.': 'Упрощённый семейный доступ к основным настройкам Wi-Fi OpenWRT.',
         'Connect QR': 'QR подключения',
@@ -898,14 +902,49 @@ function quickAllowlistButton() {
         }, T('Quick add to allowlist'));
 }
 
-function showSiteModal(site) {
-        site = site || ['', '', ''];
+function renderEmergencySiteList() {
+        var lists = document.querySelectorAll('.sf-domain-list');
 
-        ui.showModal(site[0] ? T('Edit site') : T('Add site'), [
+        for (var i = 0; i < lists.length; i++)
+                lists[i].replaceChildren.apply(lists[i], emergencySites.map(domainCard));
+}
+
+function siteInputField(label, value) {
+        var input = E('input', { 'class': 'cbi-input-text', 'value': value || '' });
+
+        return {
+                input: input,
+                node: E('label', { 'class': 'sf-field' }, [
+                        E('span', {}, label),
+                        input
+                ])
+        };
+}
+
+function siteTextareaField(label, value) {
+        var input = E('textarea', { 'class': 'cbi-input-textarea', 'rows': 4 }, value || '');
+
+        return {
+                input: input,
+                node: E('label', { 'class': 'sf-field sf-field-wide' }, [
+                        E('span', {}, label),
+                        input
+                ])
+        };
+}
+
+function showSiteModal(site) {
+        var isEdit = !!site;
+        var current = site || ['', '', ''];
+        var urlField = siteInputField(T('URL address'), current[0]);
+        var nameField = siteInputField(T('Name'), current[1]);
+        var descriptionField = siteTextareaField(T('Description'), current[2]);
+
+        ui.showModal(isEdit ? T('Edit site') : T('Add site'), [
                 E('div', { 'class': 'sf-site-modal' }, [
-                        field(T('URL address'), site[0]),
-                        field(T('Name'), site[1]),
-                        textareaField(T('Description'), site[2]),
+                        urlField.node,
+                        nameField.node,
+                        descriptionField.node,
                         E('div', { 'class': 'sf-note sf-note-warning' },
                                 T('Do not add broad yandex.ru by default: it can open video, music, games, feeds, and other non-emergency services.'))
                 ]),
@@ -917,10 +956,62 @@ function showSiteModal(site) {
                         E('button', {
                                 'class': 'btn cbi-button cbi-button-positive',
                                 'click': function () {
-                                        notify(T('Site changes would be saved after confirmation.'), 'info');
+                                        var url = urlField.input.value.trim();
+                                        var name = nameField.input.value.trim();
+                                        var description = descriptionField.input.value.trim();
+
+                                        if (!url) {
+                                                notify(T('Site URL is required.'), 'warning');
+                                                return;
+                                        }
+
+                                        if (isEdit) {
+                                                site[0] = url;
+                                                site[1] = name;
+                                                site[2] = description;
+                                        } else {
+                                                emergencySites.push([url, name, description]);
+                                        }
+
+                                        renderEmergencySiteList();
+                                        notify(T('Site saved.'), 'info');
                                         ui.hideModal();
                                 }
                         }, T('Save'))
+                ])
+        ]);
+}
+
+function deleteSite(site) {
+        var index = emergencySites.indexOf(site);
+
+        if (index === -1)
+                return;
+
+        emergencySites.splice(index, 1);
+        renderEmergencySiteList();
+        notify(T('Site deleted.'), 'info');
+        ui.hideModal();
+}
+
+function showDeleteSiteModal(site) {
+        ui.showModal(T('Delete site'), [
+                E('div', { 'class': 'sf-site-modal' }, [
+                        E('p', {}, T('Delete this site?')),
+                        E('strong', {}, site[0]),
+                        E('small', {}, T('This site will be removed from the emergency-useful list.'))
+                ]),
+                E('div', { 'class': 'right sf-modal-actions' }, [
+                        E('button', {
+                                'class': 'btn cbi-button',
+                                'click': ui.hideModal
+                        }, T('Cancel')),
+                        E('button', {
+                                'class': 'btn cbi-button cbi-button-negative',
+                                'click': function () {
+                                        deleteSite(site);
+                                }
+                        }, T('Delete'))
                 ])
         ]);
 }
@@ -937,7 +1028,7 @@ function domainCard(site) {
                 E('small', {}, site[2]),
                 E('div', { 'class': 'sf-domain-actions sf-domain-actions-bottom' }, [
                         iconButton(T('Delete site'), 'trash', 'danger', function () {
-                                notify(T('Site would be removed after confirmation.'), 'warning');
+                                showDeleteSiteModal(site);
                         })
                 ])
         ]);
@@ -1872,7 +1963,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-29';
+                var assetVersion = '0.1.0-30';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
