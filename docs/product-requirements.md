@@ -151,6 +151,8 @@ Requirements:
 - QR/manual setup must include router address/API URL, administrator login or identifier, pairing token/code, token lifetime, and Wi-Fi MAC guidance;
 - pairing tokens must be one-time, short-lived, revocable, and stored only as hashes or otherwise non-reusable secrets on the router;
 - once a pairing token/code is successfully used, the router must immediately mark it as consumed and reject every later attempt to use the same QR/manual code;
+- token consumption must be enforced on the router backend. Android and LuCI frontend may display state, but they must not be trusted to prevent token reuse;
+- manual pairing codes should be easy to transfer by hand but hard to guess. The router backend must generate them with a cryptographically secure random source: 10 random characters from safe lowercase letters `abcdefghkmnpqrstuvwxyz`, safe uppercase letters `ABCDEFGHKMNPQRSTUVWXYZ`, safe digits `2456789`, and safe special characters `+-*()[]{}<>?@#$%^&:;.,`, with at most 3 special characters;
 - pairing must not expose router root credentials, LuCI session cookies, bot tokens, AI keys, or other unrelated secrets;
 - pairing events must be written to the administrative action log with masking.
 

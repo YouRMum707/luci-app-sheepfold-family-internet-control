@@ -12,8 +12,7 @@ var devices = [
                 note: 'Всегда доступен, устройство администратора',
                 adminDevice: true,
                 adminOwner: 'Владелец',
-                adminLogin: 'owner',
-                pairingCode: 'SF-PAIR-8264'
+                adminLogin: 'owner'
         },
         {
                 name: 'Планшет ребёнка',
@@ -545,11 +544,62 @@ function settingLine(label, value) {
         ]);
 }
 
+function randomInteger(max) {
+        if (window.crypto && window.crypto.getRandomValues) {
+                var values = new Uint32Array(1);
+                window.crypto.getRandomValues(values);
+                return values[0] % max;
+        }
+
+        return Math.floor(Math.random() * max);
+}
+
+function shuffleCharacters(chars) {
+        for (var i = chars.length - 1; i > 0; i--) {
+                var j = randomInteger(i + 1);
+                var tmp = chars[i];
+                chars[i] = chars[j];
+                chars[j] = tmp;
+        }
+
+        return chars;
+}
+
+function generatePairingCode() {
+        var lower = 'abcdefghkmnpqrstuvwxyz';
+        var upper = 'ABCDEFGHKMNPQRSTUVWXYZ';
+        var digits = '2456789';
+        var specials = '+-*()[]{}<>?@#$%^&:;.,';
+        var alnum = lower + upper + digits;
+        var all = alnum + specials;
+        var chars = [
+                lower[randomInteger(lower.length)],
+                upper[randomInteger(upper.length)],
+                digits[randomInteger(digits.length)]
+        ];
+        var specialCount = randomInteger(4);
+
+        for (var s = 0; s < specialCount; s++) {
+                chars.push(specials[randomInteger(specials.length)]);
+        }
+
+        while (chars.length < 10) {
+                var pool = specialCount >= 3 ? alnum : all;
+                var next = pool[randomInteger(pool.length)];
+                if (specials.indexOf(next) !== -1)
+                        specialCount++;
+                chars.push(next);
+        }
+
+        return shuffleCharacters(chars).join('');
+}
+
 function showPairingModal(device) {
         var routerAddress = '192.168.1.1';
         var apiUrl = 'http://' + routerAddress + '/sheepfold/api';
+        var pairingCode = device.pairingCode || generatePairingCode();
         var pairingPayload = 'SF1|h=' + routerAddress + '|api=/sf|u=' +
-                (device.adminLogin || 'owner') + '|c=' + (device.pairingCode || 'SF-PAIR-0000') + '|ttl=600';
+                (device.adminLogin || 'owner') + '|c=' + pairingCode + '|ttl=600';
 
         ui.showModal(T('Pairing settings'), [
                 E('div', { 'class': 'sf-modal-pairing' }, [
@@ -563,7 +613,7 @@ function showPairingModal(device) {
                                 settingLine(T('Router address'), routerAddress),
                                 settingLine(T('Sheepfold API URL'), apiUrl),
                                 settingLine(T('Administrator login'), device.adminLogin || 'owner'),
-                                settingLine(T('Pairing code'), device.pairingCode || 'SF-PAIR-0000'),
+                                settingLine(T('Pairing code'), pairingCode),
                                 settingLine(T('Token lifetime'), T('10 minutes')),
                                 settingLine(T('QR payload'), pairingPayload),
                                 settingLine(T('Wi-Fi MAC check'), T('Use the real device MAC for this home Wi-Fi network.')),

@@ -56,7 +56,9 @@ Pairing rules:
 - QR/manual setup must use a short-lived one-time token scoped to one administrator and one device;
 - pairing tokens must be revocable and stored on the router only as hashes or non-reusable secrets;
 - after successful pairing, the router backend must immediately mark the one-time token as consumed and reject any later reuse, even if a child photographed the QR code or copied the manual code;
+- token consumption is a router-backend responsibility. Android-side state, LuCI frontend state, hidden UI flags, or "already scanned" markers are not sufficient security controls;
 - token validation must check token hash, TTL, owning administrator, target admin device, consumed state, and revocation state before issuing any durable Android credential;
+- manual pairing codes must be generated on the router backend with a cryptographically secure random source. Use 10 random characters from safe-to-copy sets: lowercase `abcdefghkmnpqrstuvwxyz`, uppercase `ABCDEFGHKMNPQRSTUVWXYZ`, digits `2456789`, and special characters `+-*()[]{}<>?@#$%^&:;.,`; include no more than 3 special characters in one code;
 - QR codes must not contain router root passwords, LuCI session cookies, bot tokens, AI keys, or unrelated secrets;
 - manual setup text next to QR should show only the minimum required connection settings;
 - pairing attempts and successful pairings must be written to the administrative action log with masking.

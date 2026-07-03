@@ -402,7 +402,9 @@ Admin:
 - token короткоживущий, одноразовый, revocable;
 - token хранится на роутере только как hash/non-reusable secret;
 - после успешного сопряжения backend роутера немедленно помечает token/code как использованный (`consumed`) и больше никогда не принимает его повторно, даже если QR сфотографировали или ручной код переписали;
+- сжигание одноразового token/code реализуется именно на backend роутера. Android state, LuCI frontend state, признак "уже отсканировано" или скрытие кнопки не являются защитой от повторного использования;
 - перед выдачей постоянного Android credential backend проверяет hash token, TTL, администратора-владельца, admin-device, consumed state и revocation state;
+- ручной временный пароль должен генерироваться backend-частью роутера через криптографически стойкий генератор и быть удобным для переноса руками, но сложным: 10 случайных символов из safe lowercase `abcdefghkmnpqrstuvwxyz`, safe uppercase `ABCDEFGHKMNPQRSTUVWXYZ`, safe digits `2456789`, safe specials `+-*()[]{}<>?@#$%^&:;.,`; не больше 3 спецсимволов в одном пароле;
 - pairing actions логируются с masking.
 
 ## Android-приложение
