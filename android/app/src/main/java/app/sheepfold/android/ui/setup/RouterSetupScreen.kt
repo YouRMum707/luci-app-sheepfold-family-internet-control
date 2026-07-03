@@ -166,6 +166,7 @@ fun RouterSetupScreen(onSetupComplete: () -> Unit) {
     var setupStep by remember { mutableStateOf(SetupStep.Agreement) }
     var isTestingConnection by remember { mutableStateOf(false) }
     var localDiscovery by remember { mutableStateOf<LocalSheepfoldDiscovery?>(null) }
+    var discoveryAutoAdvanceUsed by remember { mutableStateOf(false) }
 
     fun goBack() {
         setupStep = when (setupStep) {
@@ -196,7 +197,10 @@ fun RouterSetupScreen(onSetupComplete: () -> Unit) {
                     routerConnectionManager = routerConnectionManager,
                     onDetected = { discovery ->
                         localDiscovery = discovery
-                        setupStep = SetupStep.MacCheck
+                        if (!discoveryAutoAdvanceUsed) {
+                            discoveryAutoAdvanceUsed = true
+                            setupStep = SetupStep.MacCheck
+                        }
                     },
                     onContinue = { setupStep = SetupStep.MacCheck }
                 )
