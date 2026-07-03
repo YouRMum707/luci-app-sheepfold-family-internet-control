@@ -92,6 +92,7 @@ ensure_global_option block_on_boot '0'
 ensure_global_option new_device_policy 'allow'
 ensure_global_option log_retention '3d'
 ensure_global_option offline_device_retention_days '90'
+ensure_global_option app_port '5201'
 detect_installed() {{
         pkg="$1"
         init="$2"

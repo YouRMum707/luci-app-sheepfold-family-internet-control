@@ -336,10 +336,10 @@
 
 .sf-admin-row {
         display: grid;
-        grid-template-columns: minmax(170px, 1.2fr) minmax(120px, 0.8fr) minmax(110px, 0.7fr) minmax(160px, 1fr) minmax(130px, 0.8fr);
+        grid-template-columns: minmax(170px, 1.2fr) minmax(120px, 0.8fr) minmax(190px, 1.2fr) minmax(130px, 0.8fr);
         gap: 12px;
         align-items: center;
-        min-width: 780px;
+        min-width: 680px;
         padding: 11px 12px;
         border-top: 1px solid var(--sf-border);
         background: #ffffff;

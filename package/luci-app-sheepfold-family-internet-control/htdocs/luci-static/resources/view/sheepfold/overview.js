@@ -126,13 +126,19 @@ var translations = {
         'No devices selected': 'Устройства не выбраны',
         'Device bindings saved.': 'Привязка устройств сохранена.',
         'Admin device': 'Админское устройство',
-        'Owner': 'Владелец',
         'Pairing': 'Сопряжение',
         'Pairing settings': 'Настройки сопряжения',
         'Scan this QR code with the Android app to connect it to this router.': 'Отсканируйте QR-код Android-приложением, чтобы подключить его к этому роутеру.',
         'The QR code must contain a short-lived one-time token, not the router root password.': 'QR-код должен содержать короткоживущий одноразовый токен, а не root-пароль роутера.',
         'Manual setup': 'Ручная настройка',
         'Router address': 'Адрес роутера',
+        'Server IP address': 'IP адрес сервера',
+        'Port': 'Порт',
+        'Used by Android app and pairing QR codes.': 'Используется Android-приложением и QR-кодами подключения.',
+        'Administrator settings': 'Настройки администратора',
+        'Admin name': 'Имя',
+        'Temporary password': 'Временный пароль',
+        'Scan this QR code in the Android app for quick setup.': 'Отсканируйте этот QR-код в Android-приложении для быстрой настройки.',
         'Sheepfold API URL': 'URL API Sheepfold',
         'Administrator login': 'Логин администратора',
         'Pairing code': 'Код сопряжения',
@@ -243,9 +249,7 @@ var translations = {
         'Adding a new administrator requires confirmation.': 'Добавление администратора требует подтверждения.',
         'Unique name': 'Уникальное имя',
         'Login': 'Логин',
-        'Role': 'Роль',
         'Admin devices': 'Админские устройства',
-        'Admin': 'Администратор',
         'Commands': 'Команды',
         'show all devices': 'показать все устройства',
         'block internet': 'выключить интернет',
@@ -257,11 +261,11 @@ var translations = {
         'Clearing logs requires confirmation.': 'Очистка журнала требует подтверждения.',
         'Export masked': 'Экспорт с маскированием',
         'Masked log export is not implemented in this visual test build.': 'Экспорт журнала с маскированием пока не реализован в этой визуальной сборке.',
-        'Admin granted +30 minutes to Child tablet': 'Администратор дал +30 минут устройству "Планшет ребёнка"',
-        'New device detected: ID 4, DC:A6:32:xx:xx:19, IP 192.168.1.98': 'Обнаружено новое устройство: ID 4, DC:A6:32:xx:xx:19, IP 192.168.1.98',
+        'Owner granted +30 minutes to Child tablet': 'Владелец дал +30 минут устройству "Планшет ребёнка"',
+        'New device detected: #4, DC:A6:32:xx:xx:19, IP 192.168.1.98': 'Обнаружено новое устройство: #4, DC:A6:32:xx:xx:19, IP 192.168.1.98',
         'Global block disabled by owner': 'Глобальная блокировка выключена владельцем',
         'General': 'Общие',
-        'Language': 'Язык',
+        'Application language': 'Язык приложения',
         'Russian': 'Русский',
         'English': 'Английский',
         'New device behavior': 'Поведение для новых устройств',
@@ -711,6 +715,37 @@ function showPairingModal(device) {
         ]);
 }
 
+function showAdminSettingsModal(admin) {
+        var routerAddress = '192.168.1.1';
+        var port = safeUciGet('sheepfold', 'global', 'app_port', '5201');
+        var temporaryPassword = generatePairingCode();
+        var pairingPayload = 'SF1|h=' + routerAddress + '|p=' + port + '|u=' +
+                admin.login + '|c=' + temporaryPassword + '|ttl=600';
+
+        ui.showModal(T('Administrator settings'), [
+                E('div', { 'class': 'sf-modal-pairing' }, [
+                        E('div', { 'class': 'sf-qr-wrap' }, [
+                                qrCode(pairingPayload),
+                                E('p', {}, T('Scan this QR code in the Android app for quick setup.')),
+                                E('small', {}, T('The QR code must contain a short-lived one-time token, not the router root password.'))
+                        ]),
+                        E('div', { 'class': 'sf-manual-settings' }, [
+                                field(T('Admin name'), admin.name),
+                                field(T('Login'), admin.login),
+                                settingLine(T('Temporary password'), temporaryPassword),
+                                settingLine(T('Server IP address'), routerAddress),
+                                settingLine(T('Port'), port)
+                        ])
+                ]),
+                E('div', { 'class': 'right' }, [
+                        E('button', {
+                                'class': 'btn cbi-button',
+                                'click': ui.hideModal
+                        }, T('Close'))
+                ])
+        ]);
+}
+
 function pairingButton(device) {
         return E('button', {
                 'class': 'sf-action sf-action-pairing',
@@ -895,7 +930,7 @@ function adminDeviceList(admin) {
 
         return E('div', { 'class': 'sf-admin-device-list' }, selected.map(function (device) {
                 return E('div', {}, [
-                        E('span', { 'class': 'sf-admin-device-list-id' }, deviceDisplayId(device)),
+                        E('span', { 'class': 'sf-admin-device-list-id' }, '#' + deviceDisplayId(device)),
                         E('span', {}, device.name)
                 ]);
         }));
@@ -1341,6 +1376,12 @@ return view.extend({
                         if (generalButton)
                                 this.switchSettingsTab(generalButton, 'general');
                 }
+
+                if (tab === 'users') {
+                        var devicesButton = page.querySelector('[data-user-list-tab="devices"]');
+                        if (devicesButton)
+                                this.switchUserListTab(devicesButton, 'devices');
+                }
         },
 
         openUserListMetric: function (button, userListTab) {
@@ -1664,7 +1705,6 @@ return view.extend({
                                 E('div', { 'class': 'sf-admin-row sf-admin-head' }, [
                                         E('div', {}, T('Unique name')),
                                         E('div', {}, T('Login')),
-                                        E('div', {}, T('Role')),
                                         E('div', {}, T('Admin devices')),
                                         E('div', {}, T('Actions'))
                                 ])
@@ -1676,11 +1716,10 @@ return view.extend({
                                                 E('strong', {}, admin.name)
                                         ]),
                                         E('div', { 'class': 'sf-mono' }, admin.login),
-                                        E('div', {}, admin.role === 'owner' ? T('Owner') : T('Admin')),
                                         devicesCell,
-                                        E('div', { 'class': 'sf-row-actions' }, [
+                        E('div', { 'class': 'sf-row-actions' }, [
                                                 iconButton(T('Configure'), 'gear', 'neutral', function () {
-                                                        notify(T('This action is a visual prototype only.'), 'info');
+                                                        showAdminSettingsModal(admin);
                                                 }),
                                                 iconButton(T('Bind devices'), 'link', 'neutral', function () {
                                                         showAdminDeviceBindingModal(admin, function () {
@@ -1705,8 +1744,8 @@ return view.extend({
                                 ])
                         ]),
                         E('div', { 'class': 'sf-log' }, [
-                                E('div', {}, [E('time', {}, '03.07.2026 20:31:12'), E('span', {}, T('Admin granted +30 minutes to Child tablet'))]),
-                                E('div', {}, [E('time', {}, '03.07.2026 19:55:04'), E('span', {}, T('New device detected: ID 4, DC:A6:32:xx:xx:19, IP 192.168.1.98'))]),
+                                E('div', {}, [E('time', {}, '03.07.2026 20:31:12'), E('span', {}, T('Owner granted +30 minutes to Child tablet'))]),
+                                E('div', {}, [E('time', {}, '03.07.2026 19:55:04'), E('span', {}, T('New device detected: #4, DC:A6:32:xx:xx:19, IP 192.168.1.98'))]),
                                 E('div', {}, [E('time', {}, '03.07.2026 18:10:44'), E('span', {}, T('Global block disabled by owner'))])
                         ])
                 ]);
@@ -1714,10 +1753,11 @@ return view.extend({
 
         renderSettingsGeneral: function () {
                 return E('div', { 'class': 'sf-flat-form' }, [
-                        selectField(T('Language'), 'ru', [
+                        selectField(T('Application language'), 'ru', [
                                 ['ru', T('Russian')],
                                 ['en', T('English')]
                         ]),
+                        field(T('Port'), safeUciGet('sheepfold', 'global', 'app_port', '5201'), T('Used by Android app and pairing QR codes.')),
                         selectField(T('New device behavior'), 'allow', [
                                 ['allow', T('Allow internet by default')],
                                 ['restrict_until_configured', T('Restrict until configured')]
@@ -1788,7 +1828,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-26';
+                var assetVersion = '0.1.0-27';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);

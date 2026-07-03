@@ -30,6 +30,12 @@ Avoid:
 - In Sheepfold LuCI, prefer one clear `Save` / `Сохранить` action. Do not expose separate `Apply` and `Save` actions unless OpenWRT internals force it; if both exist technically, hide or merge `Apply` in the Sheepfold UI so parents are not asked to understand the distinction.
 - In Sheepfold LuCI, keep `All devices`, `Allowlist`, and `Blocklist` as nested tabs inside the top-level `User lists` / `Списки пользователей` tab. `All devices` must be the default nested tab.
 
+## Coding Style
+
+- Use camelCase for JavaScript/Kotlin variables, functions, object fields, and UI state names whenever the surrounding platform does not require another convention.
+- Keep OpenWRT/UCI/package keys in their native format, usually snake_case or uppercase Make variables, for example `app_port`, `ui_asset_version`, `PKG_RELEASE`, and `SHEEPFOLD_UI_ASSET_VERSION`.
+- Do not convert external API fields, UCI options, package metadata, Android resource names, or documented protocol keys to camelCase unless the external contract itself uses camelCase.
+
 ## README Layout
 
 - Keep installation, update, and uninstall instructions near the top of both `README.md` and `README.ru.md`, before long product explanations.
