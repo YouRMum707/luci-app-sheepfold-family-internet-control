@@ -274,9 +274,15 @@ private fun AgreementScreen(onAccept: () -> Unit) {
         Image(
             painter = painterResource(id = R.drawable.sheepfold_logo),
             contentDescription = "Sheepfold",
-            modifier = Modifier.size(128.dp)
+            modifier = Modifier.size(84.dp)
         )
         ScreenHeader(text = "Sheepfold", large = true)
+        FramedButton(
+            onClick = { permissionsLauncher.launch(runtimePermissions.toTypedArray()) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = if (allPermissionsGranted) "Разрешения выданы" else "Выдать разрешения Android")
+        }
         Text(
             text = "Перед настройкой примите пользовательское соглашение и условия обработки технических данных, необходимых для работы приложения.",
             style = MaterialTheme.typography.bodyLarge
@@ -289,12 +295,6 @@ private fun AgreementScreen(onAccept: () -> Unit) {
                 "Выдайте разрешения на первом шаге. Камера нужна для QR-кода, Wi-Fi/геоданные - для имени сети и MAC-адреса, уведомления - для важных событий."
             }
         )
-        FramedButton(
-            onClick = { permissionsLauncher.launch(runtimePermissions.toTypedArray()) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = if (allPermissionsGranted) "Разрешения выданы" else "Выдать разрешения Android")
-        }
         FramedButton(
             onClick = {
                 uriHandler.openUri(
