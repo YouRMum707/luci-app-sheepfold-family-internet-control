@@ -119,7 +119,9 @@ var translations = {
         'ID': 'ID',
         'Bind devices': 'Привязать устройства',
         'Device binding': 'Привязка устройств',
-        'Select administrator devices. Blocklisted devices are not available for binding.': 'Выберите устройства администратора. Устройства из чёрного списка недоступны для привязки.',
+        'Select administrator devices': 'Выберите устройства администратора',
+        'Selected administrator devices can manage Sheepfold.': 'Выбранные устройства смогут управлять программой.',
+        'Blocklisted devices are not available for binding.': 'Устройства из чёрного списка недоступны для привязки.',
         'Selected devices are shown first.': 'Выбранные устройства показаны сверху.',
         'No devices selected': 'Устройства не выбраны',
         'Device bindings saved.': 'Привязка устройств сохранена.',
@@ -981,7 +983,10 @@ function showAdminDeviceBindingModal(admin, onSave) {
 
         ui.showModal(T('Device binding'), [
                 E('div', { 'class': 'sf-binding-modal' }, [
-                        E('p', { 'class': 'sf-section-intro' }, T('Select administrator devices. Blocklisted devices are not available for binding.')),
+                        E('div', { 'class': 'sf-section-intro' }, [
+                                E('p', {}, T('Select administrator devices') + ' ' + admin.name + '. ' + T('Selected administrator devices can manage Sheepfold.')),
+                                E('p', {}, T('Blocklisted devices are not available for binding.'))
+                        ]),
                         E('div', { 'class': 'sf-panel-head sf-binding-toolbar' }, [
                                 filterInput,
                                 E('span', { 'class': 'sf-muted' }, T('Selected devices are shown first.'))
@@ -1781,7 +1786,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-24';
+                var assetVersion = '0.1.0-25';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);

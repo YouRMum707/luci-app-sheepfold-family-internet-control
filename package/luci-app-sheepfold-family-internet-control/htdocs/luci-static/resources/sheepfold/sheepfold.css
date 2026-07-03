@@ -562,7 +562,8 @@
 }
 
 .sf-binding-modal {
-        min-width: min(860px, 86vw);
+        width: min(780px, 84vw);
+        max-width: 100%;
 }
 
 .sf-binding-toolbar {
@@ -577,17 +578,29 @@
         border: 1px solid var(--sf-border);
         border-radius: 8px;
         overflow-x: auto;
+        width: 100%;
+        box-sizing: border-box;
 }
 
 .sf-binding-row {
         display: grid;
-        grid-template-columns: 44px minmax(180px, 1.4fr) minmax(110px, 0.8fr) minmax(150px, 1fr) 58px;
-        gap: 12px;
+        grid-template-columns: 36px minmax(130px, 1.3fr) minmax(92px, 0.8fr) minmax(120px, 1fr) 42px;
+        gap: 8px;
         align-items: center;
-        min-width: 700px;
         padding: 10px 12px;
         border-top: 1px solid var(--sf-border);
         background: #ffffff;
+        box-sizing: border-box;
+        width: 100%;
+}
+
+.sf-binding-row > div,
+.sf-binding-row label {
+        min-width: 0;
+}
+
+.sf-binding-row .sf-mono {
+        overflow-wrap: anywhere;
 }
 
 .sf-binding-row:first-child {
