@@ -2,21 +2,41 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-sheepfold-family-internet-control
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=20
+PKG_RELEASE:=21
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=kva4991
 SHEEPFOLD_UI_ASSET_VERSION:=$(PKG_VERSION)-$(PKG_RELEASE)
 
 LUCI_TITLE:=Sheepfold Family Internet Control
 LUCI_DESCRIPTION:=Family internet access control for OpenWRT with LuCI, Android, and bot support.
-LUCI_DEPENDS:=+firewall4 +rpcd +uci +uclient-fetch +ca-bundle
+LUCI_DEPENDS:=+luci-base +firewall4 +rpcd +uci +uclient-fetch +ca-bundle
 
 define Package/$(PKG_NAME)/postinst
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] && exit 0
+uci -q get sheepfold.global >/dev/null || uci -q set sheepfold.global='sheepfold'
+ensure_global_option() {
+	option="$$1"
+	value="$$2"
+	[ -n "$$(uci -q get sheepfold.global.$$option 2>/dev/null)" ] || uci -q set sheepfold.global.$$option="$$value"
+}
+ensure_global_option enabled '0'
+ensure_global_option language 'ru'
+ensure_global_option block_on_boot '0'
+ensure_global_option new_device_policy 'allow'
+ensure_global_option log_retention '3d'
+ensure_global_option offline_device_retention_days '90'
 uci -q set sheepfold.global.ui_asset_version='$(SHEEPFOLD_UI_ASSET_VERSION)'
 uci -q commit sheepfold
+rm -f /var/luci-indexcache* 2>/dev/null || true
+rm -f /tmp/luci-indexcache* 2>/dev/null || true
+rm -f /tmp/luci-modulecache/* 2>/dev/null || true
+[ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload || true
 exit 0
+endef
+
+define Package/$(PKG_NAME)/conffiles
+/etc/config/sheepfold
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk

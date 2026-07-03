@@ -42,6 +42,7 @@ trap 'rm -rf "$BUILD_DIR"; rmdir "$ROOT_DIR/.build" 2>/dev/null || true' EXIT
 cp -R "$PKG_DIR/root/." "$BUILD_DIR/data/"
 cp -R "$PKG_DIR/htdocs/." "$BUILD_DIR/data/www/"
 chmod 0755 "$BUILD_DIR/data/etc/init.d/sheepfold"
+chmod 0755 "$BUILD_DIR/data/etc/uci-defaults/50_luci-sheepfold"
 chmod 0755 "$BUILD_DIR/data/usr/libexec/sheepfold/sheepfold-service"
 
 cat > "$BUILD_DIR/control/control" <<CONTROL
@@ -49,20 +50,38 @@ Package: $PKG_NAME
 Version: $PKG_VERSION-$PKG_RELEASE
 Architecture: $ARCH
 Maintainer: kva4991
-Depends: firewall4, rpcd, uci, uclient-fetch, ca-bundle
+Depends: luci-base, firewall4, rpcd, uci, uclient-fetch, ca-bundle
 Section: luci
 Priority: optional
 Installed-Size: 10240
 Description: Visual test build of Sheepfold Family Internet Control LuCI app.
 CONTROL
 
+cat > "$BUILD_DIR/control/conffiles" <<CONFFILES
+/etc/config/sheepfold
+CONFFILES
+
 cat > "$BUILD_DIR/control/postinst" <<POSTINST
 #!/bin/sh
 [ -n "\${IPKG_INSTROOT}" ] && exit 0
+uci -q get sheepfold.global >/dev/null || uci -q set sheepfold.global='sheepfold'
+ensure_global_option() {
+        option="\$1"
+        value="\$2"
+        [ -n "\$(uci -q get sheepfold.global.\$option 2>/dev/null)" ] || uci -q set sheepfold.global.\$option="\$value"
+}
+ensure_global_option enabled '0'
+ensure_global_option language 'ru'
+ensure_global_option block_on_boot '0'
+ensure_global_option new_device_policy 'allow'
+ensure_global_option log_retention '3d'
+ensure_global_option offline_device_retention_days '90'
 uci -q set sheepfold.global.ui_asset_version='${PKG_VERSION}-${PKG_RELEASE}'
 uci -q commit sheepfold
-rm -f /tmp/luci-indexcache 2>/dev/null || true
+rm -f /var/luci-indexcache* 2>/dev/null || true
+rm -f /tmp/luci-indexcache* 2>/dev/null || true
 rm -f /tmp/luci-modulecache/* 2>/dev/null || true
+[ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload || true
 exit 0
 POSTINST
 chmod 0755 "$BUILD_DIR/control/postinst"

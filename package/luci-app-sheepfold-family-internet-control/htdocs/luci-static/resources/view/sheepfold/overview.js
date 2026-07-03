@@ -979,18 +979,36 @@ function wifiQrPayload(ssid, password, encryption) {
         return payload + ';';
 }
 
+function safeUciGet(config, section, option, fallback) {
+        try {
+                var value = uci.get(config, section, option);
+
+                return value == null ? fallback : value;
+        } catch (e) {
+                return fallback;
+        }
+}
+
+function safeUciSections(config, type) {
+        try {
+                return uci.sections(config, type) || [];
+        } catch (e) {
+                return [];
+        }
+}
+
 function readWifiNetworksFromUci() {
-        return uci.sections('wireless', 'wifi-iface').filter(function (section) {
+        return safeUciSections('wireless', 'wifi-iface').filter(function (section) {
                 return section.disabled !== '1' && (!section.mode || section.mode === 'ap');
         }).map(function (section) {
                 var device = section.device || '';
                 var deviceLabel = device || T('Network');
-                var band = device ? (uci.get('wireless', device, 'band') || uci.get('wireless', device, 'hwmode')) : '';
-                var channel = device ? (uci.get('wireless', device, 'channel') || 'auto') : 'auto';
+                var band = device ? (safeUciGet('wireless', device, 'band', '') || safeUciGet('wireless', device, 'hwmode', '')) : '';
+                var channel = device ? (safeUciGet('wireless', device, 'channel', 'auto') || 'auto') : 'auto';
                 var sectionName = section['.name'] || '';
-                var ssid = section.ssid || (sectionName ? uci.get('wireless', sectionName, 'ssid') : '') || '';
-                var encryption = section.encryption || (sectionName ? uci.get('wireless', sectionName, 'encryption') : '') || 'none';
-                var password = section.key || (sectionName ? uci.get('wireless', sectionName, 'key') : '') || '';
+                var ssid = section.ssid || (sectionName ? safeUciGet('wireless', sectionName, 'ssid', '') : '') || '';
+                var encryption = section.encryption || (sectionName ? safeUciGet('wireless', sectionName, 'encryption', '') : '') || 'none';
+                var password = section.key || (sectionName ? safeUciGet('wireless', sectionName, 'key', '') : '') || '';
 
                 return {
                         label: ssid ? ssid + ' (' + (band || deviceLabel) + ')' : deviceLabel,
@@ -1084,11 +1102,25 @@ return view.extend({
         activeUserListTab: 'devices',
         activeSettingsTab: 'general',
         globalInternetBlocked: null,
+        uciLoadState: {
+                sheepfold: false,
+                wireless: false
+        },
 
         load: function () {
+                var self = this;
+
                 return Promise.all([
-                        uci.load('wireless'),
-                        uci.load('sheepfold')
+                        uci.load('wireless').then(function () {
+                                self.uciLoadState.wireless = true;
+                        }, function () {
+                                self.uciLoadState.wireless = false;
+                        }),
+                        uci.load('sheepfold').then(function () {
+                                self.uciLoadState.sheepfold = true;
+                        }, function () {
+                                self.uciLoadState.sheepfold = false;
+                        })
                 ]);
         },
 
@@ -1096,7 +1128,7 @@ return view.extend({
                 if (this.globalInternetBlocked !== null)
                         return this.globalInternetBlocked;
 
-                return uci.get('sheepfold', 'global', 'block_on_boot') === '1';
+                return safeUciGet('sheepfold', 'global', 'block_on_boot', '0') === '1';
         },
 
         updateInternetButtons: function (page, blocked) {

@@ -48,6 +48,7 @@ def add_directory(tar: tarfile.TarFile, name: str) -> None:
 def add_tree(tar: tarfile.TarFile, source: Path, target_prefix: str) -> None:
     executable_paths = {
         "./etc/init.d/sheepfold",
+        "./etc/uci-defaults/50_luci-sheepfold",
         "./usr/libexec/sheepfold/sheepfold-service",
     }
 
@@ -69,24 +70,40 @@ def write_control_tar(path: Path, version: str, release: str) -> None:
 Version: {version}-{release}
 Architecture: all
 Maintainer: kva4991
-Depends: firewall4, rpcd, uci, uclient-fetch, ca-bundle
+Depends: luci-base, firewall4, rpcd, uci, uclient-fetch, ca-bundle
 Section: luci
 Priority: optional
 Installed-Size: 10240
 Description: Visual test build of Sheepfold Family Internet Control LuCI app.
 """.encode("ascii")
+    conffiles = b"/etc/config/sheepfold\n"
 
     postinst = f"""#!/bin/sh
 [ -n "${{IPKG_INSTROOT}}" ] && exit 0
+uci -q get sheepfold.global >/dev/null || uci -q set sheepfold.global='sheepfold'
+ensure_global_option() {{
+        option="$1"
+        value="$2"
+        [ -n "$(uci -q get sheepfold.global.$option 2>/dev/null)" ] || uci -q set sheepfold.global.$option="$value"
+}}
+ensure_global_option enabled '0'
+ensure_global_option language 'ru'
+ensure_global_option block_on_boot '0'
+ensure_global_option new_device_policy 'allow'
+ensure_global_option log_retention '3d'
+ensure_global_option offline_device_retention_days '90'
 uci -q set sheepfold.global.ui_asset_version='{version}-{release}'
 uci -q commit sheepfold
-rm -f /tmp/luci-indexcache 2>/dev/null || true
+rm -f /var/luci-indexcache* 2>/dev/null || true
+rm -f /tmp/luci-indexcache* 2>/dev/null || true
 rm -f /tmp/luci-modulecache/* 2>/dev/null || true
+[ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload || true
 exit 0
 """.encode("ascii")
 
     with tarfile.open(path, "w:gz", format=tarfile.GNU_FORMAT) as tar:
         add_bytes(tar, "./control", control, 0o644)
+        add_bytes(tar, "./conffiles", conffiles, 0o644)
         add_bytes(tar, "./postinst", postinst, 0o755)
 
 
