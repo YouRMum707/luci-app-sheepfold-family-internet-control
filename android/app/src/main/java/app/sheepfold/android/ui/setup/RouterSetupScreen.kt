@@ -1,7 +1,9 @@
 package app.sheepfold.android.ui.setup
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,7 +13,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import app.sheepfold.android.R
 
 @Composable
 fun RouterSetupScreen() {
@@ -21,6 +25,11 @@ fun RouterSetupScreen() {
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.sheepfold_logo),
+            contentDescription = "Sheepfold",
+            modifier = Modifier.size(96.dp)
+        )
         Text(
             text = "Овчарня",
             style = MaterialTheme.typography.headlineLarge

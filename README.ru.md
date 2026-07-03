@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/sheepfold-logo.png" alt="Sheepfold logo" width="160">
+</p>
+
 # Sheepfold : контроль доступа в интернет для семьи
 
 Русский | [English](README.md)
