@@ -620,7 +620,7 @@ private fun MacCheckScreen(onContinue: () -> Unit) {
         ScreenHeader(text = "Проверка MAC-адреса")
         Text(
             text = if (isWifi) {
-                "Для этой домашней Wi-Fi сети должен быть включён настоящий MAC-адрес телефона, а не случайный/private MAC."
+                "Sheepfold будет привязывать устройство к тому MAC-адресу, который роутер видит в этой сети."
             } else {
                 "Для проводного подключения роутер видит MAC сетевого адаптера. Подтвердите, что именно это подключение нужно привязать как админское."
             },
@@ -640,19 +640,19 @@ private fun MacCheckScreen(onContinue: () -> Unit) {
                 body = "Вернитесь назад и подключите телефон к Wi-Fi или проводной сети роутера."
             )
         } else if (currentWifi.macAddress == null) {
-            SetupCard(
-                title = "Нужна ручная проверка",
+            WarningCard(
+                title = "Желательно проверить MAC",
                 body = if (isWifi) {
-                    "Android не отдал MAC-адрес приложению. Откройте настройки текущей Wi-Fi сети и проверьте, что выбран настоящий MAC-адрес устройства."
+                    "Android не отдал MAC-адрес приложению. Желательно открыть настройки текущей Wi-Fi сети и переключить её на настоящий MAC устройства, но это не обязательно: Sheepfold сможет привязать телефон по MAC, который видит роутер."
                 } else {
                     "Android не отдал MAC-адрес адаптера приложению. Проверьте устройство в списке клиентов роутера."
                 }
             )
         } else if (macLooksRandomized) {
-            SetupCard(
-                title = "MAC выглядит как локально назначенный",
+            WarningCard(
+                title = "Желательно использовать настоящий MAC",
                 body = if (isWifi) {
-                    "Это часто означает randomized/private MAC. Переключите эту Wi-Fi сеть на настоящий MAC устройства."
+                    "Текущий MAC похож на случайный/private MAC. Лучше переключить эту Wi-Fi сеть на настоящий MAC устройства для стабильности, но это не обязательно. Если оставить случайный MAC, телефон может появиться как новое устройство после сброса или повторного добавления Wi-Fi сети."
                 } else {
                     "У проводного адаптера такой MAC тоже возможен. Проверьте, что именно этот адаптер нужно привязать как админское устройство."
                 }
@@ -687,7 +687,7 @@ private fun MacCheckScreen(onContinue: () -> Unit) {
             onClick = onContinue,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = if (isWifi) "Настоящий MAC включён" else "Подтверждаю подключение")
+            Text(text = "Продолжить")
         }
     }
 }
@@ -1371,6 +1371,34 @@ private fun SetupCard(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
                 color = bodyColor ?: MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun WarningCard(
+    title: String,
+    body: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3C4)),
+        border = BorderStroke(1.dp, Color(0xFFF2C94C))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFF5F4300)
+            )
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF5F4300)
             )
         }
     }
