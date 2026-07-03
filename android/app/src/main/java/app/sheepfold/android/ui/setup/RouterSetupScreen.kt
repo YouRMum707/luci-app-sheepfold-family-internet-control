@@ -24,6 +24,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
@@ -32,11 +33,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ButtonDefaults
@@ -63,6 +68,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.foundation.text.KeyboardOptions
@@ -259,6 +265,7 @@ private fun AgreementScreen(onAccept: () -> Unit) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val runtimePermissions = remember { requiredRuntimePermissions() }
+    var agreementAccepted by remember { mutableStateOf(false) }
     var permissionStates by remember {
         mutableStateOf(runtimePermissions.associateWith { permission ->
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -274,54 +281,99 @@ private fun AgreementScreen(onAccept: () -> Unit) {
             )
         }
     }
+    val canContinue = agreementAccepted && allPermissionsGranted
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.sheepfold_logo),
-            contentDescription = "Sheepfold",
-            modifier = Modifier.size(84.dp)
-        )
-        ScreenHeader(text = "Sheepfold", large = true)
-        Text(
-            text = "Перед настройкой примите пользовательское соглашение и условия обработки технических данных, необходимых для работы приложения.",
-            style = MaterialTheme.typography.bodyLarge
-        )
-        SetupCard(
-            title = "Разрешения Android",
-            body = if (allPermissionsGranted) {
-                "Разрешения выданы. Они нужны для QR-кода, чтения имени Wi-Fi сети, проверки MAC-адреса и важных уведомлений."
-            } else {
-                "Выдайте разрешения на первом шаге. Камера нужна для QR-кода, Wi-Fi/геоданные - для имени сети и MAC-адреса, уведомления - для важных событий."
-            }
-        )
-        FramedButton(
-            onClick = {
-                uriHandler.openUri(
-                    "https://github.com/kva4991/luci-app-sheepfold-family-internet-control/blob/main/docs/user-agreement.ru.md"
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 144.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.sheepfold_logo),
+                contentDescription = "Sheepfold",
+                modifier = Modifier.size(84.dp)
+            )
+            ScreenHeader(text = "Sheepfold", large = true)
+            Text(
+                text = "Перед настройкой примите пользовательское соглашение и условия обработки технических данных, необходимых для работы приложения.",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            SetupCard(
+                title = "Разрешения Android",
+                body = if (allPermissionsGranted) {
+                    "Разрешения выданы. Они нужны для QR-кода, чтения имени Wi-Fi сети, проверки MAC-адреса и важных уведомлений."
+                } else {
+                    "Выдайте разрешения на первом шаге. Камера нужна для QR-кода, Wi-Fi/геоданные - для имени сети и MAC-адреса, уведомления - для важных событий."
+                }
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Checkbox(
+                    checked = agreementAccepted,
+                    onCheckedChange = { agreementAccepted = it },
+                    modifier = Modifier.size(56.dp),
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Color(0xFF2E7D32),
+                        uncheckedColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Открыть пользовательское соглашение")
+                FramedButton(
+                    onClick = {
+                        uriHandler.openUri(
+                            "https://github.com/kva4991/luci-app-sheepfold-family-internet-control/blob/main/docs/user-agreement.ru.md"
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = "Открыть соглашение")
+                }
+            }
+            FramedButton(
+                enabled = !allPermissionsGranted,
+                onClick = { permissionsLauncher.launch(runtimePermissions.toTypedArray()) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = if (allPermissionsGranted) {
+                        "✓ Разрешения выданы"
+                    } else {
+                        "Выдать разрешения Android"
+                    },
+                    color = if (allPermissionsGranted) {
+                        Color(0xFF2E7D32)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                )
+            }
         }
-        FramedButton(
-            onClick = { permissionsLauncher.launch(runtimePermissions.toTypedArray()) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = if (allPermissionsGranted) "Разрешения выданы" else "Выдать разрешения Android")
-        }
-        FramedButton(
+
+        Button(
+            enabled = canContinue,
             onClick = onAccept,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp)
+                .size(112.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = Color(0xFFB8BEBB),
+                disabledContentColor = Color(0xFF707774)
+            )
         ) {
-            Text(text = "Принимаю")
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = ">")
+                Text(text = "далее")
+            }
         }
     }
 }
