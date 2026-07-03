@@ -165,6 +165,7 @@ fun RouterSetupScreen(onSetupComplete: () -> Unit) {
     val routerConnectionManager = remember { RouterConnectionManager() }
     var setupStep by remember { mutableStateOf(SetupStep.Agreement) }
     var isTestingConnection by remember { mutableStateOf(false) }
+    var localDiscovery by remember { mutableStateOf<LocalSheepfoldDiscovery?>(null) }
 
     fun goBack() {
         setupStep = when (setupStep) {
@@ -193,7 +194,10 @@ fun RouterSetupScreen(onSetupComplete: () -> Unit) {
 
                 SetupStep.WifiConnect -> WifiConnectScreen(
                     routerConnectionManager = routerConnectionManager,
-                    onDetected = { setupStep = SetupStep.MacCheck },
+                    onDetected = { discovery ->
+                        localDiscovery = discovery
+                        setupStep = SetupStep.MacCheck
+                    },
                     onContinue = { setupStep = SetupStep.MacCheck }
                 )
 
@@ -202,7 +206,7 @@ fun RouterSetupScreen(onSetupComplete: () -> Unit) {
                 )
 
                 SetupStep.PairingChoice -> PairingChoiceScreen(
-                    adminSetupLink = routerConnectionManager.adminSetupLink(),
+                    adminSetupLink = routerConnectionManager.adminSetupLink(localDiscovery?.gatewayHost),
                     onShowMessage = { message ->
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(message)
@@ -250,6 +254,7 @@ fun RouterSetupScreen(onSetupComplete: () -> Unit) {
 
                 SetupStep.ManualSetup -> ManualSetupScreen(
                     isTestingConnection = isTestingConnection,
+                    defaultServerAddress = localDiscovery?.gatewayHost.orEmpty(),
                     onBack = { goBack() },
                     onConnect = { request ->
                         if (isTestingConnection) {
@@ -854,12 +859,13 @@ private fun CopyableAdminSetupLink(
 @Composable
 private fun ManualSetupScreen(
     isTestingConnection: Boolean,
+    defaultServerAddress: String,
     onBack: () -> Unit,
     onConnect: (RouterConnectionRequest) -> Unit
 ) {
     var temporaryPassword by remember { mutableStateOf("") }
     var administratorLogin by remember { mutableStateOf("") }
-    var serverAddress by remember { mutableStateOf("") }
+    var serverAddress by remember(defaultServerAddress) { mutableStateOf(defaultServerAddress) }
     var port by remember { mutableStateOf("80") }
 
     Column(

@@ -24,6 +24,11 @@ data class LocalSheepfoldDiscovery(
     val routerName: String
 )
 
+private data class SheepfoldProbe(
+    val url: String,
+    val apiUrl: String
+)
+
 class RouterConnectionManager {
     fun getAutoRouterAddress(): String? = "192.168.1.1"
 
@@ -113,10 +118,24 @@ class RouterConnectionManager {
 
     suspend fun discoverLocalSheepfold(context: Context): LocalSheepfoldDiscovery? = withContext(Dispatchers.IO) {
         val gatewayHost = currentGatewayHost(context) ?: getAutoRouterAddress() ?: return@withContext null
+        val apiBase = "http://$gatewayHost/cgi-bin/luci/admin/services/sheepfold/api"
         val probeUrls = listOf(
-            "http://$gatewayHost/cgi-bin/luci/admin/services/sheepfold/api/ping",
-            "http://$gatewayHost/cgi-bin/luci/admin/sheepfold/api/ping",
-            "http://$gatewayHost/.well-known/sheepfold.json"
+            SheepfoldProbe(
+                url = "$apiBase/ping",
+                apiUrl = apiBase
+            ),
+            SheepfoldProbe(
+                url = "http://$gatewayHost/cgi-bin/luci/admin/sheepfold/api/ping",
+                apiUrl = "http://$gatewayHost/cgi-bin/luci/admin/sheepfold/api"
+            ),
+            SheepfoldProbe(
+                url = "http://$gatewayHost/.well-known/sheepfold.json",
+                apiUrl = apiBase
+            ),
+            SheepfoldProbe(
+                url = "http://$gatewayHost/luci-static/resources/view/sheepfold/overview.js",
+                apiUrl = apiBase
+            )
         )
 
         probeUrls.firstNotNullOfOrNull { url ->
@@ -140,11 +159,11 @@ class RouterConnectionManager {
             .ifBlank { "router" }
     }
 
-    private fun probeSheepfold(url: String, gatewayHost: String): LocalSheepfoldDiscovery? {
-        val connection = URL(url).openConnection() as HttpURLConnection
+    private fun probeSheepfold(probe: SheepfoldProbe, gatewayHost: String): LocalSheepfoldDiscovery? {
+        val connection = URL(probe.url).openConnection() as HttpURLConnection
         return try {
-            connection.connectTimeout = 1200
-            connection.readTimeout = 1200
+            connection.connectTimeout = 1800
+            connection.readTimeout = 1800
             connection.requestMethod = "GET"
             connection.instanceFollowRedirects = false
             connection.connect()
@@ -164,7 +183,7 @@ class RouterConnectionManager {
 
             LocalSheepfoldDiscovery(
                 gatewayHost = gatewayHost,
-                apiUrl = url.removeSuffix("/ping"),
+                apiUrl = probe.apiUrl,
                 routerName = routerName
             )
         } catch (_: Exception) {
