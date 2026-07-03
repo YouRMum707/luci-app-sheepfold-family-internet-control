@@ -104,6 +104,7 @@ uninstall.sh                                         удаление с роу�
 
 - [Product requirements](docs/product-requirements.md)
 - [Прямое задание для ИИ-разработчика](docs/developer-task.ru.md)
+- [API между Android-приложением и OpenWRT](docs/android-openwrt-api.ru.md)
 - [ИИ-помощник для родителей](docs/ai-assistant.ru.md)
 - [Передача контекста ИИ-помощнику](docs/ai-context-sharing.ru.md)
 - [Черновик промпта ИИ-помощника](docs/ai-assistant-prompt.ru.md)

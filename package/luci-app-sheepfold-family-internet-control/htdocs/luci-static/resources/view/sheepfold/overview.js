@@ -149,7 +149,6 @@ var translations = {
         'Token lifetime': 'Срок действия токена',
         '10 minutes': '10 минут',
         'Admin setup link': 'Ссылка настройки администратора',
-        'Open this link on the computer where LuCI is open.': 'Откройте эту ссылку на компьютере, где открыт LuCI.',
         'Click the field to copy the link.': 'Нажмите на поле, чтобы скопировать ссылку.',
         'Admin setup link copied to clipboard.': 'Ссылка настройки администратора скопирована в буфер обмена.',
         'Could not copy the link automatically. Select and copy it manually.': 'Не удалось скопировать ссылку автоматически. Выделите и скопируйте её вручную.',

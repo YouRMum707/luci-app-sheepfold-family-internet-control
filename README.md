@@ -104,6 +104,7 @@ See:
 
 - [Product requirements](docs/product-requirements.md)
 - [Direct task for AI developers](docs/developer-task.md)
+- [Android/OpenWRT API contract, Russian](docs/android-openwrt-api.ru.md)
 - [Parent AI assistant](docs/ai-assistant.md)
 - [AI context sharing](docs/ai-context-sharing.md)
 - [Parent AI assistant prompt draft, Russian](docs/ai-assistant-prompt.ru.md)

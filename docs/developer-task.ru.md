@@ -9,6 +9,7 @@
 - `AGENTS.md`;
 - `docs/agent-playbook.ru.md`;
 - `docs/product-requirements.md`;
+- `docs/android-openwrt-api.ru.md`;
 - `docs/security.md`;
 - `docs/privacy.ru.md`;
 - `docs/messaging.ru.md`;
