@@ -176,8 +176,16 @@ var translations = {
         'Used by the "until bedtime" quick action.': 'Используется кнопкой быстрого доступа "до отбоя".',
         'Access to emergency-useful sites': 'Доступ к аварийно-полезным сайтам',
         'Editable list for necessary services during restricted access.': 'Редактируемый список необходимых сервисов при ограниченном доступе.',
-        'Add domain': 'Добавить домен',
-        'Domain editor is not implemented in this visual test build.': 'Редактор доменов пока не реализован в этой визуальной сборке.',
+        'Emergency-useful sites are a small editable list of necessary services that may stay available during restricted access.': 'Аварийно-полезные сайты — это небольшой редактируемый список необходимых сервисов, которые могут оставаться доступными при ограничении интернета.',
+        'Add site': 'Добавить сайт',
+        'Edit site': 'Редактировать сайт',
+        'Delete site': 'Удалить сайт',
+        'URL address': 'URL адрес',
+        'Name': 'Название',
+        'Description': 'Описание',
+        'Cancel': 'Отмена',
+        'Site changes would be saved after confirmation.': 'Изменения сайта будут сохранены после подтверждения.',
+        'Site would be removed after confirmation.': 'Сайт будет удалён после подтверждения.',
         'Do not add broad yandex.ru by default: it can open video, music, games, feeds, and other non-emergency services.': 'Не добавляйте широкий yandex.ru по умолчанию: он может открыть видео, музыку, игры, ленты и другие неаварийные сервисы.',
         'Family-facing shortcut for common OpenWRT wireless settings.': 'Упрощённый семейный доступ к основным настройкам Wi-Fi OpenWRT.',
         'Connect QR': 'QR подключения',
@@ -197,8 +205,10 @@ var translations = {
         'Automatic router changes must show integration-specific notes and create/export a backup before applying.': 'Автоматические изменения роутера должны показывать нюансы интеграции и создавать/экспортировать резервную копию перед применением.',
         'Integration status': 'Статус интеграций',
         'AdGuard Home status': 'Статус AdGuard Home',
+        'AdGuard Home filters DNS requests after Sheepfold allows a device. It helps block ads, trackers, and unwanted domains.': 'AdGuard Home фильтрует DNS-запросы после того, как Sheepfold разрешил устройство. Он помогает блокировать рекламу, трекеры и нежелательные домены.',
         'AdGuard Home API check should use the local AdGuard Home API when credentials are configured.': 'Проверка API AdGuard Home должна использовать локальный API AdGuard Home, когда учётные данные настроены.',
         'Podkop status': 'Статус Podkop',
+        'Podkop routes already allowed traffic according to its own routing rules. Sheepfold must not overwrite Podkop routing.': 'Podkop маршрутизирует уже разрешённый трафик по своим правилам. Sheepfold не должен перезаписывать маршрутизацию Podkop.',
         'Podkop has no stable Sheepfold-facing API yet; detect package/service state and show conservative notes.': 'У Podkop пока нет стабильного API для Sheepfold; определяйте пакет/службу и показывайте осторожные подсказки.',
         'Prepare integration settings': 'Подготовить настройки интеграции',
         'Integration setup must show planned changes, create an export, and require confirmation before applying.': 'Настройка интеграции должна показать план изменений, создать экспорт и потребовать подтверждение перед применением.',
@@ -208,6 +218,7 @@ var translations = {
         'Sheepfold must not overwrite Podkop-managed routing, Dnsmasq, nftables, or sing-box state.': 'Sheepfold не должен перезаписывать маршрутизацию, Dnsmasq, nftables или sing-box, которыми управляет Podkop.',
         'Recommended chain: Sheepfold -> AdGuard Home -> Podkop.': 'Рекомендуемая цепочка: Sheepfold -> AdGuard Home -> Podkop.',
         'Active messenger': 'Активный мессенджер',
+        'Messenger integration lets approved parents receive notifications and control Sheepfold with short commands when they are away from home.': 'Интеграция с мессенджером позволяет одобренным родителям получать уведомления и управлять Sheepfold короткими командами вне дома.',
         'Disabled': 'Выключено',
         'MAX experimental': 'MAX экспериментально',
         'VK is shown first during setup, but activation requires credentials and an approved admin.': 'VK предлагается первым при настройке, но включение требует данных доступа и разрешённого администратора.',
@@ -222,8 +233,6 @@ var translations = {
         'Role': 'Роль',
         'Admin devices': 'Админские устройства',
         'Admin': 'Администратор',
-        'Default owner account': 'Учётная запись владельца по умолчанию',
-        'Password is stored as a hash, never as plain text.': 'Пароль хранится в виде хеша, никогда открытым текстом.',
         'Commands': 'Команды',
         'show all devices': 'показать все устройства',
         'block internet': 'выключить интернет',
@@ -235,9 +244,9 @@ var translations = {
         'Clearing logs requires confirmation.': 'Очистка журнала требует подтверждения.',
         'Export masked': 'Экспорт с маскированием',
         'Masked log export is not implemented in this visual test build.': 'Экспорт журнала с маскированием пока не реализован в этой визуальной сборке.',
-        'admin granted +30 minutes to Child tablet': 'администратор дал +30 минут устройству "Планшет ребёнка"',
-        'new device detected: DC:A6:32:xx:xx:19': 'обнаружено новое устройство: DC:A6:32:xx:xx:19',
-        'global block disabled by owner': 'глобальная блокировка выключена владельцем',
+        'Admin granted +30 minutes to Child tablet': 'Администратор дал +30 минут устройству "Планшет ребёнка"',
+        'New device detected: DC:A6:32:xx:xx:19, IP 192.168.1.98': 'Обнаружено новое устройство: DC:A6:32:xx:xx:19, IP 192.168.1.98',
+        'Global block disabled by owner': 'Глобальная блокировка выключена владельцем',
         'General': 'Общие',
         'Language': 'Язык',
         'Russian': 'Русский',
@@ -776,6 +785,51 @@ function quickAllowlistButton() {
         }, T('Quick add to allowlist'));
 }
 
+function showSiteModal(site) {
+        site = site || ['', '', ''];
+
+        ui.showModal(site[0] ? T('Edit site') : T('Add site'), [
+                E('div', { 'class': 'sf-site-modal' }, [
+                        field(T('URL address'), site[0]),
+                        field(T('Name'), site[1]),
+                        textareaField(T('Description'), site[2]),
+                        E('div', { 'class': 'sf-note sf-note-warning' },
+                                T('Do not add broad yandex.ru by default: it can open video, music, games, feeds, and other non-emergency services.'))
+                ]),
+                E('div', { 'class': 'right sf-modal-actions' }, [
+                        E('button', {
+                                'class': 'btn cbi-button',
+                                'click': ui.hideModal
+                        }, T('Cancel')),
+                        E('button', {
+                                'class': 'btn cbi-button cbi-button-positive',
+                                'click': function () {
+                                        notify(T('Site changes would be saved after confirmation.'), 'info');
+                                        ui.hideModal();
+                                }
+                        }, T('Save'))
+                ])
+        ]);
+}
+
+function domainCard(site) {
+        return E('div', { 'class': 'sf-domain' }, [
+                E('div', { 'class': 'sf-domain-actions sf-domain-actions-top' }, [
+                        iconButton(T('Edit site'), 'gear', 'neutral', function () {
+                                showSiteModal(site);
+                        })
+                ]),
+                E('strong', {}, site[0]),
+                E('span', {}, site[1]),
+                E('small', {}, site[2]),
+                E('div', { 'class': 'sf-domain-actions sf-domain-actions-bottom' }, [
+                        iconButton(T('Delete site'), 'trash', 'danger', function () {
+                                notify(T('Site would be removed after confirmation.'), 'warning');
+                        })
+                ])
+        ]);
+}
+
 function deviceTable(rows, options) {
         options = options || {};
 
@@ -828,6 +882,46 @@ function selectField(label, value, values, hint) {
                 })),
                 hint ? E('small', {}, hint) : ''
         ]);
+}
+
+function textareaField(label, value, hint) {
+        return E('label', { 'class': 'sf-field sf-field-wide' }, [
+                E('span', {}, label),
+                E('textarea', { 'class': 'cbi-input-textarea', 'rows': 4 }, value || ''),
+                hint ? E('small', {}, hint) : ''
+        ]);
+}
+
+function iconSvg(name) {
+        var paths = {
+                gear: [
+                        'M19.4 13.5a7.8 7.8 0 0 0 0-3l2-1.5-2-3.5-2.4 1a8 8 0 0 0-2.6-1.5L14 2h-4l-.4 3a8 8 0 0 0-2.6 1.5l-2.4-1-2 3.5 2 1.5a7.8 7.8 0 0 0 0 3l-2 1.5 2 3.5 2.4-1a8 8 0 0 0 2.6 1.5l.4 3h4l.4-3a8 8 0 0 0 2.6-1.5l2.4 1 2-3.5z',
+                        'M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z'
+                ],
+                trash: [
+                        'M4 7h16',
+                        'M10 11v6',
+                        'M14 11v6',
+                        'M6 7l1 14h10l1-14',
+                        'M9 7V4h6v3'
+                ]
+        };
+
+        return E('svg', { 'viewBox': '0 0 24 24', 'aria-hidden': 'true' }, paths[name].map(function (path) {
+                return E('path', { 'd': path });
+        }));
+}
+
+function iconButton(title, icon, tone, handler) {
+        return E('button', {
+                'class': 'sf-icon-action sf-icon-action-' + tone,
+                'title': title,
+                'aria-label': title,
+                'click': function (ev) {
+                        ev.preventDefault();
+                        handler();
+                }
+        }, iconSvg(icon));
 }
 
 function wifiQrEscape(value) {
@@ -916,13 +1010,11 @@ function wifiNetworkBox(network) {
                 return E('option', { 'value': item[0], 'selected': item[0] === network.channel ? 'selected' : null }, item[1]);
         }));
         var qrWrap = E('div', { 'class': 'sf-wifi-qr-code' });
-        var payloadNode = E('code', {});
 
         function updateQr() {
                 var payload = wifiQrPayload(ssidInput.value, passwordInput.value, securitySelect.value);
 
                 qrWrap.replaceChildren(qrCode(payload));
-                payloadNode.textContent = payload;
         }
 
         ssidInput.addEventListener('input', updateQr);
@@ -932,8 +1024,8 @@ function wifiNetworkBox(network) {
         updateQr();
 
         return E('div', { 'class': 'sf-box sf-wifi-network' }, [
+                E('h4', { 'class': 'sf-wifi-title' }, network.label),
                 E('div', { 'class': 'sf-wifi-fields' }, [
-                        E('h4', {}, network.label),
                         E('label', { 'class': 'sf-field' }, [
                                 E('span', {}, T('SSID')),
                                 ssidInput
@@ -952,10 +1044,8 @@ function wifiNetworkBox(network) {
                         ])
                 ]),
                 E('div', { 'class': 'sf-wifi-qr' }, [
-                        E('h4', {}, T('Connect QR')),
                         qrWrap,
-                        E('small', {}, T('Scan to connect to this Wi-Fi network.')),
-                        payloadNode
+                        E('small', {}, T('Scan to connect to this Wi-Fi network.'))
                 ])
         ]);
 }
@@ -981,6 +1071,12 @@ return view.extend({
                 page.querySelectorAll('.sf-tab-panel').forEach(function (node) {
                         node.hidden = node.getAttribute('data-tab') !== tab;
                 });
+
+                if (tab === 'settings') {
+                        var generalButton = page.querySelector('[data-settings-tab="general"]');
+                        if (generalButton)
+                                this.switchSettingsTab(generalButton, 'general');
+                }
         },
 
         renderTabs: function () {
@@ -1180,19 +1276,17 @@ return view.extend({
                 return E('div', { 'class': 'sf-settings-section' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
-                                        E('h3', {}, T('Access to emergency-useful sites')),
-                                        E('p', {}, T('Editable list for necessary services during restricted access.'))
+                                        E('p', { 'class': 'sf-section-intro' }, T('Emergency-useful sites are a small editable list of necessary services that may stay available during restricted access.'))
                                 ]),
-                                actionButton(T('Add domain'), 'positive', T('Domain editor is not implemented in this visual test build.'))
+                                E('button', {
+                                        'class': 'sf-action sf-action-positive',
+                                        'click': function (ev) {
+                                                ev.preventDefault();
+                                                showSiteModal();
+                                        }
+                                }, T('Add site'))
                         ]),
-                        E('div', { 'class': 'sf-note' }, T('Do not add broad yandex.ru by default: it can open video, music, games, feeds, and other non-emergency services.')),
-                        E('div', { 'class': 'sf-domain-list' }, emergencySites.map(function (site) {
-                                return E('div', { 'class': 'sf-domain' }, [
-                                        E('strong', {}, site[0]),
-                                        E('span', {}, site[1]),
-                                        E('small', {}, site[2])
-                                ]);
-                        }))
+                        E('div', { 'class': 'sf-domain-list' }, emergencySites.map(domainCard))
                 ]);
         },
 
@@ -1231,7 +1325,6 @@ return view.extend({
                 var mode = 'adguard_podkop';
 
                 return E('div', { 'class': 'sf-settings-section' }, [
-                        E('h3', {}, T('Integrations')),
                         E('div', { 'class': 'sf-form-row' }, [
                                 selectField(T('Use together with'), mode, [
                                         ['none', T('None')],
@@ -1243,11 +1336,13 @@ return view.extend({
                         E('div', { 'class': 'sf-grid two' }, [
                                 E('div', { 'class': 'sf-box sf-status-card sf-status-warning' }, [
                                         E('h4', {}, T('AdGuard Home status')),
+                                        E('p', {}, T('AdGuard Home filters DNS requests after Sheepfold allows a device. It helps block ads, trackers, and unwanted domains.')),
                                         E('strong', {}, 'API: pending'),
                                         E('p', {}, T('AdGuard Home API check should use the local AdGuard Home API when credentials are configured.'))
                                 ]),
                                 E('div', { 'class': 'sf-box sf-status-card sf-status-warning' }, [
                                         E('h4', {}, T('Podkop status')),
+                                        E('p', {}, T('Podkop routes already allowed traffic according to its own routing rules. Sheepfold must not overwrite Podkop routing.')),
                                         E('strong', {}, 'service/package: pending'),
                                         E('p', {}, T('Podkop has no stable Sheepfold-facing API yet; detect package/service state and show conservative notes.'))
                                 ])
@@ -1263,10 +1358,9 @@ return view.extend({
 
         renderBot: function () {
                 return E('div', { 'class': 'sf-settings-section' }, [
-                        E('h3', {}, T('Messenger')),
+                        E('p', { 'class': 'sf-section-intro' }, T('Messenger integration lets approved parents receive notifications and control Sheepfold with short commands when they are away from home.')),
                         E('div', { 'class': 'sf-grid two' }, [
                                 E('div', { 'class': 'sf-box' }, [
-                                        E('h4', {}, T('Messenger')),
                                         selectField(T('Active messenger'), 'none', [
                                                 ['none', T('Disabled')],
                                                 ['vk', 'VK'],
@@ -1300,7 +1394,6 @@ return view.extend({
                                 ]),
                                 actionButton(T('Add administrator'), 'danger', T('Adding a new administrator requires confirmation.'))
                         ]),
-                        E('div', { 'class': 'sf-note' }, T('Password is stored as a hash, never as plain text.')),
                         E('div', { 'class': 'sf-admin-table' }, [
                                 E('div', { 'class': 'sf-admin-row sf-admin-head' }, [
                                         E('div', {}, T('Unique name')),
@@ -1312,8 +1405,7 @@ return view.extend({
                         ].concat(admins.map(function (admin) {
                                 return E('div', { 'class': 'sf-admin-row' }, [
                                         E('div', {}, [
-                                                E('strong', {}, admin.name),
-                                                admin.role === 'owner' ? E('small', {}, T('Default owner account')) : ''
+                                                E('strong', {}, admin.name)
                                         ]),
                                         E('div', { 'class': 'sf-mono' }, admin.login),
                                         E('div', {}, admin.role === 'owner' ? T('Owner') : T('Admin')),
@@ -1330,7 +1422,6 @@ return view.extend({
                 return E('div', { 'class': 'sf-panel' }, [
                         E('div', { 'class': 'sf-panel-head' }, [
                                 E('div', {}, [
-                                        E('h3', {}, T('Logs')),
                                         E('p', {}, T('Administrative action log with masking.'))
                                 ]),
                                 E('div', { 'class': 'sf-toolbar' }, [
@@ -1339,59 +1430,43 @@ return view.extend({
                                 ])
                         ]),
                         E('div', { 'class': 'sf-log' }, [
-                                E('div', {}, [E('time', {}, '20:31'), E('span', {}, T('admin granted +30 minutes to Child tablet'))]),
-                                E('div', {}, [E('time', {}, '19:55'), E('span', {}, T('new device detected: DC:A6:32:xx:xx:19'))]),
-                                E('div', {}, [E('time', {}, '18:10'), E('span', {}, T('global block disabled by owner'))])
+                                E('div', {}, [E('time', {}, '03.07.2026 20:31:12'), E('span', {}, T('Admin granted +30 minutes to Child tablet'))]),
+                                E('div', {}, [E('time', {}, '03.07.2026 19:55:04'), E('span', {}, T('New device detected: DC:A6:32:xx:xx:19, IP 192.168.1.98'))]),
+                                E('div', {}, [E('time', {}, '03.07.2026 18:10:44'), E('span', {}, T('Global block disabled by owner'))])
                         ])
                 ]);
         },
 
         renderSettingsGeneral: function () {
-                return E('div', {}, [
-                        E('div', { 'class': 'sf-grid two' }, [
-                                E('div', { 'class': 'sf-box' }, [
-                                        E('h4', {}, T('General')),
-                                        selectField(T('Language'), 'ru', [
-                                                ['ru', T('Russian')],
-                                                ['en', T('English')]
-                                        ]),
-                                        selectField(T('New device behavior'), 'allow', [
-                                                ['allow', T('Allow internet by default')],
-                                                ['restrict_until_configured', T('Restrict until configured')]
-                                        ]),
-                                        selectField(T('Known offline devices cleanup'), '90', [
-                                                ['30', T('30 days')],
-                                                ['90', T('90 days')],
-                                                ['180', T('180 days')]
-                                        ])
-                                ]),
-                                E('div', { 'class': 'sf-box' }, [
-                                        E('h4', {}, T('General')),
-                                        field(T('Blocked page text'), T('Internet is temporarily unavailable by family rules.'))
-                                ])
-                        ])
+                return E('div', { 'class': 'sf-flat-form' }, [
+                        selectField(T('Language'), 'ru', [
+                                ['ru', T('Russian')],
+                                ['en', T('English')]
+                        ]),
+                        selectField(T('New device behavior'), 'allow', [
+                                ['allow', T('Allow internet by default')],
+                                ['restrict_until_configured', T('Restrict until configured')]
+                        ]),
+                        selectField(T('Known offline devices cleanup'), '90', [
+                                ['30', T('30 days')],
+                                ['90', T('90 days')],
+                                ['180', T('180 days')]
+                        ]),
+                        textareaField(T('Blocked page text'), T('Internet is temporarily unavailable by family rules.'))
                 ]);
         },
 
         renderSettingsMisc: function () {
-                return E('div', { 'class': 'sf-grid two' }, [
-                        E('div', { 'class': 'sf-box' }, [
-                                E('h4', {}, T('Import and export')),
-                                selectField(T('Export mode'), 'safe', [
-                                        ['safe', T('Readable JSON without secrets')],
-                                        ['encrypted', T('Encrypted full backup')]
-                                ]),
-                                E('div', { 'class': 'sf-toolbar' }, [
-                                        actionButton(T('Import'), 'neutral', T('Import requires confirmation.')),
-                                        actionButton(T('Export'), 'neutral', T('Default export is readable JSON without secrets.'))
-                                ])
+                return E('div', { 'class': 'sf-flat-form sf-misc-actions' }, [
+                        selectField(T('Export mode'), 'safe', [
+                                ['safe', T('Readable JSON without secrets')],
+                                ['encrypted', T('Encrypted full backup')]
                         ]),
-                        E('div', { 'class': 'sf-box' }, [
-                                E('h4', {}, T('Export and update')),
-                                E('div', { 'class': 'sf-toolbar' }, [
-                                        actionButton(T('Update app'), 'danger', T('Application update requires confirmation.')),
-                                        actionButton(T('Reboot router'), 'danger', T('Router reboot requires confirmation.'))
-                                ])
+                        E('div', { 'class': 'sf-action-stack' }, [
+                                actionButton(T('Import'), 'neutral', T('Import requires confirmation.')),
+                                actionButton(T('Export'), 'neutral', T('Default export is readable JSON without secrets.')),
+                                actionButton(T('Update app'), 'danger', T('Application update requires confirmation.')),
+                                actionButton(T('Reboot router'), 'danger', T('Router reboot requires confirmation.'))
                         ])
                 ]);
         },
@@ -1405,6 +1480,9 @@ return view.extend({
         },
 
         renderSettings: function () {
+                if (!settingsTabs.some(function (tab) { return tab[0] === this.activeSettingsTab; }, this))
+                        this.activeSettingsTab = 'general';
+
                 return E('div', { 'class': 'sf-panel' }, [
                         E('h3', {}, T('Settings')),
                         this.renderSettingsTabs(),
@@ -1436,7 +1514,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-14';
+                var assetVersion = '0.1.0-15';
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
                 var header = E('div', { 'class': 'sf-header' }, [
                         E('div', {}, [

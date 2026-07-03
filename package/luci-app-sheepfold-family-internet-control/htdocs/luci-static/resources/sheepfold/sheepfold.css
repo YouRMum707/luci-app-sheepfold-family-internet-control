@@ -55,6 +55,9 @@
 }
 
 .sf-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         min-height: 32px;
         border: 1px solid #cbd5e1;
         border-radius: 6px;
@@ -204,8 +207,18 @@
         margin-bottom: 10px;
 }
 
+.sf-field-wide {
+        width: 100%;
+}
+
 .sf-field span {
         font-weight: 600;
+}
+
+.sf-field textarea {
+        width: 100%;
+        min-height: 96px;
+        resize: vertical;
 }
 
 .sf-search {
@@ -378,11 +391,55 @@
 }
 
 .sf-domain {
+        position: relative;
         border: 1px solid var(--sf-border);
         border-radius: 8px;
-        padding: 10px;
+        padding: 12px 42px 34px 12px;
         display: grid;
         gap: 4px;
+        min-height: 112px;
+}
+
+.sf-domain-actions {
+        position: absolute;
+        right: 8px;
+        display: flex;
+}
+
+.sf-domain-actions-top {
+        top: 8px;
+}
+
+.sf-domain-actions-bottom {
+        bottom: 8px;
+}
+
+.sf-icon-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--sf-border);
+        border-radius: 6px;
+        background: #ffffff;
+        color: #334155;
+        cursor: pointer;
+}
+
+.sf-icon-action-danger {
+        border-color: #f0b8b2;
+        color: var(--sf-red);
+}
+
+.sf-icon-action svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
 }
 
 .sf-chip {
@@ -422,7 +479,7 @@
 
 .sf-log time {
         color: var(--sf-muted);
-        min-width: 48px;
+        min-width: 145px;
 }
 
 .sf-modal-pairing {
@@ -479,6 +536,12 @@
         align-items: start;
 }
 
+.sf-wifi-title {
+        grid-column: 1 / -1;
+        margin: 0;
+        text-align: center;
+}
+
 .sf-wifi-qr {
         display: grid;
         gap: 8px;
@@ -486,15 +549,55 @@
 }
 
 .sf-wifi-qr .sf-qr {
-        width: 132px;
-        height: 132px;
-        padding: 10px;
+        width: 190px;
+        height: 190px;
+        padding: 12px;
 }
 
-.sf-wifi-qr h4,
 .sf-wifi-qr small {
         margin: 0;
         text-align: center;
+}
+
+.sf-flat-form {
+        display: grid;
+        gap: 12px;
+        width: 100%;
+}
+
+.sf-flat-form .sf-field {
+        min-width: 0;
+        width: 100%;
+}
+
+.sf-section-intro {
+        max-width: 760px;
+        margin-top: 0;
+        color: var(--sf-ink);
+}
+
+.sf-action-stack {
+        display: grid;
+        gap: 10px;
+        max-width: 320px;
+}
+
+.sf-action-stack .sf-action {
+        justify-content: center;
+        width: 100%;
+}
+
+.sf-site-modal {
+        display: grid;
+        gap: 10px;
+        min-width: min(560px, 80vw);
+}
+
+.sf-modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 12px;
 }
 
 .sf-settings-tabs {
