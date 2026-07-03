@@ -1083,9 +1083,50 @@ return view.extend({
         activeTab: 'users',
         activeUserListTab: 'devices',
         activeSettingsTab: 'general',
+        globalInternetBlocked: null,
 
         load: function () {
-                return uci.load('wireless');
+                return Promise.all([
+                        uci.load('wireless'),
+                        uci.load('sheepfold')
+                ]);
+        },
+
+        isGlobalInternetBlocked: function () {
+                if (this.globalInternetBlocked !== null)
+                        return this.globalInternetBlocked;
+
+                return uci.get('sheepfold', 'global', 'block_on_boot') === '1';
+        },
+
+        updateInternetButtons: function (page, blocked) {
+                page.querySelectorAll('.sf-internet-toggle').forEach(function (node) {
+                        var nodeBlocked = node.getAttribute('data-blocked') === '1';
+                        var active = nodeBlocked === blocked;
+
+                        node.classList.toggle('is-active', active);
+                        node.classList.toggle('is-inactive', !active);
+                        node.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+        },
+
+        internetToggleButton: function (label, tone, blocked, currentBlocked, message) {
+                var self = this;
+                var active = blocked === currentBlocked;
+
+                return E('button', {
+                        'class': 'sf-action sf-action-' + tone + ' sf-internet-toggle ' + (active ? 'is-active' : 'is-inactive'),
+                        'data-blocked': blocked ? '1' : '0',
+                        'aria-pressed': active ? 'true' : 'false',
+                        'click': function (ev) {
+                                var page = ev.currentTarget.closest('.sf-page');
+
+                                ev.preventDefault();
+                                self.globalInternetBlocked = blocked;
+                                self.updateInternetButtons(page, blocked);
+                                notify(message, blocked ? 'warning' : 'info');
+                        }
+                }, label);
         },
 
         switchTab: function (button, tab) {
@@ -1561,8 +1602,9 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-18';
+                var assetVersion = '0.1.0-19';
                 var self = this;
+                var internetBlocked = this.isGlobalInternetBlocked();
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
                 var header = E('div', { 'class': 'sf-header' }, [
                         E('div', {}, [
@@ -1570,8 +1612,8 @@ return view.extend({
                                 E('p', {}, T('Visual test build. Router rules and persistence are not active yet.'))
                         ]),
                         E('div', { 'class': 'sf-header-actions' }, [
-                                actionButton(T('Unblock internet'), 'positive', T('Global block would be disabled after confirmation.')),
-                                actionButton(T('Block internet'), 'danger', T('Global block would block every device except allowlist.'))
+                                this.internetToggleButton(T('Unblock internet'), 'positive', false, internetBlocked, T('Global block would be disabled after confirmation.')),
+                                this.internetToggleButton(T('Block internet'), 'danger', true, internetBlocked, T('Global block would block every device except allowlist.'))
                         ])
                 ]);
 

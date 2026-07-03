@@ -114,6 +114,17 @@
         color: #ffffff;
 }
 
+.sf-header-actions .sf-internet-toggle.is-inactive {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #94a3b8;
+        box-shadow: none;
+}
+
+.sf-header-actions .sf-internet-toggle.is-active {
+        box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.12);
+}
+
 .sf-metrics {
         display: grid;
         grid-template-columns: repeat(4, minmax(120px, 1fr));
