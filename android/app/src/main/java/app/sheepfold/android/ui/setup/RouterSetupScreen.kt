@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -13,26 +14,29 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -82,6 +86,22 @@ fun RouterSetupScreen() {
     var setupStep by remember { mutableStateOf(SetupStep.Agreement) }
     var isTestingConnection by remember { mutableStateOf(false) }
 
+    fun goBack() {
+        setupStep = when (setupStep) {
+            SetupStep.Agreement -> SetupStep.Agreement
+            SetupStep.WifiConnect -> SetupStep.Agreement
+            SetupStep.MacCheck -> SetupStep.WifiConnect
+            SetupStep.PairingChoice -> SetupStep.MacCheck
+            SetupStep.QrScanner -> SetupStep.PairingChoice
+            SetupStep.ManualSetup -> SetupStep.PairingChoice
+            SetupStep.AppPassword -> SetupStep.PairingChoice
+        }
+    }
+
+    BackHandler(enabled = setupStep != SetupStep.Agreement) {
+        goBack()
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
@@ -106,7 +126,7 @@ fun RouterSetupScreen() {
 
                 SetupStep.QrScanner -> QrScannerScreen(
                     isTestingConnection = isTestingConnection,
-                    onBack = { setupStep = SetupStep.PairingChoice },
+                    onBack = { goBack() },
                     onShowMessage = { message ->
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar(message)
@@ -142,7 +162,7 @@ fun RouterSetupScreen() {
 
                 SetupStep.ManualSetup -> ManualSetupScreen(
                     isTestingConnection = isTestingConnection,
-                    onBack = { setupStep = SetupStep.PairingChoice },
+                    onBack = { goBack() },
                     onConnect = { request ->
                         if (isTestingConnection) {
                             return@ManualSetupScreen
@@ -198,24 +218,22 @@ private fun AgreementScreen(onAccept: () -> Unit) {
             contentDescription = "Sheepfold",
             modifier = Modifier.size(128.dp)
         )
-        Text(
-            text = "Sheepfold",
-            style = MaterialTheme.typography.headlineLarge
-        )
+        ScreenHeader(text = "Sheepfold", large = true)
         Text(
             text = "Перед настройкой примите пользовательское соглашение и условия обработки технических данных, необходимых для работы приложения.",
             style = MaterialTheme.typography.bodyLarge
         )
-        TextButton(
+        FramedButton(
             onClick = {
                 uriHandler.openUri(
                     "https://github.com/kva4991/luci-app-sheepfold-family-internet-control/blob/main/docs/user-agreement.ru.md"
                 )
-            }
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Открыть пользовательское соглашение")
         }
-        Button(
+        FramedButton(
             onClick = onAccept,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -235,10 +253,7 @@ private fun WifiConnectScreen(onContinue: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Подключение к Wi-Fi",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        ScreenHeader(text = "Подключение к Wi-Fi")
         Text(
             text = "Подключите телефон к домашней Wi-Fi сети роутера, на котором установлен Sheepfold.",
             style = MaterialTheme.typography.bodyLarge
@@ -247,7 +262,7 @@ private fun WifiConnectScreen(onContinue: () -> Unit) {
             title = "Важно",
             body = "Полная настройка работает локально. Телефон должен быть подключён к той же домашней сети, где открыт LuCI."
         )
-        Button(
+        FramedButton(
             onClick = {
                 context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
             },
@@ -255,7 +270,7 @@ private fun WifiConnectScreen(onContinue: () -> Unit) {
         ) {
             Text(text = "Открыть настройки Wi-Fi")
         }
-        Button(
+        FramedButton(
             onClick = onContinue,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -275,10 +290,7 @@ private fun MacCheckScreen(onContinue: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Проверка MAC-адреса",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        ScreenHeader(text = "Проверка MAC-адреса")
         Text(
             text = "Для этой домашней Wi-Fi сети должен быть включён настоящий MAC-адрес телефона, а не случайный/private MAC.",
             style = MaterialTheme.typography.bodyLarge
@@ -287,7 +299,7 @@ private fun MacCheckScreen(onContinue: () -> Unit) {
             title = "Если включён случайный MAC",
             body = "Откройте настройки текущей Wi-Fi сети и переключите MAC-адрес на настоящий. Иначе роутер может видеть телефон как новое устройство после переподключения."
         )
-        Button(
+        FramedButton(
             onClick = {
                 context.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
             },
@@ -295,7 +307,7 @@ private fun MacCheckScreen(onContinue: () -> Unit) {
         ) {
             Text(text = "Открыть настройки Wi-Fi")
         }
-        Button(
+        FramedButton(
             onClick = onContinue,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -316,10 +328,7 @@ private fun PairingChoiceScreen(
         verticalArrangement = Arrangement.spacedBy(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Настройка подключения",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        ScreenHeader(text = "Настройка подключения")
         Text(
             text = "Выберите способ подключения к Sheepfold на OpenWRT-роутере.",
             style = MaterialTheme.typography.bodyLarge
@@ -329,7 +338,7 @@ private fun PairingChoiceScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            Button(
+            FramedButton(
                 onClick = onQrClick,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -337,7 +346,7 @@ private fun PairingChoiceScreen(
             ) {
                 Text(text = "QR")
             }
-            Button(
+            FramedButton(
                 onClick = onManualClick,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -370,10 +379,7 @@ private fun ManualSetupScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(
-            text = "Ручная настройка",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        ScreenHeader(text = "Ручная настройка")
         Text(
             text = "Введите данные сопряжения, показанные в LuCI рядом с QR-кодом.",
             style = MaterialTheme.typography.bodyLarge
@@ -406,9 +412,9 @@ private fun ManualSetupScreen(
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Порт") },
             singleLine = true,
-            supportingText = { Text("По умолчанию 80 для LuCI/API. 22 обычно используется для SSH.") }
+            supportingText = { Text("По умолчанию 80 для LuCI/API.") }
         )
-        Button(
+        FramedButton(
             enabled = !isTestingConnection && serverAddress.isNotBlank() && port.isNotBlank(),
             onClick = {
                 val host = serverAddress.trim()
@@ -432,7 +438,10 @@ private fun ManualSetupScreen(
                 Text(text = "Подключиться")
             }
         }
-        TextButton(onClick = onBack) {
+        FramedButton(
+            onClick = onBack,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(text = "Назад")
         }
     }
@@ -484,17 +493,15 @@ private fun QrScannerScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(
-            text = "Сканирование QR",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        ScreenHeader(text = "Сканирование QR")
         Text(
             text = "Наведите камеру на QR-код сопряжения, открытый в LuCI.",
             style = MaterialTheme.typography.bodyLarge
         )
-        TextButton(
+        FramedButton(
             enabled = !isTestingConnection,
-            onClick = { imagePickerLauncher.launch("image/*") }
+            onClick = { imagePickerLauncher.launch("image/*") },
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Загрузить QR из файла")
         }
@@ -502,7 +509,7 @@ private fun QrScannerScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .aspectRatio(1f),
             contentAlignment = Alignment.Center
         ) {
             if (hasCameraPermission) {
@@ -519,7 +526,7 @@ private fun QrScannerScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(text = "Для сканирования QR-кода нужен доступ к камере.")
-                    Button(
+                    FramedButton(
                         onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }
                     ) {
                         Text(text = "Разрешить камеру")
@@ -528,7 +535,10 @@ private fun QrScannerScreen(
             }
         }
 
-        TextButton(onClick = onBack) {
+        FramedButton(
+            onClick = onBack,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(text = "Назад")
         }
     }
@@ -651,10 +661,7 @@ private fun AppPasswordScreen(onPasswordReady: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(14.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Пароль приложения",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        ScreenHeader(text = "Пароль приложения")
         Text(
             text = "Задайте пароль или PIN для входа в приложение Sheepfold на этом телефоне.",
             style = MaterialTheme.typography.bodyLarge
@@ -681,7 +688,7 @@ private fun AppPasswordScreen(onPasswordReady: () -> Unit) {
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
-        Button(
+        FramedButton(
             enabled = passwordIsValid,
             onClick = onPasswordReady,
             modifier = Modifier.fillMaxWidth()
@@ -689,6 +696,46 @@ private fun AppPasswordScreen(onPasswordReady: () -> Unit) {
             Text(text = "Сохранить пароль")
         }
     }
+}
+
+@Composable
+private fun ScreenHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    large: Boolean = false
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = text,
+            style = if (large) {
+                MaterialTheme.typography.headlineLarge
+            } else {
+                MaterialTheme.typography.headlineMedium
+            },
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
+}
+
+@Composable
+private fun FramedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+        content = content
+    )
 }
 
 @Composable

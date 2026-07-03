@@ -139,7 +139,7 @@ android/app/build/outputs/apk/debug/app-debug.apk
 After `gradle :app:assembleDebug`, the project also copies the APK to:
 
 ```text
-%USERPROFILE%\Downloads\sheepfold-v0.1.1.apk
+%USERPROFILE%\Downloads\sheepfold-v0.1.2.apk
 ```
 
 To copy it somewhere else, set `SHEEPFOLD_APK_OUTPUT_DIR` before building.
