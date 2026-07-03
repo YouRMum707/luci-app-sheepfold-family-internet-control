@@ -1034,7 +1034,9 @@ function deviceTable(rows, options) {
                         E('div', {}, device.group),
                         E('div', {}, badge(device.status)),
                         E('div', { 'class': 'sf-row-actions' }, [
-                                actionButton(T('Configure'), 'neutral', T('Device editor is not implemented in this visual test build.')),
+                                iconButton(T('Configure'), 'gear', 'neutral', function () {
+                                        notify(T('Device editor is not implemented in this visual test build.'), 'info');
+                                }),
                                 options.compact ? '' : actionButton(T('+30 min'), 'positive', T('Temporary access would require confirmation.'))
                         ])
                 ]);
@@ -1786,7 +1788,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-25';
+                var assetVersion = '0.1.0-26';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var cssHref = L.resource('sheepfold/sheepfold.css') + '?v=' + encodeURIComponent(assetVersion);
