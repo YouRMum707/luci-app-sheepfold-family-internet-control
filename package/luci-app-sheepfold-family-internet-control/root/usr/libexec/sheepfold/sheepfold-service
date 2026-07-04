@@ -4,7 +4,9 @@ set -eu
 COMMAND="${1:-run}"
 DEFAULT_RAM_LOG="/tmp/sheepfold/events.log"
 DETECTOR="/usr/libexec/sheepfold/sheepfold-device-detector"
+UPDATER="/usr/libexec/sheepfold/sheepfold-updater"
 LEASES_FILE="/tmp/dhcp.leases"
+UPDATE_REQUEST_FILE="/tmp/sheepfold/update.request"
 
 init_ram_log() {
         RAM_LOG="$(uci -q get sheepfold.global.log_cache_path 2>/dev/null || printf '%s' "$DEFAULT_RAM_LOG")"
@@ -20,6 +22,15 @@ init_ram_log() {
         chmod 600 "$RAM_LOG"
 }
 
+handle_update_request() {
+        [ -e "$UPDATE_REQUEST_FILE" ] || return 0
+        rm -f "$UPDATE_REQUEST_FILE"
+
+        if [ -x "$UPDATER" ]; then
+                "$UPDATER" start >/dev/null 2>&1 || true
+        fi
+}
+
 case "$COMMAND" in
         run)
                 init_ram_log
@@ -27,6 +38,8 @@ case "$COMMAND" in
                 LAST_LEASES_STATE=""
                 LAST_FULL_SCAN=0
                 while :; do
+                        handle_update_request
+
                         DETECTION_MODE="$(uci -q get sheepfold.global.detection_mode 2>/dev/null || printf full)"
                         if [ "$DETECTION_MODE" != "disabled" ] && [ -x "$DETECTOR" ]; then
                                 NOW="$(date +%s)"
@@ -63,6 +76,7 @@ case "$COMMAND" in
                 ;;
         reload)
                 init_ram_log
+                handle_update_request
                 [ -x "$DETECTOR" ] && "$DETECTOR" scan >/dev/null 2>&1 || true
                 echo "Sheepfold reload complete"
                 ;;

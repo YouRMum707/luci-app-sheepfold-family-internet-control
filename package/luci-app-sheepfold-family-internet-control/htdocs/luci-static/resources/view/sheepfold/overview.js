@@ -325,6 +325,7 @@ var translations = {
         'Update started. Do not close this page until the result appears.': 'Обновление запущено. Не закрывайте страницу до появления результата.',
         'Update result': 'Результат обновления',
         'Starting update...': 'Запуск обновления...',
+        'Update request has been queued. Sheepfold service will start it shortly.': 'Заявка на обновление создана. Сервис Sheepfold скоро начнёт установку.',
         'Update is running. Waiting for router response...': 'Обновление выполняется. Ждём ответ роутера...',
         'Update log is empty yet.': 'Журнал обновления пока пуст.',
         'Update finished successfully.': 'Обновление успешно завершено.',
@@ -332,7 +333,7 @@ var translations = {
         'Update failed.': 'Обновление не удалось.',
         'Update failed. See log above.': 'Обновление не удалось. Смотрите журнал выше.',
         'No updates available. Installed version is already current.': 'Обновлений нет. Установленная версия уже актуальна.',
-        'Could not start updater.': 'Не удалось запустить обновление.',
+        'Could not queue update request.': 'Не удалось создать заявку на обновление.',
         'Reboot router': 'Перезагрузить роутер',
         'Router reboot requires confirmation.': 'Перезагрузка роутера требует подтверждения.',
         'Sheepfold Family Internet Control': 'Sheepfold : контроль доступа в интернет для семьи',
@@ -535,21 +536,17 @@ function updateAppButton() {
                                 ])
                         ]);
 
-                        fs.exec('/usr/libexec/sheepfold/sheepfold-updater', ['start']).then(function (result) {
-                                var output = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();
-
-                                if (output)
-                                        outputNode.textContent = output;
-
-                                if (result.code !== 0) {
-                                        finishUpdate('sf-spinner-failed', T('Could not start updater.'), 'warning');
-                                        return;
-                                }
-
+                        Promise.all([
+                                fs.write('/tmp/sheepfold/update.status', 'queued\n'),
+                                fs.write('/tmp/sheepfold/update.log', T('Update request has been queued. Sheepfold service will start it shortly.') + '\n'),
+                                fs.write('/tmp/sheepfold/update.request', String(Date.now()) + '\n')
+                        ]).then(function () {
+                                statusNode.textContent = T('Update request has been queued. Sheepfold service will start it shortly.');
+                                outputNode.textContent = T('Update request has been queued. Sheepfold service will start it shortly.');
                                 pollUpdate();
                         }, function (error) {
                                 outputNode.textContent = String(error && error.message ? error.message : error);
-                                finishUpdate('sf-spinner-failed', T('Could not start updater.'), 'warning');
+                                finishUpdate('sf-spinner-failed', T('Could not queue update request.'), 'warning');
                                 button.disabled = false;
                         });
                 }
@@ -3699,7 +3696,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-59';
+                var assetVersion = '0.1.0-60';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;
