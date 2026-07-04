@@ -193,7 +193,7 @@ var translations = {
         'Used by the "until bedtime" quick action.': 'Используется кнопкой быстрого доступа "до отбоя".',
         'Access to emergency-useful sites': 'Доступ к аварийно-полезным сайтам',
         'Editable list for necessary services during restricted access.': 'Редактируемый список необходимых сервисов при ограниченном доступе.',
-        'Emergency-useful sites are a small editable list of necessary services that may stay available during restricted access.': 'Аварийно-полезные сайты — это небольшой редактируемый список необходимых сервисов, которые могут оставаться доступными при ограничении интернета.',
+        'Emergency-useful sites are a small editable list of necessary services that may stay available during restricted access.': 'Аварийно-полезные сайты — это небольшой редактируемый список необходимых сервисов, которые могут оставаться доступными при ограничении интернета на роутере (при добавлении пользователя в чёрный список или выключении доступа в интернет).',
         'Add site': 'Добавить сайт',
         'Edit site': 'Редактировать сайт',
         'Delete site': 'Удалить сайт',
@@ -2823,7 +2823,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-38';
+                var assetVersion = '0.1.0-39';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;
