@@ -189,6 +189,10 @@ classify_device() {
                 type="vacuum"
                 confidence=80
                 reason="robot vacuum marker"
+        elif text_has "$lower" 'warm floor|underfloor|floor heating|heated floor|thermoregulator|терморегулятор|т[её]пл[ыо]й пол|теплый пол|тёплый пол|подогрев пола|heater relay|smart relay|relay|реле|switch module|wall switch|light switch|выключател|освещен|свет|ламп|dimmer|диммер|curtain|curtains|blind|blinds|shade|roller shade|штор|жалюзи|карниз|kettle|чайник|iron|утюг|socket|plug|розетк|tuya|ewelink|sonoff|shelly|aqara|mijia|xiaomi smart|yeelight|philips hue|nanoleaf|wled|led controller|контроллер led|контроллер света|motion sensor|датчик движения|door sensor|window sensor|датчик двери|датчик окна|leak sensor|датчик протечки|smoke sensor|датчик дыма|temperature sensor|датчик температуры|humidity sensor|датчик влажности'; then
+                type="smart_home"
+                confidence=80
+                reason="smart-home appliance, relay, sensor, or actuator marker"
         fi
 
         case ",$ports," in

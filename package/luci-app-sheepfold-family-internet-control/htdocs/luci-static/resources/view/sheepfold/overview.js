@@ -137,6 +137,7 @@ var translations = {
         'Server': 'Сервер',
         'Smart speaker': 'Умная колонка',
         'Robot vacuum': 'Робот-пылесос',
+        'Smart home': 'Умный дом',
         'Engineering device': 'Инженерное устройство',
         'Smart device': 'Умное устройство',
         'Network device': 'Сетевое устройство',
@@ -658,6 +659,18 @@ function deviceTypeDefinitions() {
                         ]
                 },
                 {
+                        value: 'smart_home',
+                        label: T('Smart home'),
+                        mark: '⌁',
+                        paths: [
+                                'M3 11l9-8 9 8',
+                                'M5 10v10h14V10',
+                                'M9 20v-6h6v6',
+                                'M8 11h.01',
+                                'M16 11h.01'
+                        ]
+                },
+                {
                         value: 'engineering',
                         label: T('Engineering device'),
                         mark: '⚙',
@@ -741,6 +754,8 @@ function inferDeviceType(item, configured) {
                 return 'speaker';
         if (/(vacuum|roborock|dreame|deebot|ecovacs|irobot|roomba|пылесос|miio|xiaomi-vacuum|viomi|ilife|eufy|yeedi)/.test(text))
                 return 'vacuum';
+        if (/(warm floor|underfloor|floor heating|heated floor|терморегулятор|термоголовк|т[её]пл[ыо]й пол|теплый пол|тёплый пол|подогрев пола|heater relay|smart relay|relay|реле|выключател|switch module|wall switch|light switch|освещен|свет|ламп|dimmer|диммер|curtain|curtains|blind|blinds|shade|roller shade|штор|жалюзи|карниз|чайник|kettle|утюг|iron|socket|plug|розетк|tuya|ewelink|sonoff|shelly|aqara|mijia|xiaomi smart|yeelight|philips hue|nanoleaf|wled|led controller|контроллер led|контроллер света|датчик движения|motion sensor|door sensor|window sensor|датчик двери|датчик окна|leak sensor|датчик протечки|smoke sensor|датчик дыма|temperature sensor|датчик температуры|humidity sensor|датчик влажности)/.test(text))
+                return 'smart_home';
         if (/(zont|зонт|ectostroy|ectocontrol|эктоконтрол|myheat|teplocom|теплоком|xital|кситал|телеметрик|telemetrika|owen|овен|saures|boiler|kotel|кот[её]л|baxi|navien|vaillant|buderus|protherm|ariston|heating|thermostat|термостат|отоплен|контроллер|alarm|сигнализац)/.test(text))
                 return 'engineering';
         if (/(router|gateway|repeater|extender|openwrt|роутер|шлюз|точка)/.test(text))
@@ -3561,7 +3576,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-56';
+                var assetVersion = '0.1.0-57';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;

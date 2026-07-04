@@ -215,6 +215,8 @@ This group must not override the blocklist. Priority is:
 
 Strong device detection should use router-side signals such as DHCP/static lease data, hostname, vendor/OUI, open ports, service banners, mDNS/SSDP/UPnP names, and a previously confirmed device fingerprint. Detection by MAC, hostname, or open ports alone is not a cryptographic guarantee, so the UI must show why a device was trusted and allow the parent to correct it.
 
+Device types should include a separate `Smart home` / `Умный дом` type for household endpoints such as floor-heating controllers, kettles, irons, light relays/switches, smart sockets, automatic curtains, sensors, and similar devices. These are different from smart-home hubs and servers such as Home Assistant or Zigbee gateways.
+
 Strong detection should be implemented as an optional backend component/package, for example `sheepfold-device-detector`, while the LuCI package stays lightweight and calls Sheepfold backend APIs. The full detector may use existing OpenWRT tools when installed, such as `nmap`/`nmap-ssl` for ports and banners, `avahi-utils` or equivalent mDNS clients, and SSDP/UPnP probes. These must be optional full-mode dependencies, not mandatory dependencies for reduced installations.
 
 The detector must avoid continuous heavy scanning. It should run bounded local-network checks, cache results, expose confidence/explanation to LuCI/Android, and let the parent override the detected type or group.
