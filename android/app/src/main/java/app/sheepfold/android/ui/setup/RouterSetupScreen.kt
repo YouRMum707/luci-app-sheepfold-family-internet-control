@@ -553,7 +553,7 @@ private fun RoundNextButton(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "▸", style = MaterialTheme.typography.displayLarge)
-            Text(text = "далее", style = MaterialTheme.typography.bodyLarge)
+            Text(text = "далее", style = MaterialTheme.typography.titleMedium)
         }
     }
 }

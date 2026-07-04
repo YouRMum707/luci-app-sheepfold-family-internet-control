@@ -23,5 +23,45 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".widget.SheepfoldWidgetActionReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".widget.InternetEnabledWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_internet_enabled">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_internet_enabled" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.InternetDisabledWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_internet_disabled">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_internet_disabled" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.InternetSwitchWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_internet_switch">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_internet_switch" />
+        </receiver>
     </application>
 </manifest>

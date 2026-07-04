@@ -8,9 +8,9 @@ The Android companion app is planned under the name **Овчарня**.
 - Target SDK: latest stable Android SDK
 - Suggested stack: Kotlin, Jetpack Compose, Android Keystore for token storage
 - Planned widgets:
-  - Block internet
-  - Unblock internet
-  - Grant +30 minutes
+  - Internet enabled
+  - Internet disabled
+  - Combined internet state switch
 
 The app should mirror the core LuCI workflows and include the parent AI assistant tab.
 
@@ -151,7 +151,7 @@ android/app/build/outputs/apk/debug/app-debug.apk
 After `gradle :app:assembleDebug`, the project also copies the APK to:
 
 ```text
-%USERPROFILE%\Downloads\sheepfold-v0.1.23.apk
+%USERPROFILE%\Downloads\sheepfold-v0.1.24.apk
 ```
 
 To copy it somewhere else, set `SHEEPFOLD_APK_OUTPUT_DIR` before building.

@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -32,8 +33,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import app.sheepfold.android.notifications.NewDeviceNotification
+import app.sheepfold.android.notifications.SheepfoldNotifications
+import app.sheepfold.android.router.InternetAccessState
+import app.sheepfold.android.router.InternetControlRepository
+import app.sheepfold.android.widget.SheepfoldWidgetRenderer
 
 private val mainTabs = listOf(
     "Главная",
@@ -43,11 +50,6 @@ private val mainTabs = listOf(
     "Расписание",
     "Настройки"
 )
-
-private enum class InternetState {
-    Enabled,
-    Disabled
-}
 
 private enum class DeviceStatus(
     val title: String,
@@ -122,8 +124,33 @@ private val demoDevices = listOf(
 
 @Composable
 fun SheepfoldMainScreen() {
+    val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
-    var internetState by remember { mutableStateOf(InternetState.Enabled) }
+    var internetState by remember {
+        mutableStateOf(InternetControlRepository.readInternetState(context))
+    }
+
+    LaunchedEffect(Unit) {
+        demoDevices
+            .filter { device -> device.status == DeviceStatus.New }
+            .forEach { device ->
+                SheepfoldNotifications.notifyNewDeviceOnce(
+                    context = context,
+                    device = NewDeviceNotification(
+                        id = device.id,
+                        name = device.name,
+                        ip = device.ip,
+                        mac = device.mac
+                    )
+                )
+            }
+    }
+
+    fun setInternetState(state: InternetAccessState) {
+        internetState = state
+        InternetControlRepository.setInternetState(context, state)
+        SheepfoldWidgetRenderer.updateAllWidgets(context)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         ScrollableTabRow(selectedTabIndex = selectedTab) {
@@ -139,7 +166,7 @@ fun SheepfoldMainScreen() {
         when (selectedTab) {
             0 -> HomeControlScreen(
                 internetState = internetState,
-                onInternetStateChange = { internetState = it }
+                onInternetStateChange = ::setInternetState
             )
             1 -> DevicesScreen(devices = demoDevices)
             2 -> DevicesScreen(
@@ -158,8 +185,8 @@ fun SheepfoldMainScreen() {
 
 @Composable
 private fun HomeControlScreen(
-    internetState: InternetState,
-    onInternetStateChange: (InternetState) -> Unit
+    internetState: InternetAccessState,
+    onInternetStateChange: (InternetAccessState) -> Unit
 ) {
     ScreenSurface {
         SectionHeader(
@@ -168,17 +195,17 @@ private fun HomeControlScreen(
         )
         StatusCard(
             title = "Текущее состояние",
-            body = if (internetState == InternetState.Enabled) {
+            body = if (internetState == InternetAccessState.Enabled) {
                 "Интернет включён"
             } else {
                 "Интернет отключён для всех, кроме белого списка"
             },
-            color = if (internetState == InternetState.Enabled) Color(0xFF2E7D32) else Color(0xFFC62828)
+            color = if (internetState == InternetAccessState.Enabled) Color(0xFF2E7D32) else Color(0xFFC62828)
         )
         Button(
-            onClick = { onInternetStateChange(InternetState.Enabled) },
+            onClick = { onInternetStateChange(InternetAccessState.Enabled) },
             modifier = Modifier.fillMaxWidth(),
-            enabled = internetState != InternetState.Enabled,
+            enabled = internetState != InternetAccessState.Enabled,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF2E7D32),
                 contentColor = Color.White,
@@ -189,9 +216,9 @@ private fun HomeControlScreen(
             Text(text = "Интернет включён")
         }
         Button(
-            onClick = { onInternetStateChange(InternetState.Disabled) },
+            onClick = { onInternetStateChange(InternetAccessState.Disabled) },
             modifier = Modifier.fillMaxWidth(),
-            enabled = internetState != InternetState.Disabled,
+            enabled = internetState != InternetAccessState.Disabled,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFC62828),
                 contentColor = Color.White,
