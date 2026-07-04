@@ -182,10 +182,13 @@ Avoid:
 - Implement strong device detection as a separate optional backend/package, for example `sheepfold-device-detector`, not inside the LuCI-only package. The LuCI package should call a Sheepfold backend API and remain lightweight.
 - The detector may use existing OpenWRT tools when available, such as `nmap`/`nmap-ssl` for port and banner detection, `avahi-utils` or equivalent mDNS clients for service discovery, and SSDP/UPnP probes. These tools must be optional/full-mode dependencies, not mandatory dependencies for reduced installations.
 - Do not run heavy scans continuously. Use bounded local-network scans, cache results, explain detector confidence in UI, and let the parent correct the result.
+- Prefer event-driven detection: watch DHCP lease changes and run detection when a device receives/updates an IP address. Keep a rare control scan only as a fallback for router reboot, manual DHCP changes, or unusual clients. Default control interval: 15 minutes.
+- Blocklist always overrides automatic detection, automatic grouping, and the `No restrictions` group.
 - Full automatic setup is the default because it is the useful path for most families. Reduced mode is for routers with very little free space or constrained resources.
 - The OpenWRT installer must ask `Apply Sheepfold automatic setup?` / `Применить автонастройку программы?`. If the parent/admin presses Enter or answers `yes`, `y`, or `да`, set `auto_configure=1`, `detection_mode=full`, and `no_restrictions_auto_assign=1`.
 - Full automatic setup may place confidently detected infrastructure devices into `No restrictions` automatically. The UI should still make this visible and explain why the device was trusted, so the parent can correct mistakes.
-- If the parent/admin explicitly declines automatic setup with `no`, `n`, or `нет`, set or keep `auto_configure=0`, `detection_mode=reduced`, and `no_restrictions_auto_assign=0`.
+- If the parent/admin explicitly selects reduced mode with `no`, `n`, or `нет`, set or keep `auto_configure=1`, `detection_mode=reduced`, and `no_restrictions_auto_assign=1`. Reduced mode avoids heavy port checks but still may auto-assign confidently detected infrastructure devices to `No restrictions`.
+- The General settings page must expose `Update check and installation` with values daily, weekly, monthly, and never. Default is weekly. Updates must use stable releases only and require confirmation before installation.
 - Offline known devices should be cleaned after a configurable number of inactive days; default is 90 days.
 - Blocked-page placeholder text must be configurable by the parent/admin.
 - Allowlist should support quick add mode: a parent opens a 30 second connection window, sees a Wi-Fi QR code and devices that connected after the window started, then explicitly presses `Add` / `Добавить` for each candidate.

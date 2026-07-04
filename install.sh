@@ -88,10 +88,10 @@ case "${AUTO_CONFIGURE_ACCEPTED}" in
         echo "Automatic setup enabled."
         ;;
     no|NO|No|n|N|нет|Нет|НЕТ)
-        AUTO_CONFIGURE=0
+        AUTO_CONFIGURE=1
         DETECTION_MODE="reduced"
-        NO_RESTRICTIONS_AUTO_ASSIGN=0
-        echo "Reduced/manual setup selected."
+        NO_RESTRICTIONS_AUTO_ASSIGN=1
+        echo "Reduced automatic setup selected."
         ;;
     *)
         echo "Installation cancelled: automatic setup answer was not understood." >&2

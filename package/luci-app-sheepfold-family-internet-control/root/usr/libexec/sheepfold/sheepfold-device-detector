@@ -1,0 +1,312 @@
+#!/bin/sh
+set -eu
+
+COMMAND="${1:-scan}"
+CACHE_DIR="/tmp/sheepfold"
+CACHE_FILE="$CACHE_DIR/device-detection.tsv"
+RAW_FILE="$CACHE_DIR/device-detection.raw"
+DEFAULT_SCAN_PORTS="22,53,80,81,443,445,548,554,631,1883,3000,3001,5000,5001,5353,8000,8006,8080,8081,8123,8554,9000,9100,32400"
+NO_RESTRICTIONS_GROUP="Без ограничений"
+
+global_get() {
+        uci -q get "sheepfold.global.$1" 2>/dev/null || printf '%s' "$2"
+}
+
+normalize_mac() {
+        printf '%s' "$1" | tr '[:lower:]' '[:upper:]'
+}
+
+section_for_mac() {
+        wanted="$(normalize_mac "$1")"
+        for section in $(uci -q show sheepfold 2>/dev/null | sed -n "s/^sheepfold\.\([^.=]*\)=device$/\1/p"); do
+                current="$(normalize_mac "$(uci -q get "sheepfold.$section.mac" 2>/dev/null || true)")"
+                [ "$current" = "$wanted" ] && {
+                        printf '%s\n' "$section"
+                        return 0
+                }
+        done
+        return 1
+}
+
+ensure_device_section() {
+        mac="$(normalize_mac "$1")"
+        if section="$(section_for_mac "$mac")"; then
+                printf '%s\n' "$section"
+                return 0
+        fi
+
+        section="device_$(printf '%s' "$mac" | tr '[:upper:]' '[:lower:]' | tr -d ':')"
+        uci -q set "sheepfold.$section=device"
+        uci -q set "sheepfold.$section.mac=$mac"
+        printf '%s\n' "$section"
+}
+
+mac_in_named_list() {
+        list_name="$1"
+        wanted="$(normalize_mac "$2")"
+
+        for section in $(uci -q show sheepfold 2>/dev/null | sed -n "s/^sheepfold\.\([^.=]*\)=list$/\1/p"); do
+                [ "$section" = "$list_name" ] || continue
+                for mac in $(uci -q get "sheepfold.$section.mac" 2>/dev/null || true); do
+                        [ "$(normalize_mac "$mac")" = "$wanted" ] && return 0
+                done
+                for mac in $(uci -q get "sheepfold.$section.macs" 2>/dev/null || true); do
+                        [ "$(normalize_mac "$mac")" = "$wanted" ] && return 0
+                done
+        done
+
+        return 1
+}
+
+append_router_devices() {
+        : > "$RAW_FILE"
+
+        if [ -r /tmp/dhcp.leases ]; then
+                awk 'NF >= 4 { print $2 "\t" $3 "\t" $4 "\tdhcp" }' /tmp/dhcp.leases >> "$RAW_FILE"
+        fi
+
+        if [ -r /proc/net/arp ]; then
+                awk 'NR > 1 { print $4 "\t" $1 "\t" "" "\tarp" }' /proc/net/arp >> "$RAW_FILE"
+        fi
+
+        for section in $(uci -q show dhcp 2>/dev/null | sed -n "s/^dhcp\.\([^.=]*\)=host$/\1/p"); do
+                ip="$(uci -q get "dhcp.$section.ip" 2>/dev/null || true)"
+                name="$(uci -q get "dhcp.$section.name" 2>/dev/null || uci -q get "dhcp.$section.hostname" 2>/dev/null || true)"
+                for mac in $(uci -q get "dhcp.$section.mac" 2>/dev/null || true); do
+                        printf '%s\t%s\t%s\tstatic\n' "$mac" "$ip" "$name" >> "$RAW_FILE"
+                done
+        done
+}
+
+aggregate_router_devices() {
+        awk -F '\t' '
+        function valid_mac(value) {
+                return value ~ /^([0-9A-Fa-f][0-9A-Fa-f]:){5}[0-9A-Fa-f][0-9A-Fa-f]$/
+        }
+        {
+                mac = toupper($1)
+                if (!valid_mac(mac) || mac == "00:00:00:00:00:00")
+                        next
+                if (!(mac in seen)) {
+                        order[++count] = mac
+                        seen[mac] = 1
+                }
+                if ($2 != "" && ip[mac] == "")
+                        ip[mac] = $2
+                if ($3 != "" && $3 != "*" && name[mac] == "")
+                        name[mac] = $3
+                if ($4 != "" && sources[mac] !~ $4)
+                        sources[mac] = sources[mac] (sources[mac] == "" ? "" : ",") $4
+        }
+        END {
+                for (i = 1; i <= count; i++) {
+                        mac = order[i]
+                        print mac "\t" ip[mac] "\t" name[mac] "\t" sources[mac]
+                }
+        }' "$RAW_FILE"
+}
+
+scan_ports() {
+        ip="$1"
+        mode="$2"
+        max_seconds="$(global_get detector_nmap_host_timeout_seconds 20)"
+        ports="$(global_get detector_scan_ports "$DEFAULT_SCAN_PORTS")"
+
+        [ "$mode" = "full" ] || return 0
+        [ -n "$ip" ] || return 0
+        command -v nmap >/dev/null 2>&1 || return 0
+
+        nmap -Pn -T2 --host-timeout "${max_seconds}s" -p "$ports" "$ip" 2>/dev/null |
+                awk -F/ '/open/ { ports = ports (ports == "" ? "" : ",") $1 } END { print ports }'
+}
+
+text_has() {
+        printf '%s' "$1" | grep -Eiq "$2"
+}
+
+classify_device() {
+        text="$1"
+        ports="$2"
+        lower="$(printf '%s' "$text" | tr '[:upper:]' '[:lower:]')"
+        type="smart"
+        confidence=35
+        reason="lightweight router metadata"
+        target_group=""
+
+        if text_has "$lower" 'home[ -]?assistant|hassio|hass\.io|haos|openhab|adguard[ -]?home|adguardhome|samba|smb|cifs|file server|nas|proxmox|pve|truenas|freenas|openmediavault|omv|synology|diskstation|qnap|unraid|docker host|portainer|smlight|slzb|zigbee2mqtt|zha coordinator|zigbee coordinator|zigbee gateway|zigbee bridge|matter bridge|thread border router|homekit bridge|smart home hub|smarthome hub|philips hue bridge|hue bridge|ikea dirigera|dirigera|tradfri gateway|aqara hub|xiaomi gateway|mijia gateway|tuya gateway|sonoff zigbee bridge|hubitat|smartthings hub|aeotec hub|homey|fibaro home center|homematic|deconz|conbee|skyconnect|zwavejs|z-wave js|z-wave gateway|zwave gateway'; then
+                type="server"
+                confidence=90
+                reason="home infrastructure name or service marker"
+                target_group="$NO_RESTRICTIONS_GROUP"
+        elif text_has "$lower" 'nvr|dvr|xvr|video recorder|videoregistrar|cctv server|surveillance server|video server|ltv-rne|rvi-r|trassir|xmeye|ivms|hik-connect|smartpss|uniview|hikvision|hiwatch|hilook|dahua|beward|optimus|tantos|polyvision|hanwha|wisenet|axis|vivotek|tiandy'; then
+                type="server"
+                confidence=88
+                reason="video recorder or surveillance server marker"
+                target_group="$NO_RESTRICTIONS_GROUP"
+        elif text_has "$lower" 'zont|ectostroy|ectocontrol|myheat|teplocom|xital|telemetrika|owen|saures|boiler|baxi|navien|vaillant|buderus|protherm|ariston|heating|thermostat|alarm'; then
+                type="engineering"
+                confidence=88
+                reason="engineering, heating, or safety controller marker"
+                target_group="$NO_RESTRICTIONS_GROUP"
+        elif text_has "$lower" 'router|gateway|repeater|extender|openwrt|access point|ap-|mesh'; then
+                type="network"
+                confidence=86
+                reason="network infrastructure marker"
+                target_group="$NO_RESTRICTIONS_GROUP"
+        elif text_has "$lower" 'printer|print|epson|canon|hp-|brother'; then
+                type="printer"
+                confidence=82
+                reason="printer marker"
+        elif text_has "$lower" 'camera|ipcam'; then
+                type="camera"
+                confidence=72
+                reason="camera marker"
+        elif text_has "$lower" 'iphone|android|galaxy|redmi|pixel|phone'; then
+                type="phone"
+                confidence=78
+                reason="phone marker"
+        elif text_has "$lower" 'ipad|tablet|pad'; then
+                type="tablet"
+                confidence=78
+                reason="tablet marker"
+        elif text_has "$lower" 'desktop|laptop|notebook|macbook|pc-'; then
+                type="computer"
+                confidence=76
+                reason="computer marker"
+        elif text_has "$lower" 'tv|chromecast|mi box|androidtv|smarttv'; then
+                type="tv"
+                confidence=76
+                reason="TV or media marker"
+        elif text_has "$lower" 'playstation|ps4|ps5|xbox|switch|console'; then
+                type="console"
+                confidence=82
+                reason="game console marker"
+        elif text_has "$lower" 'alice|alisa|yandex|station|smart speaker|speaker|sonos|homepod|alexa|amazon echo|google home|sberboom|marusya'; then
+                type="speaker"
+                confidence=80
+                reason="smart speaker marker"
+        elif text_has "$lower" 'vacuum|roborock|dreame|deebot|ecovacs|irobot|roomba|miio|xiaomi-vacuum|viomi|ilife|eufy|yeedi'; then
+                type="vacuum"
+                confidence=80
+                reason="robot vacuum marker"
+        fi
+
+        case ",$ports," in
+                *,8123,*)
+                        type="server"; confidence=95; reason="Home Assistant port 8123 is open"; target_group="$NO_RESTRICTIONS_GROUP" ;;
+                *,8006,*)
+                        type="server"; confidence=95; reason="Proxmox port 8006 is open"; target_group="$NO_RESTRICTIONS_GROUP" ;;
+                *,3000,*|*,3001,*)
+                        if text_has "$lower" 'adguard|grafana|server|home|nas'; then
+                                type="server"; confidence=90; reason="server-like web service port is open"; target_group="$NO_RESTRICTIONS_GROUP"
+                        fi ;;
+        esac
+
+        if printf '%s' "$ports" | grep -Eq '(^|,)(445|548|2049)(,|$)'; then
+                type="server"
+                [ "$confidence" -lt 86 ] && confidence=86
+                reason="file sharing service is open"
+                target_group="$NO_RESTRICTIONS_GROUP"
+        fi
+
+        if printf '%s' "$ports" | grep -Eq '(^|,)(554|8554)(,|$)' && text_has "$lower" 'nvr|dvr|recorder|video|cctv|ltv|hikvision|dahua|axis|uniview'; then
+                type="server"
+                [ "$confidence" -lt 88 ] && confidence=88
+                reason="surveillance streaming service is open"
+                target_group="$NO_RESTRICTIONS_GROUP"
+        fi
+
+        if printf '%s' "$ports" | grep -Eq '(^|,)(9100|631)(,|$)'; then
+                type="printer"
+                [ "$confidence" -lt 86 ] && confidence=86
+                reason="printer service is open"
+                target_group=""
+        fi
+
+        printf '%s\t%s\t%s\t%s\n' "$type" "$confidence" "$target_group" "$reason"
+}
+
+write_detection() {
+        mac="$1"
+        ip="$2"
+        name="$3"
+        sources="$4"
+        mode="$5"
+        ports="$6"
+        now="$7"
+        min_confidence="$(global_get detector_min_no_restrictions_confidence 80)"
+        no_restrictions_auto_assign="$(global_get no_restrictions_auto_assign 1)"
+        text="$name $ip $mac $ports"
+        result="$(classify_device "$text" "$ports")"
+        device_type="$(printf '%s' "$result" | awk -F '\t' '{ print $1 }')"
+        confidence="$(printf '%s' "$result" | awk -F '\t' '{ print $2 }')"
+        target_group="$(printf '%s' "$result" | awk -F '\t' '{ print $3 }')"
+        reason="$(printf '%s' "$result" | awk -F '\t' '{ print $4 }')"
+        section="$(ensure_device_section "$mac")"
+        current_group="$(uci -q get "sheepfold.$section.group" 2>/dev/null || true)"
+
+        uci -q set "sheepfold.$section.ip=$ip"
+        [ -n "$name" ] && [ -z "$(uci -q get "sheepfold.$section.name" 2>/dev/null || true)" ] && uci -q set "sheepfold.$section.name=$name"
+        uci -q set "sheepfold.$section.detected_type=$device_type"
+        uci -q set "sheepfold.$section.detection_confidence=$confidence"
+        uci -q set "sheepfold.$section.detection_reason=$reason"
+        uci -q set "sheepfold.$section.detection_sources=$sources"
+        uci -q set "sheepfold.$section.detection_ports=$ports"
+        uci -q set "sheepfold.$section.detection_updated_at=$now"
+
+        if [ "$no_restrictions_auto_assign" = "1" ] &&
+                [ -n "$target_group" ] &&
+                [ "$confidence" -ge "$min_confidence" ] &&
+                ! mac_in_named_list blocklist "$mac"; then
+                case "$current_group" in
+                        ""|"Не настроено"|"Not configured")
+                                uci -q set "sheepfold.$section.group=$target_group"
+                                uci -q set "sheepfold.$section.auto_group_assigned=1"
+                                uci -q set "sheepfold.$section.auto_group_reason=$reason"
+                                ;;
+                esac
+        fi
+
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$mac" "$ip" "$name" "$device_type" "$confidence" "$target_group" "$reason" "$ports" >> "$CACHE_FILE"
+}
+
+scan_devices() {
+        mode="$(global_get detection_mode full)"
+        max_hosts="$(global_get detector_max_hosts_per_scan 16)"
+        now="$(date +%s)"
+        scanned=0
+
+        case "$max_hosts" in
+                ''|*[!0-9]*) max_hosts=16 ;;
+        esac
+
+        mkdir -p "$CACHE_DIR"
+        chmod 700 "$CACHE_DIR"
+        append_router_devices
+        : > "$CACHE_FILE"
+
+        aggregate_router_devices | while IFS="$(printf '\t')" read -r mac ip name sources; do
+                ports=""
+                if [ "$mode" = "full" ] && [ "$scanned" -lt "$max_hosts" ]; then
+                        ports="$(scan_ports "$ip" "$mode" || true)"
+                        scanned=$((scanned + 1))
+                fi
+                write_detection "$mac" "$ip" "$name" "$sources" "$mode" "$ports" "$now"
+        done
+
+        uci -q set "sheepfold.global.detector_last_scan=$now"
+        uci -q commit sheepfold
+}
+
+case "$COMMAND" in
+        scan|run|once)
+                scan_devices
+                ;;
+        status)
+                [ -r "$CACHE_FILE" ] && cat "$CACHE_FILE"
+                ;;
+        *)
+                echo "Usage: sheepfold-device-detector [scan|status]" >&2
+                exit 1
+                ;;
+esac

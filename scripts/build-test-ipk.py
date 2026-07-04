@@ -50,6 +50,7 @@ def add_tree(tar: tarfile.TarFile, source: Path, target_prefix: str) -> None:
         "./etc/init.d/sheepfold",
         "./etc/uci-defaults/50_luci-sheepfold",
         "./usr/libexec/sheepfold/sheepfold-service",
+        "./usr/libexec/sheepfold/sheepfold-device-detector",
     }
 
     for path in sorted(source.rglob("*")):
@@ -75,7 +76,7 @@ Section: luci
 Priority: optional
 Installed-Size: 10240
 Description: Visual test build of Sheepfold Family Internet Control LuCI app.
-""".encode("ascii")
+""".encode("utf-8")
     conffiles = b"/etc/config/sheepfold\n"
 
     postinst = f"""#!/bin/sh
@@ -93,9 +94,20 @@ ensure_global_option new_device_policy 'allow'
 ensure_global_option auto_configure '1'
 ensure_global_option detection_mode 'full'
 ensure_global_option no_restrictions_auto_assign '1'
+ensure_global_option detector_watch_interval_seconds '10'
+ensure_global_option detector_interval_seconds '900'
+ensure_global_option detector_max_hosts_per_scan '16'
+ensure_global_option detector_min_no_restrictions_confidence '80'
+ensure_global_option detector_nmap_host_timeout_seconds '20'
+ensure_global_option update_check_install_mode 'weekly'
 ensure_global_option log_retention '3d'
 ensure_global_option offline_device_retention_days '90'
 ensure_global_option app_port '5201'
+uci -q get sheepfold.no_restrictions >/dev/null || uci -q set sheepfold.no_restrictions='group'
+uci -q set sheepfold.no_restrictions.name='Без ограничений'
+uci -q set sheepfold.no_restrictions.protected='1'
+uci -q set sheepfold.no_restrictions.auto_assignable='1'
+uci -q set sheepfold.no_restrictions.description='Trusted home infrastructure devices that should not be limited unless they are blocklisted'
 detect_installed() {{
         pkg="$1"
         init="$2"
@@ -129,8 +141,10 @@ rm -f /var/luci-indexcache* 2>/dev/null || true
 rm -f /tmp/luci-indexcache* 2>/dev/null || true
 rm -f /tmp/luci-modulecache/* 2>/dev/null || true
 [ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload || true
+[ -x /etc/init.d/sheepfold ] && /etc/init.d/sheepfold enable || true
+[ -x /etc/init.d/sheepfold ] && /etc/init.d/sheepfold restart || true
 exit 0
-""".encode("ascii")
+""".encode("utf-8")
 
     with tarfile.open(path, "w:gz", format=tarfile.GNU_FORMAT) as tar:
         add_bytes(tar, "./control", control, 0o644)

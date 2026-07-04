@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-sheepfold-family-internet-control
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=53
+PKG_RELEASE:=55
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=kva4991
 SHEEPFOLD_UI_ASSET_VERSION:=$(PKG_VERSION)-$(PKG_RELEASE)
@@ -24,6 +24,15 @@ ensure_global_option enabled '0'
 ensure_global_option language 'ru'
 ensure_global_option block_on_boot '0'
 ensure_global_option new_device_policy 'allow'
+ensure_global_option auto_configure '1'
+ensure_global_option detection_mode 'full'
+ensure_global_option no_restrictions_auto_assign '1'
+ensure_global_option detector_watch_interval_seconds '10'
+ensure_global_option detector_interval_seconds '900'
+ensure_global_option detector_max_hosts_per_scan '16'
+ensure_global_option detector_min_no_restrictions_confidence '80'
+ensure_global_option detector_nmap_host_timeout_seconds '20'
+ensure_global_option update_check_install_mode 'weekly'
 ensure_global_option domain_allowlist_for_blocklist '1'
 if [ "$$(uci -q get sheepfold.global.domain_allowlist_for_blocklist_default_migrated 2>/dev/null)" != "1" ]; then
 	uci -q set sheepfold.global.domain_allowlist_for_blocklist='1'
@@ -34,6 +43,11 @@ ensure_global_option offline_device_retention_days '90'
 ensure_global_option app_port '5201'
 ensure_global_option log_storage 'ram'
 ensure_global_option log_cache_path '/tmp/sheepfold/events.log'
+uci -q get sheepfold.no_restrictions >/dev/null || uci -q set sheepfold.no_restrictions='group'
+uci -q set sheepfold.no_restrictions.name='Без ограничений'
+uci -q set sheepfold.no_restrictions.protected='1'
+uci -q set sheepfold.no_restrictions.auto_assignable='1'
+uci -q set sheepfold.no_restrictions.description='Trusted home infrastructure devices that should not be limited unless they are blocklisted'
 log_cache_path="$$(uci -q get sheepfold.global.log_cache_path 2>/dev/null || printf '%s' /tmp/sheepfold/events.log)"
 case "$$log_cache_path" in
 	/tmp/sheepfold/*) ;;
@@ -75,6 +89,8 @@ rm -f /var/luci-indexcache* 2>/dev/null || true
 rm -f /tmp/luci-indexcache* 2>/dev/null || true
 rm -f /tmp/luci-modulecache/* 2>/dev/null || true
 [ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload || true
+[ -x /etc/init.d/sheepfold ] && /etc/init.d/sheepfold enable || true
+[ -x /etc/init.d/sheepfold ] && /etc/init.d/sheepfold restart || true
 exit 0
 endef
 

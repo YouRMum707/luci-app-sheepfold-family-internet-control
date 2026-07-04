@@ -219,14 +219,30 @@ Strong detection should be implemented as an optional backend component/package,
 
 The detector must avoid continuous heavy scanning. It should run bounded local-network checks, cache results, expose confidence/explanation to LuCI/Android, and let the parent override the detected type or group.
 
+Operational behavior:
+
+- Sheepfold may run a lightweight resident watcher on the router.
+- The watcher should react to DHCP lease changes, especially when a device receives or updates an IP address.
+- A rare control scan is allowed as a safety net for router reboot, manual DHCP edits, or clients that behave unusually. Default control interval: 15 minutes.
+- Heavy checks such as `nmap` must be bounded by host count, port list, and timeout.
+- Blocklist always has higher priority than automatic detection and automatic `No restrictions` assignment.
+
 Installer mode:
 
 - the OpenWRT installer must ask `Apply Sheepfold automatic setup?` / `Применить автонастройку программы?`;
 - full automatic setup is the default because it is the useful path for most families;
 - if the parent/admin presses Enter or answers `yes`, `y`, or `да`, set `auto_configure=1`, `detection_mode=full`, and `no_restrictions_auto_assign=1`;
 - full automatic setup may place confidently detected infrastructure devices into the `No restrictions` group automatically;
-- if the parent/admin explicitly answers `no`, `n`, or `нет`, set or keep `auto_configure=0`, `detection_mode=reduced`, and `no_restrictions_auto_assign=0`;
-- reduced mode uses only lightweight metadata detection and must not auto-assign devices to the `No restrictions` group.
+- if the parent/admin explicitly answers `no`, `n`, or `нет`, set or keep `auto_configure=1`, `detection_mode=reduced`, and `no_restrictions_auto_assign=1`;
+- reduced mode uses only lightweight metadata detection and avoids heavy port checks, but it may still auto-assign confidently detected infrastructure devices to the `No restrictions` group.
+
+Update checks:
+
+- General settings must include `Update check and installation`;
+- allowed values: daily, weekly, monthly, never;
+- default: weekly;
+- only stable releases should be used;
+- installation must require confirmation before applying an update.
 
 Allowlist quick add:
 

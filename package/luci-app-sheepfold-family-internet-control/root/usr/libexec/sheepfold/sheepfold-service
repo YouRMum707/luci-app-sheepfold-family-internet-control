@@ -3,6 +3,8 @@ set -eu
 
 COMMAND="${1:-run}"
 DEFAULT_RAM_LOG="/tmp/sheepfold/events.log"
+DETECTOR="/usr/libexec/sheepfold/sheepfold-device-detector"
+LEASES_FILE="/tmp/dhcp.leases"
 
 init_ram_log() {
         RAM_LOG="$(uci -q get sheepfold.global.log_cache_path 2>/dev/null || printf '%s' "$DEFAULT_RAM_LOG")"
@@ -21,12 +23,48 @@ init_ram_log() {
 case "$COMMAND" in
         run)
                 init_ram_log
-                echo "Sheepfold service placeholder"
-                sleep 3600
+                echo "Sheepfold service started"
+                LAST_LEASES_STATE=""
+                LAST_FULL_SCAN=0
+                while :; do
+                        DETECTION_MODE="$(uci -q get sheepfold.global.detection_mode 2>/dev/null || printf full)"
+                        if [ "$DETECTION_MODE" != "disabled" ] && [ -x "$DETECTOR" ]; then
+                                NOW="$(date +%s)"
+                                INTERVAL="$(uci -q get sheepfold.global.detector_interval_seconds 2>/dev/null || printf 900)"
+                                WATCH_INTERVAL="$(uci -q get sheepfold.global.detector_watch_interval_seconds 2>/dev/null || printf 10)"
+                                case "$INTERVAL" in
+                                        ''|*[!0-9]*) INTERVAL=900 ;;
+                                esac
+                                case "$WATCH_INTERVAL" in
+                                        ''|*[!0-9]*) WATCH_INTERVAL=10 ;;
+                                esac
+                                [ "$INTERVAL" -lt 300 ] && INTERVAL=300
+                                [ "$WATCH_INTERVAL" -lt 5 ] && WATCH_INTERVAL=5
+
+                                if [ -r "$LEASES_FILE" ]; then
+                                        LEASES_STATE="$(wc -c "$LEASES_FILE" 2>/dev/null | awk '{ print $1 }')-$(sed -n '$p' "$LEASES_FILE" 2>/dev/null)"
+                                else
+                                        LEASES_STATE="missing"
+                                fi
+
+                                if [ "$LEASES_STATE" != "$LAST_LEASES_STATE" ]; then
+                                        "$DETECTOR" scan changed >/dev/null 2>&1 || true
+                                        LAST_LEASES_STATE="$LEASES_STATE"
+                                        LAST_FULL_SCAN="$NOW"
+                                elif [ $((NOW - LAST_FULL_SCAN)) -ge "$INTERVAL" ]; then
+                                        "$DETECTOR" scan full >/dev/null 2>&1 || true
+                                        LAST_FULL_SCAN="$NOW"
+                                fi
+                        else
+                                WATCH_INTERVAL=30
+                        fi
+                        sleep "$WATCH_INTERVAL"
+                done
                 ;;
         reload)
                 init_ram_log
-                echo "Sheepfold reload placeholder"
+                [ -x "$DETECTOR" ] && "$DETECTOR" scan >/dev/null 2>&1 || true
+                echo "Sheepfold reload complete"
                 ;;
         *)
                 echo "Usage: sheepfold-service [run|reload]" >&2

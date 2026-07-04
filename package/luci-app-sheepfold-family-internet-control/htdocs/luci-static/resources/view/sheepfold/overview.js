@@ -70,6 +70,9 @@ var translations = {
         'Device name': 'Имя устройства',
         'Hostname': 'Имя в сети',
         'Detection source': 'Источник обнаружения',
+        'Detection confidence': 'Уверенность автоопределения',
+        'Auto-detected': 'Автоопределено',
+        'Auto-assigned to No restrictions': 'Автоматически добавлено в "Без ограничений"',
         'Parents': 'Родители',
         'Children': 'Дети',
         'TV / media': 'ТВ / медиа',
@@ -86,6 +89,7 @@ var translations = {
         'Blocklisted devices are not available for binding.': 'Устройства из чёрного списка недоступны для привязки.',
         'Selected devices are shown first.': 'Выбранные устройства показаны сверху.',
         'No devices selected': 'Устройства не выбраны',
+        'No devices': 'Нет устройств',
         'Device bindings saved.': 'Привязка устройств сохранена.',
         'Admin device': 'Админское устройство',
         'Pairing': 'Сопряжение',
@@ -285,9 +289,18 @@ var translations = {
         'New device automatic setup': 'Автонастройка новых устройств',
         'Full automatic setup': 'Полная автонастройка',
         'Reduced automatic setup': 'Урезанная автонастройка',
-        'Full mode can automatically place confidently detected home infrastructure devices into No restrictions. Reduced mode is for routers with very little free space.': 'Полный режим может автоматически помещать уверенно распознанные домашние инфраструктурные устройства в группу "Без ограничений". Урезанный режим нужен для роутеров с очень малым запасом места.',
+        'Full mode can use port checks when available. Reduced mode avoids heavy checks but still can place confidently detected home infrastructure devices into No restrictions.': 'Полный режим может использовать проверку портов, если она доступна. Урезанный режим избегает тяжёлых проверок, но тоже может помещать уверенно распознанные домашние инфраструктурные устройства в группу "Без ограничений".',
+        'Detector reacts to DHCP lease changes and runs a rare control scan. It does not continuously scan the whole network.': 'Детектор реагирует на изменения DHCP-аренд и редко делает контрольный проход. Он не сканирует всю сеть постоянно.',
         'New device automatic setup saved.': 'Автонастройка новых устройств сохранена.',
         'Could not save new device automatic setup.': 'Не удалось сохранить автонастройку новых устройств.',
+        'Update check and installation': 'Проверка обновления и его установка',
+        'Every day': 'Раз в день',
+        'Every week': 'Раз в неделю',
+        'Every month': 'Раз в месяц',
+        'Never': 'Никогда',
+        'Update check policy saved.': 'Настройка проверки обновлений сохранена.',
+        'Could not save update check policy.': 'Не удалось сохранить настройку проверки обновлений.',
+        'Defines how often Sheepfold should check for a stable release and install it after confirmation.': 'Определяет, как часто Sheepfold должен проверять stable-релиз и устанавливать его после подтверждения.',
         'Known offline devices cleanup': 'Очистка логов устройств офлайн',
         '30 days': '30 дней',
         '90 days': '90 дней',
@@ -2093,17 +2106,16 @@ function blocklistEmergencyAccessField() {
 }
 
 function autoConfigureDevicesField() {
-        var value = safeUciGet('sheepfold', 'global', 'auto_configure', '1') === '1' ? 'full' : 'reduced';
+        var value = safeUciGet('sheepfold', 'global', 'detection_mode', 'full') === 'reduced' ? 'reduced' : 'full';
         var select = E('select', {
                 'class': 'cbi-input-select',
                 'change': function (ev) {
                         var nextValue = ev.currentTarget.value;
-                        var enabled = nextValue === 'full' ? '1' : '0';
                         var mode = nextValue === 'full' ? 'full' : 'reduced';
 
-                        uci.set('sheepfold', 'global', 'auto_configure', enabled);
+                        uci.set('sheepfold', 'global', 'auto_configure', '1');
                         uci.set('sheepfold', 'global', 'detection_mode', mode);
-                        uci.set('sheepfold', 'global', 'no_restrictions_auto_assign', enabled);
+                        uci.set('sheepfold', 'global', 'no_restrictions_auto_assign', '1');
 
                         uci.save().then(function () {
                                 return uci.apply();
@@ -2123,7 +2135,40 @@ function autoConfigureDevicesField() {
         return E('label', { 'class': 'sf-field sf-field-wide' }, [
                 E('span', {}, T('New device automatic setup')),
                 select,
-                E('small', {}, T('Full mode can automatically place confidently detected home infrastructure devices into No restrictions. Reduced mode is for routers with very little free space.'))
+                E('small', {}, T('Full mode can use port checks when available. Reduced mode avoids heavy checks but still can place confidently detected home infrastructure devices into No restrictions.')),
+                E('small', {}, T('Detector reacts to DHCP lease changes and runs a rare control scan. It does not continuously scan the whole network.'))
+        ]);
+}
+
+function updateCheckInstallField() {
+        var value = safeUciGet('sheepfold', 'global', 'update_check_install_mode', 'weekly');
+        var select = E('select', {
+                'class': 'cbi-input-select',
+                'change': function (ev) {
+                        var nextValue = ev.currentTarget.value;
+
+                        uci.set('sheepfold', 'global', 'update_check_install_mode', nextValue);
+                        uci.save().then(function () {
+                                return uci.apply();
+                        }).then(function () {
+                                value = nextValue;
+                                notify(T('Update check policy saved.'), 'info');
+                        }, function () {
+                                ev.currentTarget.value = value;
+                                notify(T('Could not save update check policy.'), 'warning');
+                        });
+                }
+        }, [
+                E('option', { 'value': 'daily', 'selected': value === 'daily' ? 'selected' : null }, T('Every day')),
+                E('option', { 'value': 'weekly', 'selected': value === 'weekly' ? 'selected' : null }, T('Every week')),
+                E('option', { 'value': 'monthly', 'selected': value === 'monthly' ? 'selected' : null }, T('Every month')),
+                E('option', { 'value': 'never', 'selected': value === 'never' ? 'selected' : null }, T('Never'))
+        ]);
+
+        return E('label', { 'class': 'sf-field sf-field-wide' }, [
+                E('span', {}, T('Update check and installation')),
+                select,
+                E('small', {}, T('Defines how often Sheepfold should check for a stable release and install it after confirmation.'))
         ]);
 }
 
@@ -2564,6 +2609,14 @@ function routerDeviceNote(item, configured) {
         if (configured && configured.note)
                 return configured.note;
 
+        if (configured && configured.detection_reason) {
+                var confidence = configured.detection_confidence ?
+                        ' (' + T('Detection confidence') + ': ' + configured.detection_confidence + '%)' :
+                        '';
+
+                return T('Auto-detected') + ': ' + configured.detection_reason + confidence;
+        }
+
         if (configured)
                 return T('Configured in Sheepfold');
 
@@ -2615,7 +2668,9 @@ function buildRouterDevices(dhcpLeases, arpTable) {
                 var adminDevice = configured && configured.admin_device === '1';
                 var deviceType = configured && configured.device_type ?
                         configured.device_type :
-                        inferDeviceType(item, configured);
+                        configured && configured.detected_type ?
+                                configured.detected_type :
+                                inferDeviceType(item, configured);
 
                 if (allowlist[mac])
                         status = 'allow';
@@ -2641,6 +2696,9 @@ function buildRouterDevices(dhcpLeases, arpTable) {
                         }).join(', '),
                         group: configured && configured.group ? configured.group : T('Not configured'),
                         deviceType: deviceType,
+                        detectionConfidence: configured && configured.detection_confidence,
+                        detectionReason: configured && configured.detection_reason,
+                        autoGroupAssigned: configured && configured.auto_group_assigned === '1',
                         status: status,
                         note: routerDeviceNote(item, configured),
                         adminDevice: adminDevice,
@@ -3160,6 +3218,16 @@ return view.extend({
                 var grouped = {};
                 var groupNames;
 
+                safeUciSections('sheepfold', 'group').forEach(function (section) {
+                        var groupName = section.name || section['.name'];
+
+                        if (groupName && !grouped[groupName])
+                                grouped[groupName] = [];
+                });
+
+                if (!grouped[T('No restrictions')])
+                        grouped[T('No restrictions')] = [];
+
                 devices.forEach(function (device) {
                         if (!device.group)
                                 return;
@@ -3186,12 +3254,12 @@ return view.extend({
                                         return E('div', { 'class': 'sf-box sf-group-box' }, [
                                                 E('h4', {}, groupName),
                                                 E('strong', {}, grouped[groupName].length + ' ' + T('Devices')),
-                                                E('div', { 'class': 'sf-group-device-list' }, grouped[groupName].map(function (device) {
+                                                grouped[groupName].length ? E('div', { 'class': 'sf-group-device-list' }, grouped[groupName].map(function (device) {
                                                         return E('div', {}, [
                                                                 E('span', { 'class': 'sf-device-index' }, formattedDeviceDisplayId(device)),
                                                                 E('span', {}, device.name)
                                                         ]);
-                                                }))
+                                                })) : E('div', { 'class': 'sf-muted' }, T('No devices'))
                                         ]);
                                 })) :
                                 E('div', { 'class': 'sf-note sf-note-warning' }, T('No groups yet. Assign devices to groups in device settings.'))
@@ -3399,6 +3467,7 @@ return view.extend({
                                 ['restrict_until_configured', T('Restrict until configured')]
                         ]),
                         autoConfigureDevicesField(),
+                        updateCheckInstallField(),
                         blocklistEmergencyAccessField(),
                         selectField(T('Known offline devices cleanup'), '90', [
                                 ['30', T('30 days')],
@@ -3466,7 +3535,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-53';
+                var assetVersion = '0.1.0-55';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;
