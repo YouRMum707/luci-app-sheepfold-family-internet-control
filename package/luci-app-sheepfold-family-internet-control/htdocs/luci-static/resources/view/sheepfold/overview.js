@@ -318,7 +318,8 @@ function T(text) {
 }
 
 var tabs = [
-        ['users', T('User management')],
+        ['users', T('User lists')],
+        ['management', T('User management')],
         ['wifi', T('Wi-Fi')],
         ['logs', T('Logs')],
         ['settings', T('Settings')]
@@ -335,7 +336,10 @@ var settingsTabs = [
 var userListTabs = [
         ['devices', T('All devices')],
         ['allowlist', T('Allowlist')],
-        ['blocklist', T('Blocklist')],
+        ['blocklist', T('Blocklist')]
+];
+
+var managementTabs = [
         ['schedules', T('Schedules')],
         ['groups', T('Groups')],
         ['admins', T('Administrators')]
@@ -2136,6 +2140,7 @@ function wifiNetworkBox(network) {
 return view.extend({
         activeTab: 'users',
         activeUserListTab: 'devices',
+        activeManagementTab: 'schedules',
         activeSettingsTab: 'general',
         deepLinkHandled: false,
         globalInternetBlocked: null,
@@ -2210,8 +2215,8 @@ return view.extend({
                         return;
 
                 if (params.get('view') === 'admins') {
-                        this.activeTab = 'users';
-                        this.activeUserListTab = 'admins';
+                        this.activeTab = 'management';
+                        this.activeManagementTab = 'admins';
                 }
         },
 
@@ -2277,6 +2282,12 @@ return view.extend({
                         var devicesButton = page.querySelector('[data-user-list-tab="devices"]');
                         if (devicesButton)
                                 this.switchUserListTab(devicesButton, 'devices');
+                }
+
+                if (tab === 'management') {
+                        var schedulesButton = page.querySelector('[data-management-tab="schedules"]');
+                        if (schedulesButton)
+                                this.switchManagementTab(schedulesButton, 'schedules');
                 }
         },
 
@@ -2366,6 +2377,35 @@ return view.extend({
                 }));
         },
 
+        switchManagementTab: function (button, tab) {
+                var panel = button.closest('.sf-panel');
+
+                this.activeManagementTab = tab;
+
+                panel.querySelectorAll('.sf-management-tab').forEach(function (node) {
+                        node.classList.toggle('active', node.getAttribute('data-management-tab') === tab);
+                });
+
+                panel.querySelectorAll('.sf-management-panel').forEach(function (node) {
+                        node.hidden = node.getAttribute('data-management-panel') !== tab;
+                });
+        },
+
+        renderManagementTabs: function () {
+                var self = this;
+
+                return E('div', { 'class': 'sf-tabs sf-user-list-tabs' }, managementTabs.map(function (tab) {
+                        return E('button', {
+                                'class': 'sf-tab sf-management-tab' + (self.activeManagementTab === tab[0] ? ' active' : ''),
+                                'data-management-tab': tab[0],
+                                'click': function (ev) {
+                                        ev.preventDefault();
+                                        self.switchManagementTab(ev.currentTarget, tab[0]);
+                                }
+                        }, tab[1]);
+                }));
+        },
+
         renderRootPasswordStatus: function () {
                 if (rootPasswordIsSet) {
                         return '';
@@ -2443,10 +2483,24 @@ return view.extend({
                         this.renderUserListTabs(),
                         this.renderUserListPanel('devices', this.renderDevices(true)),
                         this.renderUserListPanel('allowlist', this.renderAllowlist(true)),
-                        this.renderUserListPanel('blocklist', this.renderBlocklist(true)),
-                        this.renderUserListPanel('schedules', this.renderSchedules(true)),
-                        this.renderUserListPanel('groups', this.renderGroups(true)),
-                        this.renderUserListPanel('admins', this.renderAdmins(true))
+                        this.renderUserListPanel('blocklist', this.renderBlocklist(true))
+                ]);
+        },
+
+        renderManagementPanel: function (tab, content) {
+                return E('div', {
+                        'class': 'sf-management-panel sf-settings-panel',
+                        'data-management-panel': tab,
+                        'hidden': this.activeManagementTab === tab ? null : 'hidden'
+                }, content);
+        },
+
+        renderManagement: function () {
+                return E('div', { 'class': 'sf-panel' }, [
+                        this.renderManagementTabs(),
+                        this.renderManagementPanel('schedules', this.renderSchedules(true)),
+                        this.renderManagementPanel('groups', this.renderGroups(true)),
+                        this.renderManagementPanel('admins', this.renderAdmins(true))
                 ]);
         },
 
@@ -2781,6 +2835,7 @@ return view.extend({
         renderPanels: function () {
                 return [
                         this.renderPanel('users', this.renderUsers()),
+                        this.renderPanel('management', this.renderManagement()),
                         this.renderPanel('wifi', this.renderWifi()),
                         this.renderPanel('logs', this.renderLogs()),
                         this.renderPanel('settings', this.renderSettings())
@@ -2788,7 +2843,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-36';
+                var assetVersion = '0.1.0-37';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;
