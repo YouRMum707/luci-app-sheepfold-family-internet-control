@@ -376,6 +376,31 @@
         stroke-linejoin: round;
 }
 
+.sf-device-type-cell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+}
+
+.sf-device-type-icon {
+        display: inline-flex;
+        width: 22px;
+        height: 22px;
+        align-items: center;
+        justify-content: center;
+        color: #315f55;
+}
+
+.sf-device-type-icon svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+}
+
 .sf-ip-cell {
         display: inline-flex;
         align-items: center;
@@ -396,7 +421,7 @@
 
 .sf-device-row {
         display: grid;
-        grid-template-columns: 32px minmax(108px, 1.25fr) minmax(76px, 0.7fr) minmax(108px, 0.9fr) minmax(68px, 0.6fr) minmax(72px, 0.62fr) minmax(86px, 0.72fr);
+        grid-template-columns: 32px minmax(96px, 1.12fr) 38px minmax(72px, 0.64fr) minmax(100px, 0.84fr) minmax(62px, 0.55fr) minmax(68px, 0.58fr) minmax(82px, 0.68fr);
         gap: 4px;
         align-items: center;
         min-width: 0;

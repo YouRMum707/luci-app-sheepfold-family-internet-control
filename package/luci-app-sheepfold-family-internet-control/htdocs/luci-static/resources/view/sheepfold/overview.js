@@ -121,6 +121,17 @@ var translations = {
         '+30 min': '+30 мин',
         'Temporary access would require confirmation.': 'Временный доступ потребует подтверждения.',
         'Device': 'Устройство',
+        'Type': 'Тип',
+        'Device type': 'Тип устройства',
+        'Phone': 'Телефон',
+        'Tablet': 'Планшет',
+        'Computer': 'Компьютер',
+        'TV': 'Телевизор',
+        'Game console': 'Игровая приставка',
+        'Printer': 'Принтер',
+        'Camera': 'Камера',
+        'Smart device': 'Умное устройство',
+        'Network device': 'Сетевое устройство',
         'IP address': 'IP-адрес',
         'MAC address': 'MAC-адрес',
         'Group': 'Группа',
@@ -509,6 +520,158 @@ function staticLeaseIcon() {
                         'M6 11h12v10H6z',
                         'M12 15v2'
                 ])
+        ]);
+}
+
+function deviceTypeDefinitions() {
+        return [
+                {
+                        value: 'phone',
+                        label: T('Phone'),
+                        mark: '▯',
+                        paths: [
+                                'M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z',
+                                'M11 18h2'
+                        ]
+                },
+                {
+                        value: 'tablet',
+                        label: T('Tablet'),
+                        mark: '▭',
+                        paths: [
+                                'M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
+                                'M12 17h.01'
+                        ]
+                },
+                {
+                        value: 'computer',
+                        label: T('Computer'),
+                        mark: '⌨',
+                        paths: [
+                                'M3 4h18v11H3z',
+                                'M8 21h8',
+                                'M12 15v6'
+                        ]
+                },
+                {
+                        value: 'tv',
+                        label: T('TV'),
+                        mark: '▣',
+                        paths: [
+                                'M3 5h18v12H3z',
+                                'M8 21h8',
+                                'M12 17v4'
+                        ]
+                },
+                {
+                        value: 'console',
+                        label: T('Game console'),
+                        mark: '✚',
+                        paths: [
+                                'M7 10h10a5 5 0 0 1 4 8l-1 1a2 2 0 0 1-3-.4L15 16H9l-2 2.6a2 2 0 0 1-3 .4l-1-1a5 5 0 0 1 4-8z',
+                                'M8 14h4',
+                                'M10 12v4',
+                                'M16 13h.01',
+                                'M18 15h.01'
+                        ]
+                },
+                {
+                        value: 'printer',
+                        label: T('Printer'),
+                        mark: '▤',
+                        paths: [
+                                'M7 8V3h10v5',
+                                'M6 17H4v-6h16v6h-2',
+                                'M7 14h10v7H7z'
+                        ]
+                },
+                {
+                        value: 'camera',
+                        label: T('Camera'),
+                        mark: '◉',
+                        paths: [
+                                'M4 7h4l2-3h4l2 3h4v13H4z',
+                                'M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'
+                        ]
+                },
+                {
+                        value: 'smart',
+                        label: T('Smart device'),
+                        mark: '◇',
+                        paths: [
+                                'M12 2l8 8-8 12-8-12z',
+                                'M9 10h6',
+                                'M9 14h6'
+                        ]
+                },
+                {
+                        value: 'network',
+                        label: T('Network device'),
+                        mark: '⌂',
+                        paths: [
+                                'M4 12h16',
+                                'M7 8h10',
+                                'M10 4h4',
+                                'M6 16h.01',
+                                'M12 16h.01',
+                                'M18 16h.01',
+                                'M6 20h12'
+                        ]
+                }
+        ];
+}
+
+function deviceTypeByValue(value) {
+        return deviceTypeDefinitions().filter(function (item) {
+                return item.value === value;
+        })[0] || deviceTypeDefinitions().filter(function (item) {
+                return item.value === 'smart';
+        })[0];
+}
+
+function deviceTypeOptions() {
+        return deviceTypeDefinitions().map(function (item) {
+                return [item.value, item.mark + ' ' + item.label];
+        });
+}
+
+function inferDeviceType(item, configured) {
+        var text = [
+                configured && configured.name,
+                configured && configured.group,
+                item.staticName,
+                item.hostname
+        ].join(' ').toLowerCase();
+
+        if (/(iphone|android|galaxy|redmi|pixel|phone|телефон|смартфон)/.test(text))
+                return 'phone';
+        if (/(ipad|tablet|pad|планшет)/.test(text))
+                return 'tablet';
+        if (/(desktop|laptop|notebook|macbook|pc-|компьютер|ноутбук)/.test(text))
+                return 'computer';
+        if (/(tv|телевизор|chromecast|mi box|androidtv|smarttv)/.test(text))
+                return 'tv';
+        if (/(playstation|ps4|ps5|xbox|switch|console|приставк)/.test(text))
+                return 'console';
+        if (/(printer|print|epson|canon|hp-|принтер)/.test(text))
+                return 'printer';
+        if (/(camera|cam|ipcam|камера)/.test(text))
+                return 'camera';
+        if (/(router|gateway|repeater|extender|openwrt|роутер|шлюз|точка)/.test(text))
+                return 'network';
+
+        return 'smart';
+}
+
+function deviceTypeIcon(type) {
+        var definition = deviceTypeByValue(type);
+
+        return E('span', {
+                'class': 'sf-device-type-icon',
+                'title': definition.label,
+                'aria-label': definition.label
+        }, [
+                svgIcon(definition.paths)
         ]);
 }
 
@@ -1480,6 +1643,7 @@ function showDeviceSettingsModal(device) {
                 ['__custom', T('Custom')]
         ]));
         var customGroupField = inputControl(T('Use custom group'), groupIsCustom ? device.group : '');
+        var typeField = selectControl(T('Device type'), device.deviceType, deviceTypeOptions());
         var statusField = selectControl(T('Access mode'), device.status, [
                 ['new', T('Not configured')],
                 ['allow', T('Allowlist')],
@@ -1515,6 +1679,7 @@ function showDeviceSettingsModal(device) {
                         E('div', { 'class': 'sf-grid two' }, [
                                 nameField.node,
                                 ipField.node,
+                                typeField.node,
                                 groupField.node,
                                 customGroupField.node,
                                 statusField.node,
@@ -1536,6 +1701,7 @@ function showDeviceSettingsModal(device) {
                                         var group = groupField.input.value === '__custom' ?
                                                 customGroupField.input.value.trim() :
                                                 groupField.input.value;
+                                        var deviceType = typeField.input.value;
                                         var status = statusField.input.value;
                                         var configs = ['sheepfold'];
 
@@ -1564,6 +1730,7 @@ function showDeviceSettingsModal(device) {
                                         uci.set('sheepfold', sectionName, 'name', name);
                                         uci.set('sheepfold', sectionName, 'ip', ip);
                                         uci.set('sheepfold', sectionName, 'group', group || T('Not configured'));
+                                        uci.set('sheepfold', sectionName, 'device_type', deviceType);
                                         uci.set('sheepfold', sectionName, 'status', status);
 
                                         if (status === 'allow')
@@ -1613,7 +1780,8 @@ function deviceTable(rows, options) {
                                                  E('span', {}, device.name)
                                          ]),
                                          E('small', {}, device.note)
-                         ]),
+                          ]),
+                        E('div', { 'class': 'sf-device-type-cell' }, deviceTypeIcon(device.deviceType)),
                         E('div', { 'class': 'sf-ip-cell' }, [
                                 E('span', {}, device.ip || '-'),
                                 device.staticLease ? staticLeaseIcon() : ''
@@ -1634,6 +1802,7 @@ function deviceTable(rows, options) {
                 E('div', { 'class': 'sf-device-row sf-device-head' }, [
                         E('div', {}, T('ID')),
                         E('div', {}, T('Device')),
+                        E('div', {}, T('Type')),
                         E('div', {}, T('IP address')),
                         E('div', {}, T('MAC address')),
                         E('div', {}, T('Group')),
@@ -2125,6 +2294,9 @@ function buildRouterDevices(dhcpLeases, arpTable) {
                 var configured = configuredByMac[mac];
                 var status = configured && configured.status ? configured.status : 'new';
                 var adminDevice = configured && configured.admin_device === '1';
+                var deviceType = configured && configured.device_type ?
+                        configured.device_type :
+                        inferDeviceType(item, configured);
 
                 if (allowlist[mac])
                         status = 'allow';
@@ -2149,6 +2321,7 @@ function buildRouterDevices(dhcpLeases, arpTable) {
                                                 T('Static DHCP lease');
                         }).join(', '),
                         group: configured && configured.group ? configured.group : T('Not configured'),
+                        deviceType: deviceType,
                         status: status,
                         note: routerDeviceNote(item, configured),
                         adminDevice: adminDevice,
@@ -2969,7 +3142,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-41';
+                var assetVersion = '0.1.0-42';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;
