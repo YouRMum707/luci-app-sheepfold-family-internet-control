@@ -45,6 +45,7 @@ Avoid:
 - Keep `install.sh`, `update.sh`, and `uninstall.sh` suitable for running directly on an OpenWRT router.
 - Test `.ipk` packages must follow OpenWrt `ipkg-build` style: a gzip-compressed tar archive containing `debian-binary`, `data.tar.gz`, and `control.tar.gz`; do not publish ad-hoc `ar` archives for OpenWrt test packages.
 - After building local test packages such as `.ipk` or `.apk`, copy the finished artifact to the user's Downloads folder for easy manual installation, but do not commit generated package artifacts.
+- In the Codex sandbox, copying finished artifacts to `C:\Users\User\Downloads` usually requires an explicit escalated copy command. Build inside the repository first, then copy the already-built `.ipk`/`.apk` to Downloads with a narrow `Copy-Item` escalation instead of expecting the build script to write there from inside the sandbox.
 - The uninstall command must remove the package without clearing Sheepfold client lists or user settings, then print a report of remaining router settings that may require manual cleanup.
 - When changing installation, update, or uninstall commands, update both README files and `docs/github-install-setup.md` if relevant.
 
