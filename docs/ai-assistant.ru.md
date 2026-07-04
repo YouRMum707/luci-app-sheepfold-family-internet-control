@@ -67,7 +67,7 @@ https://api.deepseek.com
 
 Текущий рабочий черновик:
 
-- [Семейный навигатор: от контроля к доверию](ai-assistant-prompt.ru.md)
+- [Семейный навигатор: от контроля к доверию](ai-assistant-prompt-for-support-parent/v1/ai-assistant-prompt.ru.md)
 
 ## Примеры запросов
 

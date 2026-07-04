@@ -107,7 +107,7 @@ See:
 - [Android/OpenWRT API contract, Russian](docs/android-openwrt-api.ru.md)
 - [Parent AI assistant](docs/ai-assistant.md)
 - [AI context sharing](docs/ai-context-sharing.md)
-- [Parent AI assistant prompt draft, Russian](docs/ai-assistant-prompt.ru.md)
+- [Parent AI assistant prompt draft, Russian](docs/ai-assistant-prompt-for-support-parent/v1/ai-assistant-prompt.ru.md)
 - [Age-based control scenarios](docs/age-scenarios.md)
 - [Access schedules](docs/schedules.md)
 - [Country profiles](docs/country-profiles.md)
