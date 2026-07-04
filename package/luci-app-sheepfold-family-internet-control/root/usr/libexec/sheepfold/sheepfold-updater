@@ -1,0 +1,100 @@
+#!/bin/sh
+set -eu
+
+COMMAND="${1:-check}"
+OWNER="kva4991"
+REPO="luci-app-sheepfold-family-internet-control"
+PACKAGE="luci-app-sheepfold-family-internet-control"
+WORK_DIR="/tmp/sheepfold/update"
+API_URL="https://api.github.com/repos/${OWNER}/${REPO}/releases/latest"
+RELEASE_JSON="${WORK_DIR}/latest-release.json"
+PACKAGE_FILE="${WORK_DIR}/${PACKAGE}-latest.ipk"
+
+mkdir -p "$WORK_DIR"
+chmod 700 "$WORK_DIR"
+
+fetch() {
+        url="$1"
+        output="$2"
+
+        if command -v uclient-fetch >/dev/null 2>&1; then
+                uclient-fetch -q -O "$output" "$url"
+                return
+        fi
+
+        if command -v wget >/dev/null 2>&1; then
+                wget -q -O "$output" "$url"
+                return
+        fi
+
+        echo "No downloader found. Install uclient-fetch or wget." >&2
+        exit 1
+}
+
+current_version() {
+        opkg status "$PACKAGE" 2>/dev/null | sed -n 's/^Version: //p' | sed -n '1p'
+}
+
+read_release_info() {
+        fetch "$API_URL" "$RELEASE_JSON"
+
+        TAG="$(sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$RELEASE_JSON" | sed -n '1p')"
+        PACKAGE_URL="$(sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*luci-app-sheepfold-family-internet-control[^"]*_all\.ipk\)".*/\1/p' "$RELEASE_JSON" | sed -n '1p')"
+
+        if [ -z "${TAG:-}" ]; then
+                echo "Could not read latest stable release tag from GitHub." >&2
+                exit 1
+        fi
+
+        if [ -z "${PACKAGE_URL:-}" ]; then
+                echo "Latest stable release ${TAG} does not contain a Sheepfold .ipk package." >&2
+                exit 1
+        fi
+}
+
+print_check() {
+        read_release_info
+        echo "Current installed version: $(current_version || true)"
+        echo "Latest stable release: ${TAG}"
+        echo "Package URL: ${PACKAGE_URL}"
+}
+
+install_update() {
+        read_release_info
+        echo "Current installed version: $(current_version || true)"
+        echo "Latest stable release: ${TAG}"
+        echo "Downloading package..."
+        fetch "$PACKAGE_URL" "$PACKAGE_FILE"
+
+        if [ ! -s "$PACKAGE_FILE" ]; then
+                echo "Downloaded package is empty." >&2
+                exit 1
+        fi
+
+        if [ -r /etc/config/sheepfold ]; then
+                cp /etc/config/sheepfold "${WORK_DIR}/sheepfold-config-before-update"
+                chmod 600 "${WORK_DIR}/sheepfold-config-before-update"
+        fi
+
+        echo "Installing package..."
+        opkg install "$PACKAGE_FILE"
+
+        echo "Reloading Sheepfold service..."
+        [ -x /etc/init.d/sheepfold ] && /etc/init.d/sheepfold restart || true
+        [ -x /etc/init.d/rpcd ] && /etc/init.d/rpcd reload || true
+
+        echo "Update completed."
+}
+
+case "$COMMAND" in
+        check)
+                print_check
+                ;;
+        install)
+                install_update
+                ;;
+        *)
+                echo "Usage: sheepfold-updater [check|install]" >&2
+                exit 1
+                ;;
+esac

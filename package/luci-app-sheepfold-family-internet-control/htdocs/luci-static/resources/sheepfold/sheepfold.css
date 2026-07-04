@@ -1052,6 +1052,19 @@
         margin-top: 12px;
 }
 
+.sf-pre {
+        max-width: min(760px, 82vw);
+        max-height: 52vh;
+        overflow: auto;
+        padding: 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #f8fafc;
+        color: #0f172a;
+        white-space: pre-wrap;
+        word-break: break-word;
+}
+
 .sf-settings-tabs {
         margin-bottom: 14px;
 }

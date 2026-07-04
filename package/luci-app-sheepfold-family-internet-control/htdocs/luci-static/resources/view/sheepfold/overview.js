@@ -321,6 +321,12 @@ var translations = {
         'Internet is temporarily unavailable by family rules.': 'Интернет временно недоступен по семейным правилам.',
         'Update app': 'Обновить приложение',
         'Application update requires confirmation.': 'Обновление приложения требует подтверждения.',
+        'Install Sheepfold update now?': 'Установить обновление Sheepfold сейчас?',
+        'Update started. Do not close this page until the result appears.': 'Обновление запущено. Не закрывайте страницу до появления результата.',
+        'Update result': 'Результат обновления',
+        'Update completed. Refresh LuCI if the interface still shows old files.': 'Обновление завершено. Обновите LuCI, если интерфейс всё ещё показывает старые файлы.',
+        'Update failed.': 'Обновление не удалось.',
+        'Updater output is empty.': 'Updater не вернул текстовый вывод.',
         'Reboot router': 'Перезагрузить роутер',
         'Router reboot requires confirmation.': 'Перезагрузка роутера требует подтверждения.',
         'Sheepfold Family Internet Control': 'Sheepfold : контроль доступа в интернет для семьи',
@@ -431,6 +437,58 @@ function actionButton(label, tone, message) {
                         notify(message || T('This action is a visual prototype only.'), tone === 'danger' ? 'warning' : 'info');
                 }
         }, label);
+}
+
+function updateAppButton() {
+        return E('button', {
+                'class': 'sf-action sf-action-danger',
+                'click': function (ev) {
+                        var button = ev.currentTarget;
+
+                        ev.preventDefault();
+
+                        if (!window.confirm(T('Install Sheepfold update now?')))
+                                return;
+
+                        button.disabled = true;
+                        notify(T('Update started. Do not close this page until the result appears.'), 'info');
+
+                        fs.exec('/usr/libexec/sheepfold/sheepfold-updater', ['install']).then(function (result) {
+                                var output = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();
+
+                                if (!output)
+                                        output = T('Updater output is empty.');
+
+                                ui.showModal(T('Update result'), [
+                                        E('pre', { 'class': 'sf-pre' }, output),
+                                        E('div', { 'class': 'right sf-modal-actions' }, [
+                                                E('button', {
+                                                        'class': 'btn cbi-button',
+                                                        'click': ui.hideModal
+                                                }, T('Close'))
+                                        ])
+                                ]);
+
+                                if (result.code === 0)
+                                        notify(T('Update completed. Refresh LuCI if the interface still shows old files.'), 'info');
+                                else
+                                        notify(T('Update failed.'), 'warning');
+                                button.disabled = false;
+                        }, function (error) {
+                                notify(T('Update failed.'), 'warning');
+                                ui.showModal(T('Update result'), [
+                                        E('pre', { 'class': 'sf-pre' }, String(error && error.message ? error.message : error)),
+                                        E('div', { 'class': 'right sf-modal-actions' }, [
+                                                E('button', {
+                                                        'class': 'btn cbi-button',
+                                                        'click': ui.hideModal
+                                                }, T('Close'))
+                                        ])
+                                ]);
+                                button.disabled = false;
+                        });
+                }
+        }, T('Update app'));
 }
 
 function maskLogMessage(message) {
@@ -3510,7 +3568,7 @@ return view.extend({
                         E('div', { 'class': 'sf-action-stack' }, [
                                 actionButton(T('Import all settings and user list'), 'neutral', T('Import requires confirmation.')),
                                 actionButton(T('Export all settings and user list'), 'neutral', T('Default export is readable JSON without secrets.')),
-                                actionButton(T('Update app'), 'danger', T('Application update requires confirmation.')),
+                                updateAppButton(),
                                 actionButton(T('Reboot router'), 'danger', T('Router reboot requires confirmation.'))
                         ])
                 ]);
@@ -3576,7 +3634,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-57';
+                var assetVersion = '0.1.0-58';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;

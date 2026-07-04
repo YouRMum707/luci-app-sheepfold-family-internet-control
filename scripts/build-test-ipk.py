@@ -51,6 +51,7 @@ def add_tree(tar: tarfile.TarFile, source: Path, target_prefix: str) -> None:
         "./etc/uci-defaults/50_luci-sheepfold",
         "./usr/libexec/sheepfold/sheepfold-service",
         "./usr/libexec/sheepfold/sheepfold-device-detector",
+        "./usr/libexec/sheepfold/sheepfold-updater",
     }
 
     for path in sorted(source.rglob("*")):
