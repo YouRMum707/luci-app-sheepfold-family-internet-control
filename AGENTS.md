@@ -174,7 +174,12 @@ Avoid:
 
 - New device behavior is configurable: `allow` by default, or `restrict_until_configured`.
 - Global "Block internet" blocks every device except allowlisted devices.
-- Device groups should include children, parents, TVs/media devices, and guests/custom groups.
+- Device groups should include children, parents, TVs/media devices, guests/custom groups, and a special `No restrictions` / `Без ограничений` group.
+- The `No restrictions` group is a group-level trusted service-device rule: it may bypass schedules, temporary restrictions, new-device restrictions, and global block, but it must never override the blocklist. Blocklist remains the highest priority.
+- Strong device detection may suggest or confirm `No restrictions` for infrastructure devices such as NAS, Home Assistant, AdGuard Home, Proxmox, video recorders, and smart-home hubs, but it must not grant permanent trust from MAC/hostname alone.
+- Full detection should combine several router-side signals such as DHCP/static lease data, hostname, vendor/OUI when available, open ports, service banners, mDNS/SSDP/UPnP names, and previously confirmed device fingerprints. Treat port/banner checks as confidence signals, not as cryptographic identity.
+- Installation may offer a reduced mode. Reduced mode uses only lightweight current metadata detection and must not auto-assign newly detected devices to `No restrictions`.
+- Full mode may run stronger local detection, but automatic placement into `No restrictions` requires either explicit parent confirmation or a previously trusted fingerprint for the same device. This prevents a child from bypassing rules by spoofing MAC, hostname, or easy service banners.
 - Offline known devices should be cleaned after a configurable number of inactive days; default is 90 days.
 - Blocked-page placeholder text must be configurable by the parent/admin.
 - Allowlist should support quick add mode: a parent opens a 30 second connection window, sees a Wi-Fi QR code and devices that connected after the window started, then explicitly presses `Add` / `Добавить` for each candidate.

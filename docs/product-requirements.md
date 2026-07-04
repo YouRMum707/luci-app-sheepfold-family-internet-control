@@ -199,7 +199,26 @@ Device groups should be supported for easier management:
 - children;
 - parents;
 - TVs/media devices;
-- guests/custom groups.
+- guests/custom groups;
+- no restrictions / `Без ограничений`.
+
+`No restrictions` / `Без ограничений` is a trusted service-device group for household infrastructure such as NAS, Home Assistant, AdGuard Home, Proxmox, video recorders, and smart-home hubs. Devices in this group should not be restricted by schedules, temporary restrictions, new-device restrictions, or global internet block.
+
+This group must not override the blocklist. Priority is:
+
+1. blocklist;
+2. allowlist;
+3. no restrictions group;
+4. temporary access;
+5. schedule;
+6. general rules.
+
+Strong device detection should use router-side signals such as DHCP/static lease data, hostname, vendor/OUI, open ports, service banners, mDNS/SSDP/UPnP names, and a previously confirmed device fingerprint. Detection by MAC, hostname, or open ports alone is not enough to silently grant permanent trust, because a child may spoof easy identifiers.
+
+Installer mode:
+
+- reduced mode uses only lightweight metadata detection and must not auto-assign devices to the `No restrictions` group;
+- full mode may run stronger local detection and suggest `No restrictions`, but automatic placement requires parent confirmation or a previously trusted fingerprint.
 
 Allowlist quick add:
 
@@ -215,14 +234,6 @@ Allowlist quick add:
 - every candidate row must include name/hostname if known, current IP, MAC, connection time, and an `Add` / `Добавить` button;
 - quick add must not silently allowlist all new devices; the parent must press `Add` for each candidate;
 - backend validation must still prevent adding a MAC that is in the blocklist.
-
-Schedule priority:
-
-1. blocklist;
-2. allowlist;
-3. temporary access;
-4. schedule;
-5. general rules.
 
 Schedules must support weekdays, time ranges, enabled/disabled state, device or group targets, intervals that cross midnight, and both block and allow rules.
 

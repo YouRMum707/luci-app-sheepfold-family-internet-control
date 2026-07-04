@@ -74,6 +74,7 @@ var translations = {
         'Children': 'Дети',
         'TV / media': 'ТВ / медиа',
         'Guests': 'Гости',
+        'No restrictions': 'Без ограничений',
         'Custom': 'Своя',
         'Use custom group': 'Использовать свою группу',
         'Access mode': 'Режим доступа',
@@ -1799,7 +1800,8 @@ function showDeviceSettingsModal(device) {
                 [T('Parents'), T('Parents')],
                 [T('Children'), T('Children')],
                 [T('TV / media'), T('TV / media')],
-                [T('Guests'), T('Guests')]
+                [T('Guests'), T('Guests')],
+                [T('No restrictions'), T('No restrictions')]
         ];
         var knownGroupValues = knownGroups.map(function (item) { return item[0]; });
         var groupIsCustom = device.group && knownGroupValues.indexOf(device.group) === -1;
@@ -3422,7 +3424,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-50';
+                var assetVersion = '0.1.0-51';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;
