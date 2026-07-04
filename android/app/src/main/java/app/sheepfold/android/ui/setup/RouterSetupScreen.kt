@@ -330,14 +330,14 @@ private fun AgreementScreen(onAccept: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 144.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                .padding(start = 20.dp, top = 12.dp, end = 20.dp, bottom = 172.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
                 painter = painterResource(id = R.drawable.sheepfold_logo),
                 contentDescription = "Sheepfold",
-                modifier = Modifier.size(168.dp)
+                modifier = Modifier.size(136.dp)
             )
             ScreenHeader(text = "Sheepfold", large = true)
             Text(
@@ -553,7 +553,7 @@ private fun RoundNextButton(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "▸", style = MaterialTheme.typography.displayLarge)
-            Text(text = "далее")
+            Text(text = "далее", style = MaterialTheme.typography.bodyLarge)
         }
     }
 }

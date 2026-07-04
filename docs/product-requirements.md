@@ -204,7 +204,9 @@ Device groups should be supported for easier management:
 Allowlist quick add:
 
 - the Allowlist tab should include a `Quick add to allowlist` / `Быстрое добавление в белый список` button;
-- pressing it opens a modal with a Wi-Fi QR code on the left and a list of newly connected devices on the right;
+- pressing it opens a modal with a Wi-Fi QR code, a separate one-time allowlist request QR/link, and a list of newly connected devices;
+- the one-time allowlist request link should be short enough for the current LuCI QR renderer, for example `/q/{quickAllowlistToken}`;
+- the router backend must consume the quick allowlist token, detect the phone MAC from router-side DHCP/ARP/neighbor data, and reject token reuse;
 - the modal starts a 30 second connection window;
 - the `Connection allowed` / `Разрешено подключение` button should show a decreasing status bar for the 30 second window;
 - when the timer expires, the button turns grey but stays clickable;

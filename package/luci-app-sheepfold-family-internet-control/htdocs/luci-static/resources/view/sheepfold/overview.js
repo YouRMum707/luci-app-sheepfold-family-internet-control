@@ -160,6 +160,10 @@ var translations = {
         'Quick allowlist add': 'Быстрое добавление в белый список',
         'Scan Wi-Fi QR, then add newly connected devices manually.': 'Отсканируйте QR Wi-Fi, затем вручную добавьте только что подключившиеся устройства.',
         'Wi-Fi access QR': 'QR подключения к Wi-Fi',
+        'Allowlist request QR': 'QR запроса в белый список',
+        'After connecting to Wi-Fi, scan this QR to request allowlist access from this phone.': 'После подключения к Wi-Fi отсканируйте этот QR с телефона, чтобы запросить добавление в белый список.',
+        'One-time allowlist link': 'Одноразовая ссылка добавления',
+        'Router backend must consume this one-time token, detect the phone MAC from router-side data, and reject reuse.': 'Backend роутера должен сжечь этот одноразовый токен, определить MAC телефона по данным роутера и отклонять повторное использование.',
         'Newly connected devices': 'Только что подключившиеся устройства',
         'Connection allowed': 'Разрешено подключение',
         'Connection window expired': 'Окно подключения истекло',
@@ -828,8 +832,22 @@ function generatePairingCode() {
         return shuffleCharacters(chars).join('');
 }
 
+function generateUrlToken(length) {
+        var chars = 'abcdefghkmnpqrstuvwxyzABCDEFGHKMNPQRSTUVWXYZ2456789';
+        var token = [];
+
+        for (var i = 0; i < length; i++)
+                token.push(chars[randomInteger(chars.length)]);
+
+        return token.join('');
+}
+
 function currentRouterAddress() {
         return window.location.hostname || String(window.location.host || '').split(':')[0] || '192.168.1.1';
+}
+
+function quickAllowlistUrl(token) {
+        return window.location.protocol + '//' + currentRouterAddress() + '/q/' + encodeURIComponent(token);
 }
 
 function showPairingModal(device) {
@@ -912,6 +930,8 @@ function showQuickAllowlistModal() {
         var wifiPayload = networks.length ?
                 wifiQrPayload(networks[0].ssid, networks[0].password, networks[0].encryption) :
                 'WIFI:T:nopass;S:;;';
+        var allowlistToken = generateUrlToken(18);
+        var allowlistUrl = quickAllowlistUrl(allowlistToken);
         var progressFill = E('span', { 'class': 'sf-quick-progress-fill' });
         var statusText = E('span', { 'class': 'sf-quick-status-text' });
         var permitButton;
@@ -965,6 +985,13 @@ function showQuickAllowlistModal() {
                                 qrCode(wifiPayload),
                                 E('p', {}, T('Scan Wi-Fi QR, then add newly connected devices manually.')),
                                 E('code', {}, wifiPayload)
+                        ]),
+                        E('div', { 'class': 'sf-qr-wrap' }, [
+                                E('h4', {}, T('Allowlist request QR')),
+                                qrCode(allowlistUrl),
+                                E('p', {}, T('After connecting to Wi-Fi, scan this QR to request allowlist access from this phone.')),
+                                settingLine(T('One-time allowlist link'), allowlistUrl),
+                                E('small', {}, T('Router backend must consume this one-time token, detect the phone MAC from router-side data, and reject reuse.'))
                         ]),
                         E('div', { 'class': 'sf-quick-side' }, [
                                 permitButton,
@@ -2823,7 +2850,7 @@ return view.extend({
         },
 
         render: function () {
-                var assetVersion = '0.1.0-39';
+                var assetVersion = '0.1.0-40';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;

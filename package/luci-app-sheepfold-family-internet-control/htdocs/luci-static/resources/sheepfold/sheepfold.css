@@ -786,9 +786,9 @@
 
 .sf-modal-quick {
         display: grid;
-        grid-template-columns: 220px minmax(360px, 1fr);
+        grid-template-columns: 220px 260px minmax(360px, 1fr);
         gap: 18px;
-        max-width: 860px;
+        max-width: 1120px;
 }
 
 .sf-qr-wrap {
@@ -803,6 +803,11 @@
 
 .sf-qr-wrap small {
         color: var(--sf-muted);
+}
+
+.sf-qr-wrap .sf-setting-line {
+        grid-template-columns: 1fr;
+        gap: 4px;
 }
 
 .sf-qr {
