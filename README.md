@@ -122,16 +122,12 @@ See:
 - [Security model](docs/security.md)
 - [User agreement](docs/user-agreement.md)
 - [Privacy policy](docs/privacy.md)
+- [Donation](docs/donation.md)
 - [OpenWRT router comparison](https://hattabbi4.github.io/openwrt-router-compare/)
 
 ## Support
 
-If you find Sheepfold useful and want to support development, donation links will be added here before the first public release.
-
-Suggested support channels:
-
-- GitHub Sponsors for international donations;
-- Boosty or YooMoney for Russian-speaking users.
+If you find Sheepfold useful and want to support development, see [Donation](docs/donation.md).
 
 ## License
 

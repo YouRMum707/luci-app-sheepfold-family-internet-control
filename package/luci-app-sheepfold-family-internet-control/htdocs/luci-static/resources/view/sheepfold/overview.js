@@ -51,6 +51,12 @@ var translations = {
         'Administrators': 'Администраторы',
         'Logs': 'Журнал',
         'Settings': 'Настройки',
+        'Donation': 'Donation',
+        'Support the project': 'Поддержать проект',
+        'If Sheepfold becomes useful and you want to support development, donation links will be added here before the first public release.': 'Если Sheepfold окажется полезным и вы захотите поддержать разработку, ссылки для донатов будут добавлены здесь до первого публичного релиза.',
+        'Possible options:': 'Возможные варианты:',
+        'GitHub Sponsors for international audience;': 'GitHub Sponsors для международной аудитории;',
+        'Boosty or YooMoney for Russian-speaking users.': 'Boosty или ЮMoney для русскоязычных пользователей.',
         'Misc': 'Разное',
         'Scheduled': 'По расписанию',
         'Restricted': 'Ограничено',
@@ -346,7 +352,8 @@ var tabs = [
         ['management', T('User management')],
         ['wifi', T('Wi-Fi')],
         ['logs', T('Logs')],
-        ['settings', T('Settings')]
+        ['settings', T('Settings')],
+        ['donation', T('Donation')]
 ];
 
 var settingsTabs = [
@@ -3516,6 +3523,24 @@ return view.extend({
                 ]);
         },
 
+        renderDonation: function () {
+                return E('div', { 'class': 'sf-panel' }, [
+                        E('div', { 'class': 'sf-panel-head' }, [
+                                E('div', {}, [
+                                        E('p', {}, T('Support the project'))
+                                ])
+                        ]),
+                        E('div', { 'class': 'sf-flat-form' }, [
+                                E('p', {}, T('If Sheepfold becomes useful and you want to support development, donation links will be added here before the first public release.')),
+                                E('p', {}, T('Possible options:')),
+                                E('ul', {}, [
+                                        E('li', {}, T('GitHub Sponsors for international audience;')),
+                                        E('li', {}, T('Boosty or YooMoney for Russian-speaking users.'))
+                                ])
+                        ])
+                ]);
+        },
+
         renderPanel: function (tab, content) {
                 return E('section', {
                         'class': 'sf-tab-panel',
@@ -3530,12 +3555,13 @@ return view.extend({
                         this.renderPanel('management', this.renderManagement()),
                         this.renderPanel('wifi', this.renderWifi()),
                         this.renderPanel('logs', this.renderLogs()),
-                        this.renderPanel('settings', this.renderSettings())
+                        this.renderPanel('settings', this.renderSettings()),
+                        this.renderPanel('donation', this.renderDonation())
                 ];
         },
 
         render: function () {
-                var assetVersion = '0.1.0-55';
+                var assetVersion = '0.1.0-56';
                 var self = this;
                 var internetBlocked = this.isGlobalInternetBlocked();
                 var allowlistCount = devices.filter(function (device) { return device.status === 'allow'; }).length;
