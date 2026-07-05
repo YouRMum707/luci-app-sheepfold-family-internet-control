@@ -166,6 +166,13 @@ var translations = {
         'Manual MAC-based add form is not implemented in this visual test build.': 'Ручное добавление по MAC пока не реализовано в этой визуальной сборке.',
         'These devices are never blocked by global blocking or schedules.': 'Эти устройства не блокируются глобальной блокировкой и расписаниями.',
         'Add device': 'Добавить устройство',
+        'Add device to allowlist': 'Добавить устройство в белый список',
+        'Add device to blocklist': 'Добавить устройство в чёрный список',
+        'MAC address is required.': 'MAC-адрес обязателен.',
+        'Enter a valid MAC address.': 'Введите корректный MAC-адрес.',
+        'Device added to allowlist.': 'Устройство добавлено в белый список.',
+        'Device added to blocklist.': 'Устройство добавлено в чёрный список.',
+        'Could not add device.': 'Не удалось добавить устройство.',
         'The UI must prevent adding the same MAC to allowlist and blocklist.': 'Интерфейс должен запрещать добавление одного MAC одновременно в белый и чёрный список.',
         'Quick add to allowlist': 'Быстрое добавление в белый список',
         'Quick allowlist add': 'Быстрое добавление в белый список',
@@ -189,7 +196,7 @@ var translations = {
         'Quick mode only collects candidates. A parent still presses Add for every device.': 'Быстрый режим только собирает кандидатов. Родитель всё равно нажимает "Добавить" для каждого устройства.',
         'Blocklisted devices cannot access the internet, LuCI, SSH, or the Sheepfold API.': 'Устройства из чёрного списка не могут открывать интернет, LuCI, SSH и Sheepfold API.',
         'Blocklist changes require confirmation.': 'Изменения чёрного списка требуют подтверждения.',
-        'Emergency-useful sites for blocklisted devices are enabled and still do not open router access.': 'Включен доступ к "аварийно-полезным сайтам" для чёрного списка (это не открывает доступ к роутеру).',
+        'Emergency-useful sites for blocklisted devices are enabled and still do not open router access.': 'Включен доступ к "аварийно-полезным сайтам" для чёрного списка (а доступ к роутеру всё-равно закрыт).',
         'Emergency-useful sites for blocklisted devices are disabled and still do not open router access.': 'Выключен доступ к "аварийно-полезным сайтам" для чёрного списка (это не открывает доступ к роутеру).',
         'Blocklist emergency-useful sites access': 'Доступ пользователей из чёрного списка к "аварийно-полезным сайтам"',
         'Allows only configured emergency-useful sites for blocklisted devices. Router access remains blocked.': 'Разрешает устройствам из чёрного списка только настроенные аварийно-полезные сайты. Доступ к роутеру остаётся закрытым.',
@@ -1518,6 +1525,99 @@ function pairingButton(device) {
                         showPairingModal(device);
                 }
         }, [adminDeviceIcon(), E('span', {}, T('Pairing'))]);
+}
+
+function showManualListDeviceModal(targetStatus) {
+        var isAllowlist = targetStatus === 'allow';
+        var title = isAllowlist ? T('Add device to allowlist') : T('Add device to blocklist');
+        var macField = inputControl(T('MAC address'), '', { 'placeholder': 'AA:BB:CC:DD:EE:FF' });
+        var nameField = inputControl(T('Device name'), '');
+        var ipField = inputControl(T('IP address'), '');
+        var conflictNote = E('div', { 'class': 'sf-note sf-note-danger', 'hidden': 'hidden' });
+
+        function showError(message) {
+                conflictNote.textContent = message;
+                conflictNote.hidden = false;
+        }
+
+        ui.showModal(title, [
+                E('div', { 'class': 'sf-device-editor' }, [
+                        conflictNote,
+                        E('div', { 'class': 'sf-grid two' }, [
+                                macField.node,
+                                nameField.node,
+                                ipField.node
+                        ])
+                ]),
+                E('div', { 'class': 'right sf-modal-actions' }, [
+                        E('button', {
+                                'class': 'btn cbi-button',
+                                'click': ui.hideModal
+                        }, T('Cancel')),
+                        E('button', {
+                                'class': 'btn cbi-button cbi-button-positive',
+                                'click': function () {
+                                        var mac = normalizeMac(macField.input.value);
+                                        var name = nameField.input.value.trim();
+                                        var ip = ipField.input.value.trim();
+                                        var sectionName;
+
+                                        conflictNote.hidden = true;
+                                        conflictNote.textContent = '';
+
+                                        if (!macField.input.value.trim()) {
+                                                showError(T('MAC address is required.'));
+                                                return;
+                                        }
+
+                                        if (!mac) {
+                                                showError(T('Enter a valid MAC address.'));
+                                                return;
+                                        }
+
+                                        if (isAllowlist && macInSheepfoldList('blocklist', mac)) {
+                                                showError(T('This device is already in the blocklist. Remove it from the blocklist before adding it to the allowlist.'));
+                                                return;
+                                        }
+
+                                        if (!isAllowlist && macInSheepfoldList('allowlist', mac)) {
+                                                showError(T('This device is already in the allowlist. Remove it from the allowlist before adding it to the blocklist.'));
+                                                return;
+                                        }
+
+                                        sectionName = ensureSheepfoldDeviceSection({ mac: mac });
+                                        uci.set('sheepfold', sectionName, 'mac', mac);
+                                        uci.set('sheepfold', sectionName, 'name', name || mac);
+                                        uci.set('sheepfold', sectionName, 'ip', ip);
+                                        uci.set('sheepfold', sectionName, 'group', T('Not configured'));
+                                        uci.set('sheepfold', sectionName, 'device_type', 'smart');
+                                        uci.set('sheepfold', sectionName, 'status', targetStatus);
+
+                                        updateMacList(isAllowlist ? 'allowlist' : 'blocklist', mac, true);
+
+                                        saveUciChanges(['sheepfold']).then(function () {
+                                                notify(isAllowlist ? T('Device added to allowlist.') : T('Device added to blocklist.'), 'info');
+                                                ui.hideModal();
+                                                window.setTimeout(function () {
+                                                        window.location.reload();
+                                                }, 700);
+                                        }, function () {
+                                                notify(T('Could not add device.'), 'warning');
+                                        });
+                                }
+                        }, T('Save'))
+                ])
+        ]);
+}
+
+function manualListDeviceButton(targetStatus) {
+        return E('button', {
+                'class': 'sf-action sf-action-positive',
+                'click': function (ev) {
+                        ev.preventDefault();
+                        showManualListDeviceModal(targetStatus);
+                }
+        }, T('Add device'));
 }
 
 function showQuickAllowlistModal() {
@@ -2869,7 +2969,11 @@ function safeUciSections(config, type) {
 }
 
 function normalizeMac(mac) {
-        var value = String(mac || '').trim().toUpperCase();
+        var value = String(mac || '').trim().toUpperCase().replace(/-/g, ':');
+        var compact = value.replace(/:/g, '');
+
+        if (/^[0-9A-F]{12}$/.test(compact))
+                value = compact.replace(/(..)(?=.)/g, '$1:');
 
         if (!/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(value))
                 return '';
@@ -3587,7 +3691,7 @@ return view.extend({
                                 ]),
                                 E('div', { 'class': 'sf-toolbar' }, [
                                         quickAllowlistButton(),
-                                        actionButton(T('Add device'), 'positive', T('The UI must prevent adding the same MAC to allowlist and blocklist.'))
+                                        manualListDeviceButton('allow')
                                 ])
                         ]),
                         deviceTable(devices.filter(function (device) { return device.status === 'allow'; }), { compact: true })
@@ -3602,9 +3706,9 @@ return view.extend({
                                 E('div', {}, [
                                         E('p', {}, T('Blocklisted devices cannot access the internet, LuCI, SSH, or the Sheepfold API.'))
                                 ]),
-                                actionButton(T('Add device'), 'positive', T('Blocklist changes require confirmation.'))
+                                manualListDeviceButton('blocked')
                         ]),
-                        E('div', { 'class': 'sf-note sf-note-warning' }, emergencyAccessEnabled ?
+                        E('div', { 'class': 'sf-note ' + (emergencyAccessEnabled ? 'sf-note-ok' : 'sf-note-warning') }, emergencyAccessEnabled ?
                                 T('Emergency-useful sites for blocklisted devices are enabled and still do not open router access.') :
                                 T('Emergency-useful sites for blocklisted devices are disabled and still do not open router access.')),
                         deviceTable(devices.filter(function (device) { return device.status === 'blocked'; }), { compact: true })
