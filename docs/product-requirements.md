@@ -280,7 +280,7 @@ Default bedtime: `21:00`. Bedtime should be configurable in schedule settings.
 
 The Android app is for parent/admin devices only. Sheepfold should not require installing an app on children's phones.
 
-An optional client-facing blocked-page placeholder should be served locally by the router instead of endless page loading. This is not a child control interface; it is only a simple explanation that internet access is currently unavailable. The placeholder text must be configurable by the parent/admin.
+An optional client-facing blocked-page placeholder should be served locally by the router instead of endless page loading. This is not a child control interface; it is only a simple explanation that internet access is currently unavailable. The placeholder text must be configurable by the parent/admin. Non-browser clients must also receive a bounded response: POST/PUT/PATCH/DELETE requests should get a machine-readable 403 JSON response when possible, and game consoles, robot vacuums, speakers, and other IoT devices should get a short predictable response instead of hanging indefinitely.
 
 ## Age-Based Guidance
 

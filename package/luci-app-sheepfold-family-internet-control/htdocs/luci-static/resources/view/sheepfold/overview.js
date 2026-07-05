@@ -337,14 +337,19 @@ var translations = {
         'Disable Wi-Fi': 'Отключить Wi-Fi',
         'WPS action saved.': 'Действие кнопки WPS сохранено.',
         'Could not save WPS action.': 'Не удалось сохранить действие кнопки WPS.',
-        'Adding devices to allowlist from WPS is dangerous and must require an explicit confirmation window in the router backend.': 'Добавление устройств в белый список через WPS опасно и должно требовать отдельного окна подтверждения в backend-части роутера.',
+        'Adding devices to allowlist through the WPS button is dangerous because after pressing it, for 30 seconds any device can connect to Wi-Fi and get into the allowlist.': 'Добавление устройств в белый список через WPS кнопку опасно так как при нажатии на неё, в течении 30 секунд - любое устройство сможет подключиться к вифи и попасть в белый список.',
+        'While WPS connection is allowed, all router LEDs should blink using the 1010000 pattern for 30 seconds. One tick is half a second.': 'Пока разрешено WPS-подключение, все светодиоды роутера должны мигать паттерном 1010000 в течение 30 секунд. Один тик — полсекунды.',
         'Router LED control': 'Управление светодиодами роутера',
         'Turn off all LEDs permanently': 'Отключить навсегда все светодиоды',
         'New device LED alert until LuCI login': 'Сигнал светодиодами о новом устройстве до входа в LuCI',
         'LED setting saved.': 'Настройка светодиодов сохранена.',
         'Could not save LED setting.': 'Не удалось сохранить настройку светодиодов.',
         'LED behavior depends on the router model and available OpenWrt LED triggers.': 'Поведение светодиодов зависит от модели роутера и доступных OpenWrt LED-триггеров.',
-        'When a new device connects, several LEDs should light one after another like a running chain. If the router has one RGB LED, use a rainbow loop. After a successful LuCI password login or after any admin views the new-device notification on the phone, restore the router default LED behavior immediately.': 'Когда подключилось новое устройство, несколько светодиодов должны зажигаться по очереди, как бегущая цепочка. Если у роутера один RGB-светодиод, используйте радужный цикл. После успешного входа в LuCI с паролем или после просмотра уведомления о новом устройстве на телефоне любым админом сразу верните дефолтное поведение светодиодов роутера.',
+        'When a new device connects, router LEDs will turn on. After a successful LuCI password login or after any admin views the new-device notification on the phone, restore the router default LED behavior immediately.': 'Когда подключилось новое устройство, светодиоды на роутере зажгуться. После успешного входа в LuCI с паролем или после просмотра уведомления о новом устройстве на телефоне любым админом сразу верните дефолтное поведение светодиодов роутера.',
+        'Wi-Fi settings': 'Настройки Wi-Fi',
+        'WPS button': 'Кнопка WPS',
+        'Router LEDs': 'Светодиоды роутера',
+        'Other actions': 'Другие действия',
         'Known offline devices cleanup': 'Очистка логов устройств офлайн',
         '30 days': '30 дней',
         '90 days': '90 дней',
@@ -354,7 +359,7 @@ var translations = {
         'Export mode': 'Режим экспорта',
         'Readable JSON without secrets': 'Читаемый JSON без секретов',
         'Encrypted full backup': 'Зашифрованный полный бэкап',
-        'Blocked page text': 'Текст страницы блокировки',
+        'Blocked internet page text shown instead of websites': 'Текст интернет-страницы блокировки открывающейся вместо сайтов',
         'Internet is temporarily unavailable by family rules.': 'Интернет временно недоступен по семейным правилам.',
         'Update app': 'Обновить приложение',
         'Application update requires confirmation.': 'Обновление приложения требует подтверждения.',
@@ -445,6 +450,13 @@ function saveGlobalOption(option, value) {
         return uci.save().then(function () {
                 return uci.apply();
         });
+}
+
+function acknowledgeNewDeviceLedAlert(source) {
+        if (safeUciGet('sheepfold', 'global', 'router_led_control', 'router_default') !== 'new_device_alert_until_luci_login')
+                return;
+
+        fs.write('/tmp/sheepfold/new-device-alert.ack', String(source || 'luci') + '\n').catch(function () {});
 }
 
 function badge(status) {
@@ -2480,17 +2492,23 @@ function timeAutomationField(label, modeOption, timeOption, defaultTime) {
                 options[timeOption] = nextTime;
 
                 function performSave() {
+                        neverRadio.checked = nextMode !== 'time';
+                        timeRadio.checked = nextMode === 'time';
+                        timeInput.value = nextTime;
+
                         saveGlobalOptions(options).then(function () {
-                        lastMode = nextMode;
-                        lastTime = nextTime;
-                        notify(T('Wi-Fi automation settings saved.'), 'info');
-                }, function () {
-                        restoreLastValue();
-                        notify(T('Could not save Wi-Fi automation settings.'), 'warning');
-                });
+                                lastMode = nextMode;
+                                lastTime = nextTime;
+                                notify(T('Wi-Fi automation settings saved.'), 'info');
+                        }, function () {
+                                restoreLastValue();
+                                notify(T('Could not save Wi-Fi automation settings.'), 'warning');
+                        });
                 }
 
                 if (modeOption === 'wifi_auto_disable_mode' && nextMode === 'time') {
+                        neverRadio.checked = false;
+                        timeRadio.checked = true;
                         confirmationOpen = true;
                         confirmWifiAutoDisable(nextTime).then(function (confirmed) {
                                 confirmationOpen = false;
@@ -2508,6 +2526,9 @@ function timeAutomationField(label, modeOption, timeOption, defaultTime) {
 
         neverRadio.addEventListener('change', saveIfChanged);
         timeRadio.addEventListener('change', saveIfChanged);
+        timeInput.addEventListener('focus', function () {
+                timeRadio.checked = true;
+        });
         timeInput.addEventListener('blur', saveIfChanged);
         timeInput.addEventListener('keydown', function (ev) {
                 if (ev.key === 'Enter') {
@@ -2558,21 +2579,59 @@ function saveSelectGlobalField(label, option, value, values, successMessage, err
         ]);
 }
 
+function settingsDivider(label) {
+        return E('div', { 'class': 'sf-settings-divider' }, [
+                E('hr'),
+                E('span', {}, label)
+        ]);
+}
+
 function wpsActionField(label, option) {
         return saveSelectGlobalField(label, option, 'router_default', [
                 ['router_default', T('Router default behavior')],
                 ['allow_wifi_connection', T('Allow Wi-Fi connection')],
                 ['allow_wifi_and_allowlist', T('Allow Wi-Fi connection and add devices to allowlist (dangerous)')],
                 ['disable_wifi', T('Disable Wi-Fi')]
-        ], T('WPS action saved.'), T('Could not save WPS action.'), T('Adding devices to allowlist from WPS is dangerous and must require an explicit confirmation window in the router backend.'));
+        ], T('WPS action saved.'), T('Could not save WPS action.'), [
+                E('span', {}, T('Adding devices to allowlist through the WPS button is dangerous because after pressing it, for 30 seconds any device can connect to Wi-Fi and get into the allowlist.')),
+                E('br'),
+                E('span', {}, T('While WPS connection is allowed, all router LEDs should blink using the 1010000 pattern for 30 seconds. One tick is half a second.'))
+        ]);
 }
 
 function ledControlField() {
-        return saveSelectGlobalField(T('Router LED control'), 'router_led_control', 'router_default', [
+        var currentValue = safeUciGet('sheepfold', 'global', 'router_led_control', 'router_default');
+        var hint = E('small', {
+                'hidden': currentValue === 'new_device_alert_until_luci_login' ? null : 'hidden'
+        }, T('When a new device connects, router LEDs will turn on. After a successful LuCI password login or after any admin views the new-device notification on the phone, restore the router default LED behavior immediately.'));
+        var select = E('select', {
+                'class': 'cbi-input-select',
+                'change': function (ev) {
+                        var nextValue = ev.currentTarget.value;
+
+                        saveGlobalOption('router_led_control', nextValue).then(function () {
+                                currentValue = nextValue;
+                                hint.hidden = nextValue === 'new_device_alert_until_luci_login' ? null : 'hidden';
+                                notify(T('LED setting saved.'), 'info');
+                        }, function () {
+                                ev.currentTarget.value = currentValue;
+                                hint.hidden = currentValue === 'new_device_alert_until_luci_login' ? null : 'hidden';
+                                notify(T('Could not save LED setting.'), 'warning');
+                        });
+                }
+        }, [
                 ['router_default', T('Router default behavior')],
                 ['off_forever', T('Turn off all LEDs permanently')],
                 ['new_device_alert_until_luci_login', T('New device LED alert until LuCI login')]
-        ], T('LED setting saved.'), T('Could not save LED setting.'), T('When a new device connects, several LEDs should light one after another like a running chain. If the router has one RGB LED, use a rainbow loop. After a successful LuCI password login or after any admin views the new-device notification on the phone, restore the router default LED behavior immediately.'));
+        ].map(function (item) {
+                return E('option', { 'value': item[0], 'selected': item[0] === currentValue ? 'selected' : null }, item[1]);
+        }));
+
+        return E('label', { 'class': 'sf-field sf-field-wide' }, [
+                E('span', {}, T('Router LED control')),
+                select,
+                hint
+        ]);
 }
 
 function inputControl(label, value, attrs, hint) {
@@ -3926,17 +3985,21 @@ return view.extend({
                                 ['180', T('180 days')]
                         ]),
                         cachePathField(),
-                        textareaField(T('Blocked page text'), T('Internet is temporarily unavailable by family rules.'))
+                        textareaField(T('Blocked internet page text shown instead of websites'), T('Internet is temporarily unavailable by family rules.'))
                 ]);
         },
 
         renderSettingsMisc: function () {
                 return E('div', { 'class': 'sf-flat-form sf-misc-actions' }, [
+                        settingsDivider(T('Wi-Fi settings')),
                         timeAutomationField(T('Enable Wi-Fi automatically'), 'wifi_auto_enable_mode', 'wifi_auto_enable_time', '07:00'),
                         timeAutomationField(T('Disable Wi-Fi automatically'), 'wifi_auto_disable_mode', 'wifi_auto_disable_time', '23:00'),
+                        settingsDivider(T('WPS button')),
                         wpsActionField(T('WPS short button press'), 'wps_short_press_action'),
                         wpsActionField(T('WPS long button press'), 'wps_long_press_action'),
+                        settingsDivider(T('Router LEDs')),
                         ledControlField(),
+                        settingsDivider(T('Other actions')),
                         selectField(T('Export mode'), 'safe', [
                                 ['safe', T('Readable JSON without secrets')],
                                 ['encrypted', T('Encrypted full backup')]
@@ -4032,6 +4095,7 @@ return view.extend({
                 ]);
 
                 this.applyInitialDeepLinkState();
+                acknowledgeNewDeviceLedAlert('luci');
 
                 if (!rootPasswordIsSet) {
                         return E('div', { 'class': 'sf-page' }, [

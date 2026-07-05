@@ -43,14 +43,19 @@ cp -R "$PKG_DIR/root/." "$BUILD_DIR/data/"
 cp -R "$PKG_DIR/htdocs/." "$BUILD_DIR/data/www/"
 chmod 0755 "$BUILD_DIR/data/etc/init.d/sheepfold"
 chmod 0755 "$BUILD_DIR/data/etc/uci-defaults/50_luci-sheepfold"
+chmod 0755 "$BUILD_DIR/data/etc/hotplug.d/button/90-sheepfold-wps"
 chmod 0755 "$BUILD_DIR/data/usr/libexec/sheepfold/sheepfold-service"
+chmod 0755 "$BUILD_DIR/data/usr/libexec/sheepfold/sheepfold-device-detector"
+chmod 0755 "$BUILD_DIR/data/usr/libexec/sheepfold/sheepfold-updater"
+chmod 0755 "$BUILD_DIR/data/usr/libexec/sheepfold/sheepfold-router-control"
+chmod 0755 "$BUILD_DIR/data/www/cgi-bin/sheepfold-blocked"
 
 cat > "$BUILD_DIR/control/control" <<CONTROL
 Package: $PKG_NAME
 Version: $PKG_VERSION-$PKG_RELEASE
 Architecture: $ARCH
 Maintainer: kva4991
-Depends: luci-base, firewall4, rpcd, uci, uclient-fetch, ca-bundle
+Depends: luci-base, firewall4, rpcd, uci, uclient-fetch, ca-bundle, uhttpd
 Section: luci
 Priority: optional
 Installed-Size: 10240
@@ -74,9 +79,41 @@ ensure_global_option enabled '0'
 ensure_global_option language 'ru'
 ensure_global_option block_on_boot '0'
 ensure_global_option new_device_policy 'allow'
+ensure_global_option auto_configure '1'
+ensure_global_option detection_mode 'full'
+ensure_global_option no_restrictions_auto_assign '1'
+ensure_global_option detector_watch_interval_seconds '10'
+ensure_global_option detector_interval_seconds '900'
+ensure_global_option detector_max_hosts_per_scan '16'
+ensure_global_option detector_min_no_restrictions_confidence '80'
+ensure_global_option detector_nmap_host_timeout_seconds '20'
+ensure_global_option update_check_install_mode 'weekly'
+ensure_global_option wifi_auto_enable_mode 'never'
+ensure_global_option wifi_auto_enable_time '07:00'
+ensure_global_option wifi_auto_disable_mode 'never'
+ensure_global_option wifi_auto_disable_time '23:00'
+ensure_global_option wps_short_press_action 'router_default'
+ensure_global_option wps_long_press_action 'router_default'
+ensure_global_option router_led_control 'router_default'
+ensure_global_option blocked_page_enabled '1'
+ensure_global_option blocked_page_text 'Интернет временно недоступен по семейным правилам. Если это ошибка, обратитесь к родителю.'
+ensure_global_option blocked_page_port '5202'
+ensure_global_option domain_allowlist_for_blocklist '1'
 ensure_global_option log_retention '3d'
 ensure_global_option offline_device_retention_days '90'
 ensure_global_option app_port '5201'
+ensure_global_option log_storage 'ram'
+ensure_global_option log_cache_path '/tmp/sheepfold/events.log'
+uci -q get sheepfold.no_restrictions >/dev/null || uci -q set sheepfold.no_restrictions='group'
+uci -q set sheepfold.no_restrictions.name='Без ограничений'
+uci -q set sheepfold.no_restrictions.protected='1'
+uci -q set sheepfold.no_restrictions.auto_assignable='1'
+uci -q set sheepfold.no_restrictions.description='Trusted home infrastructure devices that should not be limited unless they are blocklisted'
+uci -q get sheepfold.child_1 >/dev/null || uci -q set sheepfold.child_1='group'
+uci -q set sheepfold.child_1.name='Ребёнок номер 1'
+uci -q set sheepfold.child_1.protected='0'
+uci -q set sheepfold.child_1.auto_assignable='0'
+uci -q set sheepfold.child_1.description='Default first child group'
 detect_installed() {
         pkg="\$1"
         init="\$2"

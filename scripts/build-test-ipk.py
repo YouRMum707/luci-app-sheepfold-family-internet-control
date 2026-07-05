@@ -49,9 +49,12 @@ def add_tree(tar: tarfile.TarFile, source: Path, target_prefix: str) -> None:
     executable_paths = {
         "./etc/init.d/sheepfold",
         "./etc/uci-defaults/50_luci-sheepfold",
+        "./etc/hotplug.d/button/90-sheepfold-wps",
         "./usr/libexec/sheepfold/sheepfold-service",
         "./usr/libexec/sheepfold/sheepfold-device-detector",
         "./usr/libexec/sheepfold/sheepfold-updater",
+        "./usr/libexec/sheepfold/sheepfold-router-control",
+        "./www/cgi-bin/sheepfold-blocked",
     }
 
     for path in sorted(source.rglob("*")):
@@ -72,7 +75,7 @@ def write_control_tar(path: Path, version: str, release: str) -> None:
 Version: {version}-{release}
 Architecture: all
 Maintainer: kva4991
-Depends: luci-base, firewall4, rpcd, uci, uclient-fetch, ca-bundle
+Depends: luci-base, firewall4, rpcd, uci, uclient-fetch, ca-bundle, uhttpd
 Section: luci
 Priority: optional
 Installed-Size: 10240
@@ -101,14 +104,32 @@ ensure_global_option detector_max_hosts_per_scan '16'
 ensure_global_option detector_min_no_restrictions_confidence '80'
 ensure_global_option detector_nmap_host_timeout_seconds '20'
 ensure_global_option update_check_install_mode 'weekly'
+ensure_global_option wifi_auto_enable_mode 'never'
+ensure_global_option wifi_auto_enable_time '07:00'
+ensure_global_option wifi_auto_disable_mode 'never'
+ensure_global_option wifi_auto_disable_time '23:00'
+ensure_global_option wps_short_press_action 'router_default'
+ensure_global_option wps_long_press_action 'router_default'
+ensure_global_option router_led_control 'router_default'
+ensure_global_option blocked_page_enabled '1'
+ensure_global_option blocked_page_text 'Интернет временно недоступен по семейным правилам. Если это ошибка, обратитесь к родителю.'
+ensure_global_option blocked_page_port '5202'
+ensure_global_option domain_allowlist_for_blocklist '1'
 ensure_global_option log_retention '3d'
 ensure_global_option offline_device_retention_days '90'
 ensure_global_option app_port '5201'
+ensure_global_option log_storage 'ram'
+ensure_global_option log_cache_path '/tmp/sheepfold/events.log'
 uci -q get sheepfold.no_restrictions >/dev/null || uci -q set sheepfold.no_restrictions='group'
 uci -q set sheepfold.no_restrictions.name='Без ограничений'
 uci -q set sheepfold.no_restrictions.protected='1'
 uci -q set sheepfold.no_restrictions.auto_assignable='1'
 uci -q set sheepfold.no_restrictions.description='Trusted home infrastructure devices that should not be limited unless they are blocklisted'
+uci -q get sheepfold.child_1 >/dev/null || uci -q set sheepfold.child_1='group'
+uci -q set sheepfold.child_1.name='Ребёнок номер 1'
+uci -q set sheepfold.child_1.protected='0'
+uci -q set sheepfold.child_1.auto_assignable='0'
+uci -q set sheepfold.child_1.description='Default first child group'
 detect_installed() {{
         pkg="$1"
         init="$2"

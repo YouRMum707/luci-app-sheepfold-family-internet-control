@@ -5,8 +5,10 @@ COMMAND="${1:-run}"
 DEFAULT_RAM_LOG="/tmp/sheepfold/events.log"
 DETECTOR="/usr/libexec/sheepfold/sheepfold-device-detector"
 UPDATER="/usr/libexec/sheepfold/sheepfold-updater"
+ROUTER_CONTROL="/usr/libexec/sheepfold/sheepfold-router-control"
 LEASES_FILE="/tmp/dhcp.leases"
 UPDATE_REQUEST_FILE="/tmp/sheepfold/update.request"
+LED_ALERT_ACK_FILE="/tmp/sheepfold/new-device-alert.ack"
 
 init_ram_log() {
         RAM_LOG="$(uci -q get sheepfold.global.log_cache_path 2>/dev/null || printf '%s' "$DEFAULT_RAM_LOG")"
@@ -31,6 +33,18 @@ handle_update_request() {
         fi
 }
 
+handle_router_control() {
+        [ -x "$ROUTER_CONTROL" ] || return 0
+
+        if [ -e "$LED_ALERT_ACK_FILE" ]; then
+                "$ROUTER_CONTROL" led-alert-ack >/dev/null 2>&1 || true
+        fi
+
+        "$ROUTER_CONTROL" wifi-automation-tick >/dev/null 2>&1 || true
+        "$ROUTER_CONTROL" led-apply >/dev/null 2>&1 || true
+        "$ROUTER_CONTROL" blocked-page-apply >/dev/null 2>&1 || true
+}
+
 case "$COMMAND" in
         run)
                 init_ram_log
@@ -39,6 +53,7 @@ case "$COMMAND" in
                 LAST_FULL_SCAN=0
                 while :; do
                         handle_update_request
+                        handle_router_control
 
                         DETECTION_MODE="$(uci -q get sheepfold.global.detection_mode 2>/dev/null || printf full)"
                         if [ "$DETECTION_MODE" != "disabled" ] && [ -x "$DETECTOR" ]; then
@@ -77,6 +92,7 @@ case "$COMMAND" in
         reload)
                 init_ram_log
                 handle_update_request
+                handle_router_control
                 [ -x "$DETECTOR" ] && "$DETECTOR" scan >/dev/null 2>&1 || true
                 echo "Sheepfold reload complete"
                 ;;

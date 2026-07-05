@@ -1,0 +1,414 @@
+#!/bin/sh
+set -eu
+
+COMMAND="${1:-status}"
+RUNTIME_DIR="/tmp/sheepfold"
+LED_DEFAULTS="$RUNTIME_DIR/led-defaults.tsv"
+LED_ALERT_FLAG="$RUNTIME_DIR/new-device-alert"
+LED_ALERT_ACK="$RUNTIME_DIR/new-device-alert.ack"
+LED_ALERT_PID="$RUNTIME_DIR/led-alert.pid"
+WPS_LEASES_BEFORE="$RUNTIME_DIR/wps-leases-before.tsv"
+WPS_ALLOWLIST_FLAG="$RUNTIME_DIR/wps-allowlist-window"
+WIFI_LAST_ACTION="$RUNTIME_DIR/wifi-automation-last-action"
+BLOCKED_HTTPD_PID="$RUNTIME_DIR/blocked-httpd.pid"
+BLOCKED_HTTPD_ROOT="$RUNTIME_DIR/blocked-www"
+
+mkdir -p "$RUNTIME_DIR"
+
+log() {
+        logger -t sheepfold-router-control "$*"
+}
+
+global_get() {
+        uci -q get "sheepfold.global.$1" 2>/dev/null || printf '%s' "$2"
+}
+
+valid_port() {
+        case "$1" in
+                ''|*[!0-9]*) return 1 ;;
+        esac
+        [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
+}
+
+normalize_mac() {
+        printf '%s' "$1" | tr '[:lower:]' '[:upper:]'
+}
+
+valid_mac() {
+        printf '%s' "$1" | grep -Eq '^([0-9A-F]{2}:){5}[0-9A-F]{2}$'
+}
+
+ensure_list_section() {
+        name="$1"
+        uci -q get "sheepfold.$name" >/dev/null 2>&1 || uci -q set "sheepfold.$name=list"
+}
+
+add_mac_to_allowlist() {
+        mac="$(normalize_mac "$1")"
+        valid_mac "$mac" || return 0
+        ensure_list_section allowlist
+
+        for existing in $(uci -q get sheepfold.allowlist.mac 2>/dev/null || true); do
+                [ "$(normalize_mac "$existing")" = "$mac" ] && return 0
+        done
+
+        uci -q add_list "sheepfold.allowlist.mac=$mac"
+}
+
+wifi_set_all() {
+        disabled="$1"
+        changed=0
+
+        for radio in $(uci -q show wireless 2>/dev/null | sed -n "s/^wireless\.\([^.=]*\)=wifi-device$/\1/p"); do
+                uci -q set "wireless.$radio.disabled=$disabled"
+                changed=1
+        done
+
+        [ "$changed" = "1" ] || {
+                log "No wireless radios found"
+                return 1
+        }
+
+        uci -q commit wireless
+        wifi reload >/dev/null 2>&1 || wifi >/dev/null 2>&1 || true
+}
+
+wifi_enable() {
+        wifi_set_all 0
+        log "All Wi-Fi radios enabled"
+}
+
+wifi_disable() {
+        wifi_set_all 1
+        log "All Wi-Fi radios disabled"
+}
+
+blocked_httpd_running() {
+        [ -r "$BLOCKED_HTTPD_PID" ] || return 1
+        pid="$(cat "$BLOCKED_HTTPD_PID" 2>/dev/null || true)"
+        [ -n "$pid" ] || return 1
+        kill -0 "$pid" 2>/dev/null
+}
+
+blocked_httpd_stop() {
+        if blocked_httpd_running; then
+                kill "$(cat "$BLOCKED_HTTPD_PID")" 2>/dev/null || true
+        fi
+        rm -f "$BLOCKED_HTTPD_PID"
+}
+
+blocked_httpd_start() {
+        port="$(global_get blocked_page_port 5202)"
+        valid_port "$port" || port=5202
+
+        mkdir -p "$BLOCKED_HTTPD_ROOT"
+        rm -f "$BLOCKED_HTTPD_ROOT/index.html"
+
+        if blocked_httpd_running; then
+                return 0
+        fi
+
+        if ! command -v uhttpd >/dev/null 2>&1; then
+                log "uhttpd is not available for blocked page responder"
+                return 0
+        fi
+
+        uhttpd -f -p "0.0.0.0:$port" -h "$BLOCKED_HTTPD_ROOT" -x /cgi-bin \
+                -E /cgi-bin/sheepfold-blocked >/dev/null 2>&1 &
+        echo "$!" > "$BLOCKED_HTTPD_PID"
+        log "Blocked page responder started on port $port"
+}
+
+blocked_page_apply() {
+        enabled="$(global_get blocked_page_enabled 1)"
+        if [ "$enabled" = "1" ]; then
+                blocked_httpd_start
+        else
+                blocked_httpd_stop
+        fi
+}
+
+save_led_defaults() {
+        [ -s "$LED_DEFAULTS" ] && return 0
+        : > "$LED_DEFAULTS"
+
+        for led in /sys/class/leds/*; do
+                [ -d "$led" ] || continue
+                name="${led##*/}"
+                trigger="$(sed -n 's/.*\[\([^]]*\)\].*/\1/p' "$led/trigger" 2>/dev/null || true)"
+                brightness="$(cat "$led/brightness" 2>/dev/null || printf 0)"
+                printf '%s\t%s\t%s\n' "$name" "${trigger:-none}" "${brightness:-0}" >> "$LED_DEFAULTS"
+        done
+}
+
+led_set() {
+        led="$1"
+        brightness="$2"
+        [ -d "$led" ] || return 0
+        [ -w "$led/trigger" ] && printf none > "$led/trigger" 2>/dev/null || true
+        [ -w "$led/brightness" ] && printf '%s' "$brightness" > "$led/brightness" 2>/dev/null || true
+}
+
+led_all() {
+        brightness="$1"
+        save_led_defaults
+        for led in /sys/class/leds/*; do
+                led_set "$led" "$brightness"
+        done
+}
+
+led_restore_defaults() {
+        if [ -r "$LED_DEFAULTS" ]; then
+                while IFS="$(printf '\t')" read -r name trigger brightness; do
+                        led="/sys/class/leds/$name"
+                        [ -d "$led" ] || continue
+                        [ -n "$trigger" ] && [ -w "$led/trigger" ] && printf '%s' "$trigger" > "$led/trigger" 2>/dev/null || true
+                        [ -n "$brightness" ] && [ -w "$led/brightness" ] && printf '%s' "$brightness" > "$led/brightness" 2>/dev/null || true
+                done < "$LED_DEFAULTS"
+                rm -f "$LED_DEFAULTS"
+        else
+                for led in /sys/class/leds/*; do
+                        [ -d "$led" ] || continue
+                        [ -w "$led/trigger" ] && printf default-on > "$led/trigger" 2>/dev/null || true
+                done
+        fi
+}
+
+led_off_forever() {
+        led_all 0
+        log "All router LEDs turned off by Sheepfold"
+}
+
+led_blink_code() {
+        seconds="${1:-30}"
+        pattern="${2:-1010000}"
+        end=$(( $(date +%s) + seconds ))
+
+        save_led_defaults
+        while [ "$(date +%s)" -lt "$end" ]; do
+                i=1
+                while [ "$i" -le "${#pattern}" ] && [ "$(date +%s)" -lt "$end" ]; do
+                        bit="$(printf '%s' "$pattern" | cut -c "$i")"
+                        [ "$bit" = "1" ] && led_all 1 || led_all 0
+                        sleep 0.5
+                        i=$((i + 1))
+                done
+        done
+        led_restore_defaults
+}
+
+led_alert_loop_running() {
+        [ -r "$LED_ALERT_PID" ] || return 1
+        pid="$(cat "$LED_ALERT_PID" 2>/dev/null || true)"
+        [ -n "$pid" ] || return 1
+        kill -0 "$pid" 2>/dev/null
+}
+
+led_alert_loop() {
+        echo "$$" > "$LED_ALERT_PID"
+        save_led_defaults
+
+        while [ -e "$LED_ALERT_FLAG" ] &&
+                [ "$(global_get router_led_control router_default)" = "new_device_alert_until_luci_login" ]; do
+                set -- /sys/class/leds/*
+                count=0
+                for led in "$@"; do
+                        [ -d "$led" ] && count=$((count + 1))
+                done
+
+                if [ "$count" -le 0 ]; then
+                        sleep 5
+                elif [ "$count" -eq 1 ]; then
+                        for value in 1 0 1 0; do
+                                led_all "$value"
+                                sleep 0.5
+                        done
+                else
+                        for active in /sys/class/leds/*; do
+                                [ -d "$active" ] || continue
+                                for led in /sys/class/leds/*; do
+                                        [ -d "$led" ] || continue
+                                        [ "$led" = "$active" ] && led_set "$led" 1 || led_set "$led" 0
+                                done
+                                sleep 0.5
+                        done
+                fi
+        done
+
+        led_restore_defaults
+        rm -f "$LED_ALERT_PID"
+}
+
+led_alert_start() {
+        [ "$(global_get router_led_control router_default)" = "new_device_alert_until_luci_login" ] || return 0
+        [ -e "$LED_ALERT_FLAG" ] || return 0
+        led_alert_loop_running && return 0
+        "$0" led-alert-loop >/dev/null 2>&1 </dev/null &
+}
+
+led_alert_ack() {
+        rm -f "$LED_ALERT_FLAG" "$LED_ALERT_ACK"
+        led_restore_defaults
+        log "New-device LED alert acknowledged"
+}
+
+snapshot_leases() {
+        if [ -r /tmp/dhcp.leases ]; then
+                awk 'NF >= 4 { print toupper($2) }' /tmp/dhcp.leases | sort -u
+        fi
+}
+
+start_wps_pbc() {
+        started=0
+
+        if command -v ubus >/dev/null 2>&1; then
+                for service in $(ubus list 'hostapd.*' 2>/dev/null || true); do
+                        ubus call "$service" wps_start '{}' >/dev/null 2>&1 && started=1 || true
+                done
+        fi
+
+        if command -v hostapd_cli >/dev/null 2>&1; then
+                for dir in /var/run/hostapd /var/run/hostapd-*; do
+                        [ -d "$dir" ] || continue
+                        for sock in "$dir"/*; do
+                                [ -S "$sock" ] || continue
+                                iface="${sock##*/}"
+                                hostapd_cli -p "$dir" -i "$iface" wps_pbc >/dev/null 2>&1 && started=1 || true
+                        done
+                done
+        fi
+
+        [ "$started" = "1" ] && log "WPS PBC started" || log "WPS PBC could not be started on this router"
+        return 0
+}
+
+wps_allowlist_window() {
+        snapshot_leases > "$WPS_LEASES_BEFORE"
+        touch "$WPS_ALLOWLIST_FLAG"
+        start_wps_pbc
+        "$0" led-blink-code 30 1010000 >/dev/null 2>&1 </dev/null &
+        sleep 30
+
+        snapshot_leases | while read -r mac; do
+                [ -n "$mac" ] || continue
+                grep -qx "$mac" "$WPS_LEASES_BEFORE" 2>/dev/null && continue
+                add_mac_to_allowlist "$mac"
+        done
+
+        uci -q commit sheepfold
+        rm -f "$WPS_ALLOWLIST_FLAG" "$WPS_LEASES_BEFORE"
+        log "WPS allowlist window finished"
+}
+
+wps_handle_action() {
+        action="$1"
+
+        case "$action" in
+                router_default|"")
+                        return 0
+                        ;;
+                allow_wifi_connection)
+                        start_wps_pbc
+                        "$0" led-blink-code 30 1010000 >/dev/null 2>&1 </dev/null &
+                        ;;
+                allow_wifi_and_allowlist)
+                        "$0" wps-allowlist-window >/dev/null 2>&1 </dev/null &
+                        ;;
+                disable_wifi)
+                        wifi_disable
+                        ;;
+        esac
+}
+
+wps_button() {
+        press_kind="${1:-short}"
+        if [ "$press_kind" = "long" ]; then
+                action="$(global_get wps_long_press_action router_default)"
+        else
+                action="$(global_get wps_short_press_action router_default)"
+        fi
+
+        wps_handle_action "$action"
+}
+
+wifi_automation_tick() {
+        now_time="$(date +%H:%M)"
+        today="$(date +%Y-%m-%d)"
+        enable_mode="$(global_get wifi_auto_enable_mode never)"
+        enable_time="$(global_get wifi_auto_enable_time 07:00)"
+        disable_mode="$(global_get wifi_auto_disable_mode never)"
+        disable_time="$(global_get wifi_auto_disable_time 23:00)"
+
+        last="$(cat "$WIFI_LAST_ACTION" 2>/dev/null || true)"
+
+        if [ "$enable_mode" = "time" ] && [ "$now_time" = "$enable_time" ]; then
+                key="$today enable $enable_time"
+                if [ "$last" != "$key" ]; then
+                        wifi_enable
+                        echo "$key" > "$WIFI_LAST_ACTION"
+                fi
+        fi
+
+        if [ "$disable_mode" = "time" ] && [ "$now_time" = "$disable_time" ]; then
+                key="$today disable $disable_time"
+                if [ "$last" != "$key" ]; then
+                        wifi_disable
+                        echo "$key" > "$WIFI_LAST_ACTION"
+                fi
+        fi
+}
+
+case "$COMMAND" in
+        wifi-enable)
+                wifi_enable
+                ;;
+        wifi-disable)
+                wifi_disable
+                ;;
+        wifi-automation-tick)
+                wifi_automation_tick
+                ;;
+        wps-button)
+                wps_button "${2:-short}"
+                ;;
+        wps-allowlist-window)
+                wps_allowlist_window
+                ;;
+        led-apply)
+                case "$(global_get router_led_control router_default)" in
+                        off_forever) led_off_forever ;;
+                        new_device_alert_until_luci_login) led_alert_start ;;
+                        *) led_restore_defaults ;;
+                esac
+                ;;
+        blocked-page-apply)
+                blocked_page_apply
+                ;;
+        blocked-page-stop)
+                blocked_httpd_stop
+                ;;
+        led-blink-code)
+                led_blink_code "${2:-30}" "${3:-1010000}"
+                ;;
+        led-alert-start)
+                led_alert_start
+                ;;
+        led-alert-loop)
+                led_alert_loop
+                ;;
+        led-alert-ack)
+                led_alert_ack
+                ;;
+        status)
+                printf 'wifi_auto_enable=%s %s\n' "$(global_get wifi_auto_enable_mode never)" "$(global_get wifi_auto_enable_time 07:00)"
+                printf 'wifi_auto_disable=%s %s\n' "$(global_get wifi_auto_disable_mode never)" "$(global_get wifi_auto_disable_time 23:00)"
+                printf 'wps_short=%s\n' "$(global_get wps_short_press_action router_default)"
+                printf 'wps_long=%s\n' "$(global_get wps_long_press_action router_default)"
+                printf 'router_led_control=%s\n' "$(global_get router_led_control router_default)"
+                printf 'blocked_page=%s %s\n' "$(global_get blocked_page_enabled 1)" "$(global_get blocked_page_port 5202)"
+                ;;
+        *)
+                echo "Usage: sheepfold-router-control [wifi-enable|wifi-disable|wifi-automation-tick|wps-button|led-apply|led-alert-ack|blocked-page-apply|status]" >&2
+                exit 1
+                ;;
+esac

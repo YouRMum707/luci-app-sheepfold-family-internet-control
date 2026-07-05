@@ -1,0 +1,19 @@
+#!/bin/sh
+
+[ "$BUTTON" = "wps" ] || [ "$BUTTON" = "wps_button" ] || exit 0
+[ "$ACTION" = "released" ] || exit 0
+
+ROUTER_CONTROL="/usr/libexec/sheepfold/sheepfold-router-control"
+[ -x "$ROUTER_CONTROL" ] || exit 0
+
+case "${SEEN:-0}" in
+        ''|*[!0-9]*) SEEN=0 ;;
+esac
+
+if [ "$SEEN" -ge 2 ]; then
+        "$ROUTER_CONTROL" wps-button long >/dev/null 2>&1 || true
+else
+        "$ROUTER_CONTROL" wps-button short >/dev/null 2>&1 || true
+fi
+
+exit 0

@@ -15,7 +15,8 @@
       "file": {
         "/tmp/sheepfold/events.log": [ "write" ],
         "/tmp/sheepfold/*": [ "write" ],
-        "/usr/libexec/sheepfold/sheepfold-updater": [ "exec" ]
+        "/usr/libexec/sheepfold/sheepfold-updater": [ "exec" ],
+        "/usr/libexec/sheepfold/sheepfold-router-control": [ "exec" ]
       }
     }
   }

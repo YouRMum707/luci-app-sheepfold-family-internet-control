@@ -13,3 +13,8 @@ start_service() {
 reload_service() {
         /usr/libexec/sheepfold/sheepfold-service reload
 }
+
+stop_service() {
+        [ -x /usr/libexec/sheepfold/sheepfold-router-control ] &&
+                /usr/libexec/sheepfold/sheepfold-router-control blocked-page-stop >/dev/null 2>&1 || true
+}

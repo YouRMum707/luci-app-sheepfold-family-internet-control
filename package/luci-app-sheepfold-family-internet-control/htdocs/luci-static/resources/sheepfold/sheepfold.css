@@ -1046,6 +1046,22 @@
         width: 100%;
 }
 
+.sf-settings-divider {
+        display: grid;
+        grid-template-columns: minmax(32px, 1fr) auto minmax(32px, 1fr);
+        gap: 10px;
+        align-items: center;
+        margin: 8px 0 2px;
+        color: var(--sf-muted);
+        font-weight: 700;
+}
+
+.sf-settings-divider hr {
+        width: 100%;
+        border: 0;
+        border-top: 1px solid var(--sf-border);
+}
+
 .sf-section-intro {
         max-width: 760px;
         margin-top: 0;

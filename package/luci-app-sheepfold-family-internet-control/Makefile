@@ -2,14 +2,14 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-sheepfold-family-internet-control
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=63
+PKG_RELEASE:=64
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=kva4991
 SHEEPFOLD_UI_ASSET_VERSION:=$(PKG_VERSION)-$(PKG_RELEASE)
 
 LUCI_TITLE:=Sheepfold Family Internet Control
 LUCI_DESCRIPTION:=Family internet access control for OpenWRT with LuCI, Android, and bot support.
-LUCI_DEPENDS:=+luci-base +firewall4 +rpcd +uci +uclient-fetch +ca-bundle
+LUCI_DEPENDS:=+luci-base +firewall4 +rpcd +uci +uclient-fetch +ca-bundle +uhttpd
 
 define Package/$(PKG_NAME)/postinst
 #!/bin/sh
@@ -40,6 +40,9 @@ ensure_global_option wifi_auto_disable_time '23:00'
 ensure_global_option wps_short_press_action 'router_default'
 ensure_global_option wps_long_press_action 'router_default'
 ensure_global_option router_led_control 'router_default'
+ensure_global_option blocked_page_enabled '1'
+ensure_global_option blocked_page_text 'Интернет временно недоступен по семейным правилам. Если это ошибка, обратитесь к родителю.'
+ensure_global_option blocked_page_port '5202'
 ensure_global_option domain_allowlist_for_blocklist '1'
 if [ "$$(uci -q get sheepfold.global.domain_allowlist_for_blocklist_default_migrated 2>/dev/null)" != "1" ]; then
 	uci -q set sheepfold.global.domain_allowlist_for_blocklist='1'
